@@ -29,8 +29,8 @@ Lo stato corrente (fase, ora della consegna, cosa manca) sta in cima a `README.m
 - Il tempo è il vincolo. Prima il percorso della demo intero, anche brutto, poi si rifinisce. Niente che la giuria non vedrà: autenticazione, impostazioni, casi limite, configurabilità.
 - Quello che è simulato si dichiara in `docs/fase-01-piano.md` e, se serve, nel pitch. Mai presentare come funzionante una cosa finta.
 - Dati sintetici: nessun dato reale di studenti, docenti o atenei. Stanno nel database, caricati da uno script di semina, non scritti nel frontend.
-- Per scegliere un modello (LLM, embedding, voce) si parte da una ricerca web su catalogo e prezzi del giorno. Non ci si basa su quello che si ricorda.
-- Test quasi nessuno. La verifica è far girare il percorso della demo dall'inizio alla fine dopo ogni modifica che lo tocca, e dirlo a Luca con l'esito vero.
+- **Modelli via OpenRouter.** Luca ha una chiave con 5 $ di credito: è tutto il budget della giornata. Si usano sempre modelli economici della classe Luna: il predefinito è `openai/gpt-6-luna` (0,10 $ per milione di token in ingresso e 0,50 $ in uscita, catalogo OpenRouter letto il 14/11/2026). Un modello più caro solo se Luca lo dice per quel punto preciso. Ogni chiamata ha un tetto di token in uscita, e le prove ripetute in sviluppo usano risposte brevi. Per cambiare modello o aggiungerne uno di altro tipo (embedding, voce) si rilegge il catalogo del giorno su `https://openrouter.ai/api/v1/models`, non ci si basa su quello che si ricorda. La chiave si chiama `OPENROUTER_API_KEY`, sta nel `.env` alla radice, arriva al Worker da `app/backend/.dev.vars` in locale e da `wrangler secret put` online. Non arriva mai al frontend: il browser chiama solo la nostra API.
+- **Un solo test che conta: il percorso della demo in Playwright.** Dalla prima fase di build esiste `npm run e2e`, che apre l'applicazione in un browser vero e percorre la demo dall'inizio alla fine come farà Luca davanti alla giuria, in locale e contro l'URL online. Cresce insieme alla demo: ogni fase di build aggiunge il suo passo. Si lancia dopo ogni modifica che tocca il percorso e prima di ogni deploy, e l'esito vero si dice a Luca, con lo screenshot del passo che fallisce. Luca può lanciarlo anche da solo, o farlo girare a un agente mentre un altro costruisce. Le chiamate ai modelli nel test sono vere ma poche: una corsa completa deve costare centesimi. Oltre a questo, test quasi nessuno: niente test unitari su codice banale.
 - Piano di riserva se la rete del posto cade: una registrazione dello schermo del percorso completo, fatta appena funziona.
 - Commit piccoli e frequenti su `main`, con push: oggi niente branch e PR. Il push serve anche da backup.
 - Nessun segreto nel repository: chiavi solo in `.env` o `.dev.vars`, gitignorati, con i nomi in `.env.example`. Prima di rendere pubblico il repository si ricontrollano `input/` e la storia Git.
@@ -60,7 +60,12 @@ Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non 
 
 ## Interfaccia
 
-La giuria giudica quello che vede. Per l'interfaccia della demo in Claude Code è attivo il plugin `interfaces` (da `.claude/settings.json`): `build-design` per costruire una schermata, `interface-review` prima di considerarla finita, `variant` per confrontare alternative. Con altri runtime valgono le stesse attese: una schermata per passo della demo, testo leggibile da un proiettore, stati di attesa visibili mentre gli agenti lavorano.
+La giuria giudica quello che vede. Due skill, in due momenti diversi, per non avere indicazioni in conflitto:
+
+- **Per partire, `ui-ux-pro-max`** (in `.agents/skills/ui-ux-pro-max/`, con symlink per Claude Code; qualunque runtime può lanciarne lo script con `python3`). Una volta sola, nella fase del piano, si genera il design system dell'idea scelta con `--design-system` e lo si salva in `docs/design-system.md`: stile, palette, font, componenti. Da lì in poi quel file è la regola e non si rigenera. Le sue proposte sono un punto di partenza: Luca sceglie, e stili vistosi che su un proiettore si leggono male si scartano.
+- **Per rifinire, `interfaces`** (plugin di Claude Code, da `.claude/settings.json`), quando una schermata funziona già: `interface-review` prima di considerarla finita, `better-ui` e `variant` per migliorarla o confrontare alternative. Non decide il design system, lo rispetta.
+
+Con qualunque runtime valgono le stesse attese: una schermata per passo della demo, testo leggibile da un proiettore, stati di attesa visibili mentre gli agenti lavorano.
 
 ## Video
 
@@ -73,12 +78,13 @@ Resta aperta l'opzione di aprire il pitch con un video breve dell'idea, fatto co
 | `input/` | Fonti dell'hackathon incollate da Luca. Non si modificano |
 | `docs/fase-00-brainstorming.md` | Le idee confrontate, quella scelta e perché |
 | `docs/fase-01-piano.md` | Percorso della demo, architettura, fasi di build |
+| `docs/design-system.md` | Stile, palette, font e componenti dell'interfaccia |
 | `docs/fase-NN-….md` | Una per fase di build |
 | `app/frontend/` | Next.js, export statico |
 | `app/backend/` | Worker Hono, migrazioni D1, agenti, script di semina |
 | `pitch/` | Slide, scaletta, eventuale video |
 
-Skill condivise fra runtime, se ne servono, vanno in `.agents/skills/` con un symlink in `.claude/skills/`.
+Le skill condivise fra runtime stanno in `.agents/skills/`, copiate senza la loro `.git` e con l'origine annotata in `ORIGINE.md`; `.claude/skills/` contiene solo symlink.
 
 ## Scrittura
 

@@ -10,3 +10,6 @@ out/
 .wrangler/
 .claude/settings.local.json
 .agent-context.local.md
+test-results/
+playwright-report/
+__pycache__/
