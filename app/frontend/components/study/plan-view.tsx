@@ -3,6 +3,7 @@
 // Il piano: chi ha fatto cosa (ordine calcolato dal grafo, poi il Pianificatore sessione per
 // sessione), le sessioni con i concetti in ordine, il perché e le slide da guardare.
 import { useState } from "react";
+import Link from "next/link"; // study plan page
 import { AlertCircle, Check, ChevronDown, Loader2 } from "lucide-react";
 import type { PianificatoreState, StudySession } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -28,9 +29,17 @@ export function PlanView({ planId, onNew }: { planId: string; onNew: () => void 
           {plan.days === 1 ? "day" : "days"} · {stats.known} already known ·{" "}
           {plan.scope === "svolte" ? "lessons taught only" : "the whole course"}
         </p>
-        <Button variant="outline" onClick={onNew} disabled={running}>
-          New plan
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {/* study plan page */}
+          {plan.status === "done" && (
+            <Button asChild>
+              <Link href={`/study/plan?p=${encodeURIComponent(planId)}`}>Open full plan</Link>
+            </Button>
+          )}
+          <Button variant="outline" onClick={onNew} disabled={running}>
+            New plan
+          </Button>
+        </div>
       </div>
 
       <ol className="grid grid-cols-1 gap-2 lg:grid-cols-2" aria-label="Who works on the plan">

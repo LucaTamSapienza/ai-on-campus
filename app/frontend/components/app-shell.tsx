@@ -86,7 +86,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // studente porta al grafo. Le pagine si rimontano al cambio di ruolo e rileggono i dati.
   const router = useRouter();
   setApiRole(role);
-  const allowed = NAV.some((n) => n.roles.includes(role) && isActive(n.href));
+  const allowed = NAV.some((n) => n.roles.includes(role) && isActive(n.href))
+    || pathname.startsWith("/study/plan"); // study plan page: documento a pagina intera, per entrambi i ruoli
   useEffect(() => {
     if (!allowed) router.replace("/");
   }, [allowed, router]);

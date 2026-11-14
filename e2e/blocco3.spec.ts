@@ -1,8 +1,10 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 
 // Blocco 3, piano di studio: lo studente sceglie giorni e cosa conosce, il backend ordina dal
 // grafo, il Pianificatore spiega ogni sessione con le slide di prova. Chiamate ai modelli vere:
-// una corsa alle due misure costa meno di un centesimo.
+// una corsa alle due misure costa meno di un centesimo. In fondo il piano a pagina intera e il
+// download del PDF.
 // Le misure sono i progetti di playwright.config.ts (desktop 1440×900, telefono 390×844).
 //
 //   DEMO_URL=http://localhost:8790 npm run e2e -- e2e/blocco3.spec.ts            export servito dal Worker
@@ -74,6 +76,25 @@ test.describe("blocco 3", () => {
     await expect(page.getByText(/^after |no prerequisite/).first()).toBeVisible();
     await noHorizontalScroll(page);
     await shot("3-piano");
+
+    // Il piano a pagina intera, fuori dalla navigazione, e il PDF scaricato davvero.
+    await visible(page, "link", "Open full plan").click();
+    await expect(page).toHaveURL(/\/study\/plan\?p=/);
+    const doc = page.locator("[data-plan-document]");
+    await expect(doc.getByRole("heading", { name: "Study plan", level: 1 })).toBeVisible();
+    await expect(doc.getByRole("img", { name: "Reply" })).toBeVisible();
+    await expect(doc.getByRole("list", { name: "Study sessions" }).locator(":scope > li")).toHaveCount(4);
+    await expect(doc.getByText("Slides to look at")).toHaveCount(4);
+    await expect(doc.getByText("The Planner never sees exam questions, rubrics or class results.")).toBeVisible();
+    const docOverflow = await doc.evaluate((el) => Math.max(el.scrollWidth - el.clientWidth, document.documentElement.scrollWidth - window.innerWidth));
+    expect(docOverflow, "scorrimento orizzontale del documento").toBeLessThanOrEqual(0);
+    await shot("4-documento");
+    const [download] = await Promise.all([page.waitForEvent("download", { timeout: 60_000 }), doc.getByRole("button", { name: "Download PDF" }).click()]);
+    expect(download.suggestedFilename()).toMatch(/^prisma-study-plan-.+\.pdf$/);
+    const pdf = readFileSync(await download.path());
+    expect(pdf.subarray(0, 5).toString(), "intestazione PDF").toBe("%PDF-");
+    expect(pdf.length, "dimensione del PDF").toBeGreaterThan(20_000);
+    await download.saveAs(`${SHOTS}/blocco3-${testInfo.project.name}-piano.pdf`);
     expect(errors, "errori in console").toEqual([]);
 
     // Lato server lo studente apre solo il piano di studio: l'esame resta chiuso.
