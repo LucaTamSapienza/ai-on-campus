@@ -306,6 +306,8 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
       // Dal blocco 2 lo studente legge anche i materiali (senza caricamento); esame, classe e lezioni no.
       await expect(page.getByRole("link", { name: "Materiali" })).toBeVisible();
       for (const name of ["Esame", "Classe", "Lezioni"]) await expect(page.getByRole("link", { name })).toHaveCount(0);
+      // Dal blocco 3 lo studente ha anche il suo piano di studio.
+      await expect(page.getByRole("link", { name: "Studio" })).toBeVisible();
       const search = page.getByRole("searchbox", { name: "Cerca un concetto" });
       await search.fill("Q-learning");
       await search.press("Enter");

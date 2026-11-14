@@ -368,3 +368,48 @@ export const lezioniApi = {
     request<{ text: string; seconds: number; costUsd: number | null }>(`/courses/${courseId}/lessons/transcribe`, json("POST", { audio, format: "wav" })),
 };
 // fine blocco 2
+
+// blocco 3: piano di studio dello studente.
+export type StudioOptions = {
+  scope: "svolte" | "tutte";
+  lessons: { id: string; title: string; short: string; done: boolean; concepts: number }[];
+  concepts: { id: string; name: string; lessonId: string | null; evidence: number }[];
+  maxDays: number;
+};
+export type StudyPassage = { id: string; locator: string; sourceTitle: string; text: string };
+export type StudySession = {
+  id: string;
+  ordinal: number;
+  day: number;
+  status: "pending" | "running" | "done" | "error";
+  error: string | null;
+  why: string | null;
+  concepts: { id: string; name: string; topicName: string | null; lesson: string | null; evidence: number; after: string[] }[];
+  look: { note: string; passage: StudyPassage }[];
+};
+export type StudyPlan = {
+  id: string;
+  days: number;
+  scope: "svolte" | "tutte";
+  knownLessons: string[];
+  knownConcepts: string[];
+  stats: { inScope: number; known: number; toStudy: number; withoutEvidence: number; edges: number; cyclesBroken: number };
+  status: RunStatus;
+  error: string | null;
+  createdAt: string;
+  sessions: StudySession[];
+};
+export type PianificatoreState = {
+  planId: string | null;
+  status: "idle" | "running" | "done" | "error";
+  sessions: Record<string, { status: StudySession["status"]; text: string }>;
+  version: number;
+};
+
+export const studioApi = {
+  options: (courseId: string) => request<StudioOptions>(`/courses/${courseId}/studio`),
+  create: (courseId: string, data: { days: number; knownLessons: string[]; knownConcepts: string[] }) =>
+    request<{ planId: string }>(`/courses/${courseId}/study-plans`, json("POST", data)),
+  plan: (planId: string) => request<{ plan: StudyPlan }>(`/study-plans/${planId}`).then((r) => r.plan),
+};
+// fine blocco 3

@@ -27,6 +27,12 @@ export { Classe };
 import { lezioni } from "./lezioni/routes";
 // fine blocco 2
 
+// blocco 3: piano di studio dello studente
+import { Pianificatore } from "./studio/pianificatore";
+import { studio } from "./studio/routes";
+export { Pianificatore };
+// fine blocco 3
+
 const VERSION = "0.2.0";
 const MAX_SOURCE_CHARS = 300_000;
 const MAX_SOURCES_PER_COURSE = 40;
@@ -360,6 +366,10 @@ app.route("/", classe);
 app.route("/", lezioni);
 // fine blocco 2
 
+// blocco 3: rotte del piano di studio
+app.route("/", studio);
+// fine blocco 3
+
 app.notFound((c) => fail(c, 404, "not_found", "Rotta inesistente."));
 app.onError((err, c) => {
   console.error(err);
@@ -409,6 +419,14 @@ export default {
         return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
       }
       // fine blocco 2
+      // blocco 3: il Pianificatore, solo per un piano che esiste.
+      const plan = url.pathname.match(/^\/agents\/pianificatore\/([^/]+)$/);
+      if (plan) {
+        const exists = await env.DB.prepare("SELECT 1 FROM study_plans WHERE id = ?").bind(decodeURIComponent(plan[1])).first();
+        if (!exists) return deny(404, "not_found", "Piano non trovato.");
+        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+      }
+      // fine blocco 3
       // fase 03: il coordinatore del triplo attacco, solo per un'esecuzione che esiste.
       const run = url.pathname.match(/^\/agents\/attacco\/([^/]+)$/);
       if (run) {

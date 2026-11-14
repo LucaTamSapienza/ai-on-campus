@@ -18,7 +18,12 @@ const TEACHER_ONLY = [
 
 export const isStudent = (role: string | null | undefined) => role === "studente";
 
+// blocco 3: l'unica scrittura dello studente, il suo piano di studio.
+const STUDENT_WRITES = [/^\/api\/courses\/[^/]+\/study-plans$/];
+// fine blocco 3
+
 export function studentForbidden(method: string, path: string): boolean {
+  if (method === "POST" && STUDENT_WRITES.some((re) => re.test(path))) return false; // blocco 3
   if (method !== "GET" && method !== "HEAD") return true;
   return TEACHER_ONLY.some((re) => re.test(path));
 }
@@ -31,7 +36,7 @@ export const studentGuard: MiddlewareHandler<{ Bindings: Env }> = async (c, next
   return next();
 };
 
-// WebSocket: lo studente vede solo il Cartografo (il grafo che cresce).
+// WebSocket: lo studente vede solo il Cartografo (il grafo che cresce) e, blocco 3, il Pianificatore del suo piano.
 export function studentAgentForbidden(url: URL): boolean {
-  return isStudent(url.searchParams.get("role")) && !/^\/agents\/cartografo\//.test(url.pathname);
+  return isStudent(url.searchParams.get("role")) && !/^\/agents\/(cartografo|pianificatore)\//.test(url.pathname);
 }

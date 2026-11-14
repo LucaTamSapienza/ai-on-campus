@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { CalendarCheck, Users } from "lucide-react";
 import { setApiRole } from "@/lib/api";
 // fine blocco 2
+import { Route } from "lucide-react"; // blocco 3
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,8 @@ const NAV: NavItem[] = [
   // blocco 2
   { href: "/classe", label: "Classe", icon: Users, roles: ["docente"] },
   { href: "/lezioni", label: "Lezioni", icon: CalendarCheck, roles: ["docente"] },
+  // blocco 3: il piano di studio, solo per lo studente (al docente la barra del telefono avrebbe sei voci)
+  { href: "/studio", label: "Studio", icon: Route, roles: ["studente"] },
 ];
 
 type ShellValue = {
