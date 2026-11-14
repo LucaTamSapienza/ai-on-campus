@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 // Il percorso della demo, in un browser vero.
+// Si lancia solo quando lo chiede Luca.
 // In locale: npm run e2e (l'app deve già girare su localhost:3000).
 // Online:    DEMO_URL=https://ai-on-campus.<sottodominio>.workers.dev npm run e2e
 export default defineConfig({

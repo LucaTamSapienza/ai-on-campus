@@ -1,6 +1,6 @@
 # ai-on-campus
 
-Workspace dell'hackathon del 14/11/2026, tema «AI on Campus»: l'AI dentro le università. Luca Tam ragiona sull'idea con i compagni di squadra, ma il repository e il codice sono solo suoi. L'uso dell'AI è libero, quindi quasi tutto il lavoro passa dagli agenti che leggono questo file. La direzione è un'idea B2B: un prodotto che un ateneo, un dipartimento o un fornitore di servizi universitari compra, non un'app per il singolo studente. L'idea non è ancora scelta.
+Workspace dell'hackathon del 14/11/2026, tema «AI on Campus»: l'AI dentro le università. Luca Tam è in squadra con altri compagni, ma ognuno lavora per conto suo: si ragiona insieme sull'idea, poi repository, codice e agenti di questo workspace sono solo di Luca. L'uso dell'AI è libero, quindi quasi tutto il lavoro passa dagli agenti che leggono questo file. La direzione è un'idea B2B: un prodotto che un ateneo, un dipartimento o un fornitore di servizi universitari compra, non un'app per il singolo studente. L'idea non è ancora scelta.
 
 Questo file è il contratto per qualunque agente (Claude Code, Codex o altro). `CLAUDE.md` è solo un adapter che lo richiama.
 
@@ -14,7 +14,7 @@ I criteri ufficiali non sono ancora noti. Quando arrivano stanno in `input/` e q
 
 ## Le fasi
 
-Ogni fase ha il suo file in `docs/`, numerato. Luca approva due cose sole: l'idea scelta (fase 00) e il piano (fase 01). Da lì in poi le fasi di build si chiudono da sole quando il percorso della demo passa.
+Ogni fase ha il suo file in `docs/`, numerato. Luca approva due cose sole: l'idea scelta (fase 00) e il piano (fase 01). Da lì in poi le fasi di build si chiudono da sole, senza aspettare nessuno.
 
 - **Prima di tutto, input.** Luca incolla in `input/` regolamento, criteri, tracce, sponsor, API e orari. Leggi tutto prima di proporre qualcosa. Sono fonti: non si modificano. Quello che lì non c'è non si inventa, si chiede a Luca. Le conversazioni registrate durante la giornata (briefing, mentor, giuria) si leggono dal connettore Circleback, configurato in `.mcp.json`: quello che serve si riassume in `input/` con data e ora, la trascrizione intera resta su Circleback. Su Circleback c'è anche tutto il lavoro di Luca con i clienti, che qui non deve entrare. Si cercano solo le registrazioni del 14/11/2026 (`startDate` ed `endDate` su quel giorno) e, fra quelle, si aprono solo le conversazioni sull'hackathon e sul brainstorming dell'idea. Una registrazione di oggi che parla d'altro non si legge oltre il titolo; se dal titolo non si capisce, si chiede a Luca. Nessuna ricerca senza filtro di data, e niente di una call di lavoro finisce in questo repository.
 - **`docs/fase-00-brainstorming.md`.** Da tre a cinque idee B2B, ognuna con: chi compra e chi la usa, quale problema ha oggi e quanto gli costa, cosa fa l'AI che prima non si poteva fare, cosa si vede nella demo in due minuti, cosa si riesce a costruire nelle ore rimaste. Si confrontano sui criteri della giuria. Sceglie Luca, e il file si chiude con l'idea scelta e il perché.
@@ -48,7 +48,7 @@ Luca dialoga con un solo orchestratore. L'orchestratore tiene il piano, decide l
 
 - **Prima in verticale.** Un solo filo che attraversa tutto: una schermata, una rotta, una tabella, un agente del prodotto che risponde, online. Finché questo filo non gira non si parallelizza niente.
 - **Poi in parallelo, per moduli.** Il piano divide il resto in moduli con confini chiari (file e rotte di ciascuno). Ogni modulo va a un agente, nella sua worktree e sul suo branch. I contratti fra moduli (forma delle rotte, tabelle) si fissano nel piano prima di lanciarli, così non si pestano i piedi.
-- **L'orchestratore integra.** Mergia le PR una alla volta e rilancia `npm run e2e` su `main` dopo ogni merge.
+- **L'orchestratore integra.** Mergia le PR una alla volta, nell'ordine che evita conflitti, e controlla che su `main` l'app parta ancora.
 
 ## Come si costruisce
 
@@ -56,7 +56,8 @@ Luca dialoga con un solo orchestratore. L'orchestratore tiene il piano, decide l
 - Quello che è simulato si dichiara in `docs/fase-01-piano.md` e, se serve, nel pitch. Mai presentare come funzionante una cosa finta.
 - Dati sintetici: nessun dato reale di studenti, docenti o atenei. Stanno nel database, caricati da uno script di semina, non scritti nel frontend.
 - **Modelli via OpenRouter.** Luca ha una chiave con 5 $ di credito: è tutto il budget della giornata. Si usano sempre modelli economici della classe Luna: il predefinito è `openai/gpt-6-luna` (0,10 $ per milione di token in ingresso e 0,50 $ in uscita, catalogo OpenRouter letto il 14/11/2026). Un modello più caro solo se Luca lo dice per quel punto preciso. Ogni chiamata ha un tetto di token in uscita, e le prove ripetute in sviluppo usano risposte brevi. Per cambiare modello o aggiungerne uno di altro tipo (embedding, voce) si rilegge il catalogo del giorno su `https://openrouter.ai/api/v1/models`, non ci si basa su quello che si ricorda. La chiave si chiama `OPENROUTER_API_KEY`, sta nel `.env` alla radice, arriva al Worker da `app/backend/.dev.vars` in locale e da `wrangler secret put` online. Non arriva mai al frontend: il browser chiama solo la nostra API.
-- **Si verifica con Playwright, e basta.** Nessun altro livello di test: niente test unitari, di integrazione, di rotta o di schema, niente mock, niente copertura. Non si perde tempo a provare il codice con altro codice. Playwright e Chromium sono già installati alla radice (`playwright.config.ts`, cartella `e2e/`): `npm run e2e` apre l'applicazione in un browser vero e percorre la demo come farà Luca davanti alla giuria, in locale oppure contro l'URL online con `DEMO_URL=<url> npm run e2e`. È un solo file, `e2e/demo.spec.ts`, che nasce con lo scheletro e a cui ogni modulo aggiunge il suo passo. Controlla che ogni passo arrivi a schermo, non il testo che scrivono i modelli, che cambia a ogni corsa. Si lancia prima di ogni PR e prima di ogni deploy; se fallisce si guarda lo screenshot e si corregge l'app, non si scrivono altri test per capire perché. Le chiamate ai modelli sono vere ma poche: una corsa completa deve costare centesimi.
+- **Niente deve rallentare il lavoro, nemmeno le verifiche.** Nessun livello di test: niente test unitari, di integrazione, di rotta o di schema, niente mock, niente copertura. Non si perde tempo a provare il codice con altro codice. Per ogni passo basta la prova più rapida che dica che funziona: l'app parte senza errori e la cosa appena fatta risponde (una chiamata alla rotta, un'occhiata alla pagina).
+- **Playwright parte solo quando lo dice Luca, mai in automatico.** Non è una condizione per PR, merge o deploy, e l'agente non lo lancia di sua iniziativa: al più propone in una riga di lanciarlo, e continua. È già installato alla radice con Chromium (`playwright.config.ts`, cartella `e2e/`): `npm run e2e` apre l'applicazione in un browser vero e percorre la demo come farà Luca davanti alla giuria, in locale oppure contro l'URL online con `DEMO_URL=<url> npm run e2e`. Il percorso sta in un solo file, `e2e/demo.spec.ts`, che l'agente scrive quando Luca chiede la prima corsa e poi tiene allineato alla demo. Controlla che ogni passo arrivi a schermo, non il testo che scrivono i modelli, che cambia a ogni corsa. Se fallisce si guarda lo screenshot e si corregge l'app. Le chiamate ai modelli sono vere: una corsa completa deve costare centesimi.
 - Piano di riserva se la rete del posto cade: una registrazione dello schermo del percorso completo, fatta appena funziona.
 - Nessun segreto nel repository: chiavi solo in `.env` o `.dev.vars`, gitignorati, con i nomi in `.env.example`. Prima di rendere pubblico il repository si ricontrollano `input/` e la storia Git.
 
@@ -68,9 +69,9 @@ Il giro, per ogni pezzo di lavoro:
 
 1. **Branch da `main` aggiornato**: `git pull`, poi `git switch -c <prefisso>/<cosa>`. Prefissi `feat/`, `fix/`, `docs/`, `chore/`. Un branch per un passo compiuto (una fase di build, una schermata, un agente), non per una giornata di lavoro.
 2. **Commit piccoli e push frequenti del branch.** Il push è anche il backup: niente lavoro di ore solo sul Mac. Sul branch si può pushare anche un lavoro a metà.
-3. **PR verso `main` con `gh pr create`** quando il passo funziona: `npm run e2e` è passato e la PR lo dice, con cosa cambia per la demo e cosa resta simulato. L'agente apre la PR da sé, senza chiedere.
-4. **Il merge lo fa l'agente, senza aspettare Luca**, appena `npm run e2e` passa sul branch: `gh pr merge --squash --delete-branch`. Su `main` ogni PR diventa un solo commit. È una regola di questo repository per oggi: negli altri progetti di Luca il merge lo decide lui. Se il test non passa non si mergia, e lo si dice.
-5. **Deploy solo da `main`**, dopo il merge: `git switch main`, `git pull`, `npm run e2e`, `wrangler deploy`. Online gira sempre un commit di `main`.
+3. **PR verso `main` con `gh pr create`** quando il passo funziona, con una riga su cosa cambia per la demo, come è stato provato e cosa resta simulato. L'agente apre la PR da sé, senza chiedere.
+4. **Il merge lo fa l'agente, subito e senza aspettare Luca**: `gh pr merge --squash --delete-branch`. Su `main` ogni PR diventa un solo commit, che è quello che permette di tornare indietro. È una regola di questo repository per oggi: negli altri progetti di Luca il merge lo decide lui. Se l'app non parte non si mergia, e lo si dice.
+5. **Deploy solo da `main`**, dopo il merge: `git switch main`, `git pull`, `wrangler deploy`. Online gira sempre un commit di `main`.
 
 Tornare indietro:
 
@@ -128,8 +129,8 @@ Le skill nel repository stanno in `.agents/skills/` e valgono per ogni runtime (
 | Fase 01, piano | `generate-diagrams` | macchina di Luca | Lo schema dell'architettura, che serve nel piano e poi nelle slide |
 | Build, scheletro e deploy | `wrangler`, `workers-best-practices` | plugin Cloudflare | Configurazione di `wrangler.jsonc`, D1, binding, deploy. Sempre prima di un comando remoto |
 | Build, frontend | `design-system`, `ui-styling` | repository | Alla prima schermata, per portare i token di `docs/design-system.md` in Tailwind e scegliere i componenti shadcn/ui. Sulle schermate successive si riusa quello che c'è |
-| Build, fine di ogni fase | Playwright (`npm run e2e`) | repository | Dopo ogni modifica che tocca il percorso della demo e prima di ogni deploy. Non è una skill: è il test in `e2e/` |
-| Build, fine di ogni fase | `run` | Claude Code | Quando serve guardare l'app con gli occhi, per uno screenshot o un difetto che il test non descrive |
+| Quando lo chiede Luca | Playwright (`npm run e2e`) | repository | Solo su richiesta di Luca, mai in automatico. Non è una skill: è il percorso della demo in `e2e/` |
+| Build | `run` | Claude Code | Quando serve guardare l'app con gli occhi, per uno screenshot o un difetto che il test non descrive |
 | Rifinitura | `interfaces` | plugin, lo installa Luca | Solo su schermate che funzionano già: `interface-review` prima di considerarne finita una, `better-ui` e `variant` per migliorarla. Non decide il design system, lo rispetta. Mai mentre il percorso della demo è ancora rotto |
 | Pitch | `slides`, `banner-design` | repository | Slide in HTML con lo stesso design system della demo; `banner-design` per la copertina. Solo quando tutto funziona: il pitch non si comincia prima |
 | Pitch, video | skill Remotion | `ad-studio` | Solo se Luca decide di fare il video, in una sessione aperta su quel repository |
