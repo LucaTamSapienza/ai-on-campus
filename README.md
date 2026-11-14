@@ -10,4 +10,4 @@ Hackathon del 14/11/2026, tema «AI on Campus». Un'idea B2B per le università,
 
 ## Come si lavora qui
 
-Le regole per gli agenti sono in `AGENTS.md`. In breve: fonti in `input/`, brainstorming, idea scelta in `docs/idea.md`, poi demo e pitch.
+Le regole per gli agenti sono in `AGENTS.md`. In breve: fonti in `input/`, brainstorming in `docs/fase-00-brainstorming.md`, piano in `docs/fase-01-piano.md`, poi le fasi di build e il pitch. Stack: Next.js e Hono su Cloudflare Workers, D1, agenti su Durable Objects.
