@@ -4,12 +4,12 @@
 // identificatori arrivano al server, nessun testo libero.
 import { useEffect, useMemo, useState } from "react";
 import { Check, Minus, Plus, Search, X } from "lucide-react";
-import { toast } from "sonner";
 import { ApiError, studioApi, type StudioOptions } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toastError } from "@/components/ui/sonner";
 
 export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated: (planId: string) => void }) {
   const [options, setOptions] = useState<StudioOptions | null>(null);
@@ -24,7 +24,7 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
     studioApi
       .options(courseId)
       .then(setOptions)
-      .catch((e) => setError(e instanceof Error ? e.message : "Error"));
+      .catch((e) => setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again."));
   }, [courseId]);
 
   const byId = useMemo(() => new Map(options?.concepts.map((c) => [c.id, c]) ?? []), [options]);
@@ -60,7 +60,7 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
       const { planId } = await studioApi.create(courseId, { days, knownLessons: [...lessons], knownConcepts: [...concepts] });
       onCreated(planId);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "The plan did not start. Try again.");
+      toastError(e instanceof ApiError ? e.message : "The plan did not start. Try again.");
       setSending(false);
     }
   };
@@ -129,8 +129,8 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
                 title={l.title}
                 onClick={() => toggle(lessons, l.id, setLessons)}
                 className={cn(
-                  "flex h-11 items-center gap-2 rounded-full border bg-card px-4 text-sm font-medium transition-colors duration-150 ease-out outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
-                  on && "border-primary bg-primary text-primary-foreground hover:bg-primary",
+                  "flex h-11 items-center gap-2 rounded-full border bg-card px-4 text-sm font-medium transition-colors duration-150 ease-out outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring",
+                  on && "border-primary bg-primary-soft text-foreground ring-1 ring-primary ring-inset hover:bg-primary-soft",
                 )}
               >
                 {on && <Check className="size-4" aria-hidden />}
@@ -170,9 +170,9 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
                     toggle(concepts, c.id, setConcepts);
                     setQuery("");
                   }}
-                  className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2 text-left text-base outline-none hover:bg-muted focus-visible:bg-muted"
+                  className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2 text-left text-base outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset"
                 >
-                  <span className="min-w-0 truncate">{c.name}</span>
+                  <span className="min-w-0 break-words">{c.name}</span>
                   <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 </button>
               </li>
@@ -187,9 +187,9 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
                 type="button"
                 onClick={() => toggle(concepts, id, setConcepts)}
                 aria-label={`Remove ${byId.get(id)?.name ?? "concept"}`}
-                className="flex h-11 max-w-full items-center gap-2 rounded-full bg-muted px-4 text-sm font-medium outline-none hover:bg-border focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="flex min-h-11 max-w-full items-center gap-2 rounded-full bg-muted px-4 py-2 text-left text-sm font-medium outline-none hover:bg-muted-hover focus-visible:ring-3 focus-visible:ring-ring"
               >
-                <span className="truncate">{byId.get(id)?.name}</span>
+                <span className="min-w-0 break-words">{byId.get(id)?.name}</span>
                 <X className="size-4 shrink-0 text-muted-foreground" aria-hidden />
               </button>
             ))}

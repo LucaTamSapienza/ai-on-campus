@@ -14,7 +14,7 @@ export function SourceRef({ sourceTitle, locator, text, role }: { sourceTitle: s
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <span className="font-mono text-sm font-medium" title={sourceTitle}>
           {shortSource(sourceTitle)} · {locator}

@@ -41,7 +41,7 @@ function Esame() {
       setQuestions(first ? (await esameApi.exam(first.id)).questions : []);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again.");
     }
   }, [course]);
 

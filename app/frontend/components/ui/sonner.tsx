@@ -1,6 +1,6 @@
 "use client"
 
-import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { Toaster as Sonner, toast, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -43,4 +43,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   )
 }
 
-export { Toaster }
+// Un errore resta finché non lo si chiude: dice cosa fare, e non deve sparire mentre lo si legge.
+const toastError = (message: string) => toast.error(message, { duration: Infinity, closeButton: true })
+
+export { Toaster, toastError }

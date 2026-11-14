@@ -65,7 +65,7 @@ function outcomeText(attack: Attack, live: AttaccoState | null): string {
 
 function StatusIcon({ status }: { status: string }) {
   if (status === "running") return <Loader2 className="size-4 animate-spin text-accent" aria-label="Working" />;
-  if (status === "error") return <AlertCircle className="size-4 text-destructive" aria-label="Error" />;
+  if (status === "error") return <AlertCircle className="size-4 text-destructive" aria-label="Failed" />;
   return null;
 }
 
@@ -94,7 +94,7 @@ function MobileAgent({ attack, run, live, passages }: { attack: Attack; run: Run
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-14 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex min-h-14 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <span className="flex flex-col">
           <span className="text-base font-semibold">{meta.name}</span>
@@ -137,7 +137,7 @@ function AgentHeader({ attack, live, passages }: { attack: Attack; live: Attacco
 
 function AgentBody({ attack, run, live }: { attack: Attack; run: RunDetail; live: AttaccoState | null }) {
   const status = statusOf(attack, live);
-  if (status === "error") return <p className="text-sm text-destructive">{attack.error ?? liveOf(live, attack.agent)?.note ?? "Error"}</p>;
+  if (status === "error") return <p className="text-sm text-destructive">{attack.error ?? liveOf(live, attack.agent)?.note ?? "The agent stopped. Attack the question again."}</p>;
   if (status !== "done") {
     const text = liveOf(live, attack.agent)?.text ?? "";
     return text ? (

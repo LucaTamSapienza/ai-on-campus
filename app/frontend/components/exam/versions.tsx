@@ -15,15 +15,21 @@ export function Versions({ versions, currentVersionId }: { versions: VersionOutc
   if (versions.length < 2) return null;
   return (
     <section aria-label="Before and after" className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold">Before and after</h2>
+      <h2 className="text-lg font-semibold">Before and after</h2>
       <ol className="grid gap-4 lg:grid-cols-2">
         {versions.map(({ version, outcome }) => (
           <li key={version.id} className={cn("flex flex-col gap-3 rounded-lg border bg-card p-4", version.id === currentVersionId && "border-primary")}>
             <div className="flex flex-col gap-0.5">
-              <p className="text-base font-semibold">Version {version.version}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold">Version {version.version}</p>
+                {/* la versione corrente ha anche un'etichetta, non solo il bordo */}
+                {version.id === currentVersionId && (
+                  <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary-strong">current</span>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">{ORIGIN[version.origin]}</p>
             </div>
-            <p className="line-clamp-6 text-sm whitespace-pre-wrap">{version.text}</p>
+            <p className="text-sm whitespace-pre-wrap">{version.text}</p>
             {outcome ? (
               <>
                 <ul className="flex flex-col divide-y rounded-lg border">

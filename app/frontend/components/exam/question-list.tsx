@@ -4,12 +4,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight, Loader2, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { esameApi, type ExamQuestion, type RubricInput } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { VerdictBadge } from "./shared";
+import { toastError } from "@/components/ui/sonner";
 
 export function QuestionList({ questions, onNew }: { questions: ExamQuestion[]; onNew: () => void }) {
   return (
@@ -19,7 +19,7 @@ export function QuestionList({ questions, onNew }: { questions: ExamQuestion[]; 
           <li key={q.id}>
             <Link
               href={`/exam?q=${q.id}`}
-              className="flex items-center gap-3 rounded-lg border bg-card p-4 outline-none transition-colors duration-150 hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="flex items-center gap-3 rounded-lg border bg-card p-4 outline-none transition-colors duration-150 hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring"
             >
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <p className="text-sm text-muted-foreground">
@@ -75,7 +75,7 @@ export function QuestionForm({ examId, onCreated, onCancel }: { examId: () => Pr
       const { id } = await esameApi.createQuestion(await examId(), { text: text.trim(), rubric });
       onCreated(id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Question not saved.");
+      toastError(err instanceof Error ? err.message : "Question not saved.");
     } finally {
       setBusy(false);
     }

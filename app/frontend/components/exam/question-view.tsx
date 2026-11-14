@@ -15,6 +15,7 @@ import { Scheda } from "./scheda";
 import { fmt } from "./shared";
 import { useRun } from "./use-run";
 import { Versions } from "./versions";
+import { toastError } from "@/components/ui/sonner";
 
 export function QuestionView({ questionId }: { questionId: string }) {
   const [detail, setDetail] = useState<QuestionDetail | null>(null);
@@ -31,7 +32,7 @@ export function QuestionView({ questionId }: { questionId: string }) {
       setRunId((cur) => cur ?? d.lastRun?.id ?? null);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again.");
     }
   }, [questionId]);
 
@@ -49,7 +50,7 @@ export function QuestionView({ questionId }: { questionId: string }) {
       if (e instanceof ApiError && e.status === 409) {
         toast.message("An attack is already running on this question.");
         await reload();
-      } else toast.error(e instanceof Error ? e.message : "The attack did not start.");
+      } else toastError(e instanceof Error ? e.message : "The attack did not start.");
     } finally {
       setStarting(false);
     }
@@ -77,7 +78,7 @@ export function QuestionView({ questionId }: { questionId: string }) {
     <div className="flex flex-col gap-6">
       <Link
         href="/exam"
-        className="flex h-11 items-center gap-2 self-start rounded-lg text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex h-11 items-center gap-2 self-start rounded-lg text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring"
       >
         <ArrowLeft className="size-4" aria-hidden /> All questions
       </Link>
@@ -86,7 +87,7 @@ export function QuestionView({ questionId }: { questionId: string }) {
         <p className="text-sm text-muted-foreground">
           Question {detail.question.ordinal} · version {v.version} · {fmt(v.maxPoints)} points
         </p>
-        <p className="text-lg font-medium whitespace-pre-wrap lg:text-xl">{v.text}</p>
+        <p className="max-w-(--measure) text-lg leading-normal font-medium whitespace-pre-wrap lg:text-2xl lg:leading-normal">{v.text}</p>
         <Rubric rubric={v.rubric} />
         {canAttack && (
           <Button onClick={attack} disabled={starting} className="self-stretch sm:self-start">
@@ -166,7 +167,7 @@ function Rubric({ rubric }: { rubric: RubricItem[] }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <span className="text-sm font-medium">Grading rubric · {rubric.length} criteria</span>
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-150", open && "rotate-180")} aria-hidden />

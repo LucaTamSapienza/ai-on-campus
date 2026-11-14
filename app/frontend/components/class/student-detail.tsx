@@ -53,7 +53,7 @@ export function StudentDetail({ run, student, answer }: { run: ClassRunDetail; s
 
       {received.length > 0 && (
         <details className="group flex flex-col gap-2">
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold outline-none focus-visible:ring-3 focus-visible:ring-ring">
             Passages received ({received.length})
           </summary>
           <div className="flex flex-col gap-2">

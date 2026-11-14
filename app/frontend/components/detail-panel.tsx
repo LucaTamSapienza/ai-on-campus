@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toastError } from "@/components/ui/sonner";
 
 type Props = {
   conceptId: string | null;
@@ -92,7 +93,7 @@ function DetailBody({
     api
       .concept(conceptId)
       .then((d) => alive && setDetail(d))
-      .catch((e) => alive && setError(e instanceof Error ? e.message : "Error"));
+      .catch((e) => alive && setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again."));
     return () => {
       alive = false;
     };
@@ -158,7 +159,7 @@ function DetailBody({
                           type="button"
                           onClick={() => onSelect(r.otherId)}
                           title={r.note}
-                          className="min-h-11 rounded-lg border bg-card px-3 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                          className="min-h-11 rounded-lg border bg-card px-3 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring"
                         >
                           {r.otherName}
                         </button>
@@ -211,7 +212,7 @@ function DetailBody({
                   onClose();
                   onChanged();
                 } catch (e) {
-                  toast.error(e instanceof ApiError ? e.message : "Could not delete the concept.");
+                  toastError(e instanceof ApiError ? e.message : "Could not delete the concept. Try again.");
                 }
               }}
             >
@@ -239,7 +240,7 @@ function EditForm({ detail, onCancel, onSaved }: { detail: ConceptDetail; onCanc
           onSaved({ ...detail, concept: { ...detail.concept, name: r.name, definition: r.definition } });
           toast.success("Concept updated.");
         } catch (err) {
-          toast.error(err instanceof ApiError ? err.message : "Could not save.");
+          toastError(err instanceof ApiError ? err.message : "Could not save. Try again.");
         } finally {
           setSaving(false);
         }

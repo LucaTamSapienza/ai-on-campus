@@ -56,7 +56,7 @@ function CourseGraph({ courseId }: { courseId: string }) {
         setGraph(g);
         setError(null);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Error"));
+      .catch((e) => setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again."));
   }, [courseId]);
 
   // Si rilegge il grafo all'avvio e a ogni scrittura del Cartografo.

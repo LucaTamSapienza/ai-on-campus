@@ -70,7 +70,7 @@ export function GradeView({ grade, label }: { grade: Grade; label?: string }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <span className="text-sm text-muted-foreground">{label ?? "Grader's score"}</span>
         <span className="flex items-center gap-2">

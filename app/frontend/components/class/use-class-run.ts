@@ -22,7 +22,7 @@ export function useClassRun(runId: string) {
       setRun(next);
       setError(null);
     } catch (e) {
-      if (mine === seq.current) setError(e instanceof Error ? e.message : "Error");
+      if (mine === seq.current) setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again.");
     }
   }, [runId]);
 

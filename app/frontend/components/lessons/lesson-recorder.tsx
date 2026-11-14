@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toWavBase64 } from "./wav";
+import { toastError } from "@/components/ui/sonner";
 
 const MAX_SECONDS = 180;
 
@@ -40,7 +41,7 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
-      toast.error("The microphone is unavailable or permission was denied.");
+      toastError("The microphone is unavailable or permission was denied.");
       return;
     }
     const chunks: Blob[] = [];
@@ -56,7 +57,7 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
         setTitle(`Lesson recorded on ${new Date().toLocaleDateString("en-GB")}`);
         setPhase({ kind: "review", text: r.text, seconds: r.seconds, cost: r.costUsd });
       } catch (e) {
-        toast.error(e instanceof ApiError ? e.message : "Transcription failed.");
+        toastError(e instanceof ApiError ? e.message : "Transcription failed. Record again or paste the text.");
         setPhase({ kind: "idle" });
       }
     };
@@ -77,7 +78,7 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
       setPhase({ kind: "idle" });
       onAdded();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Could not add the transcript.");
+      toastError(e instanceof ApiError ? e.message : "Could not add the transcript. Try again.");
     } finally {
       setSending(false);
     }
@@ -127,7 +128,7 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
           <p className="text-sm text-muted-foreground">
             {phase.seconds} seconds transcribed{phase.cost !== null ? ` · $${phase.cost.toFixed(4)}` : ""}
           </p>
-          <p className="max-h-64 overflow-y-auto rounded-lg border bg-background p-3 text-base whitespace-pre-line">{phase.text}</p>
+          <p className="max-h-64 overflow-y-auto overscroll-contain rounded-lg border bg-background p-3 text-base whitespace-pre-line">{phase.text}</p>
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Source title
             <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />

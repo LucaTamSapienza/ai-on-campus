@@ -9,6 +9,7 @@ import { ApiError, esameApi, type CavillatoreFinding, type DecisionAction, type 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { fmt, PassageRef, VerdictBadge } from "./shared";
+import { toastError } from "@/components/ui/sonner";
 
 type Props = {
   run: RunDetail;
@@ -21,6 +22,8 @@ type Props = {
 export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: Props) {
   const review = run.review!;
   const proposal = review.proposedText ?? "";
+  // Il corso non copre la domanda: il server non manda una riscrittura e non accetta di approvarla.
+  const notCovered = !proposal && review.verdicts.some((v) => v.kind === "prove_insufficienti");
   const [text, setText] = useState(proposal || run.version.text);
   const [busy, setBusy] = useState<DecisionAction | null>(null);
   const edited = text.trim() !== (proposal || run.version.text).trim();
@@ -45,7 +48,7 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
       toast.success(`Version ${run.version.version + 1} saved. Attacking again.`);
       onNewRun(runId);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Something went wrong. Try again.");
+      toastError(e instanceof ApiError ? e.message : "Could not record the decision. Try again.");
       if (e instanceof ApiError && e.status === 409) onChanged();
     } finally {
       setBusy(null);
@@ -55,7 +58,7 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
   return (
     <section aria-label="Reviewer's report" className="flex flex-col gap-6 rounded-lg border bg-card p-4 lg:p-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold">Report</h2>
+        <h2 className="text-lg font-semibold">Report</h2>
         <p className="text-sm text-muted-foreground">Verdicts computed from the scores, with the evidence alongside. The Reviewer proposes the rewrite, the teacher decides.</p>
       </div>
 
@@ -71,7 +74,11 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
 
       <div className="flex flex-col gap-3 border-t pt-6">
         <label htmlFor="proposta" className="text-base font-semibold">
-          {proposal ? "Proposed rewrite" : "The Reviewer proposes no changes"}
+          {proposal
+            ? "Proposed rewrite"
+            : notCovered
+              ? "Not covered by the course materials: no rewrite proposed"
+              : "The Reviewer proposes no changes"}
         </label>
         {review.rationale && <p className="text-sm text-muted-foreground">{review.rationale}</p>}
         {review.error && <p className="text-sm text-destructive">Reviewer: {review.error}</p>}
@@ -97,8 +104,8 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
           </p>
         ) : (
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            {proposal && (
-              <Button onClick={() => decide("approvata")} disabled={!!busy || edited} variant={edited ? "outline" : "default"}>
+            {(proposal || notCovered) && (
+              <Button onClick={() => decide("approvata")} disabled={!!busy || edited || notCovered} variant={edited || notCovered ? "outline" : "default"}>
                 {busy === "approvata" && <Loader2 className="animate-spin" aria-hidden />}
                 Approve and attack again
               </Button>

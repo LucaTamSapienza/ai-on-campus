@@ -2,7 +2,6 @@
 
 // Materiali del corso: caricamento delle fonti e il loro stato, con il Cartografo dal vivo.
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { api, ApiError, type Source } from "@/lib/api";
 import { useCartografo } from "@/hooks/use-cartografo";
 import { useShell } from "@/components/app-shell";
@@ -13,6 +12,7 @@ import { SourceUpload } from "@/components/source-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toastError } from "@/components/ui/sonner";
 
 export default function MaterialsPage() {
   const { course, courseLoading, courseError } = useShell();
@@ -67,7 +67,7 @@ function CreateCourse() {
           await api.createCourse(name.trim());
           await reloadCourse();
         } catch (err) {
-          toast.error(err instanceof ApiError ? err.message : "Could not create the course.");
+          toastError(err instanceof ApiError ? err.message : "Could not create the course. Try again.");
         }
       }}
     >

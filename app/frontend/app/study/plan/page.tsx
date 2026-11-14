@@ -34,7 +34,7 @@ export default function StudyPlanPage() {
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   if (!mounted) return null;
   return createPortal(
-    <div data-plan-document className="fixed inset-0 z-40 overflow-y-auto bg-background print:static print:overflow-visible">
+    <div data-plan-document className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background print:static print:overflow-visible">
       <style>{PRINT_CSS}</style>
       <Suspense fallback={<DocumentSkeleton />}>
         <StudyPlan />

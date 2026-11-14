@@ -5,7 +5,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, Lightbulb } from "lucide-react";
-import { toast } from "sonner";
 import { ApiError, lezioniApi, type Lesson, type Proposal } from "@/lib/api";
 import { shortSource } from "@/lib/graph-style";
 import { cn } from "@/lib/utils";
@@ -18,6 +17,7 @@ import { SourceRef } from "@/components/source-ref";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LessonRecorder } from "@/components/lessons/lesson-recorder";
+import { toastError } from "@/components/ui/sonner";
 
 export default function LezioniPage() {
   const { course, courseLoading } = useShell();
@@ -39,7 +39,7 @@ function Lessons({ courseId }: { courseId: string }) {
       setLessons(l);
       setProposals(p);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Could not load the lessons.");
+      toastError(e instanceof ApiError ? e.message : "Could not load the lessons. Try again.");
     }
   }, [courseId]);
 
@@ -56,7 +56,7 @@ function Lessons({ courseId }: { courseId: string }) {
       await lezioniApi.setDone(l.id, done);
       setProposals(await lezioniApi.proposals(courseId));
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Could not save.");
+      toastError(e instanceof ApiError ? e.message : "Could not save. Try again.");
       load();
     }
   };
@@ -87,7 +87,7 @@ function Lessons({ courseId }: { courseId: string }) {
                   onClick={() => toggle(l)}
                   title={l.title}
                   className={cn(
-                    "flex min-h-11 w-full items-center gap-2 rounded-lg border bg-card px-3 py-2 text-left text-sm transition-colors duration-150 ease-out outline-none hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50",
+                    "flex min-h-11 w-full items-center gap-2 rounded-lg border bg-card px-3 py-2 text-left text-sm transition-colors duration-150 ease-out outline-none hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring",
                     l.doneAt && "border-primary",
                   )}
                 >
@@ -100,7 +100,7 @@ function Lessons({ courseId }: { courseId: string }) {
                   >
                     {l.doneAt && <Check className="size-3.5" />}
                   </span>
-                  <span className="min-w-0 truncate">
+                  <span className="min-w-0 break-words">
                     {l.kind === "transcript" ? <span>{l.title}</span> : <span className="font-mono font-medium">{shortSource(l.title)}</span>}
                     <span className="block text-xs text-muted-foreground">
                       {l.kind === "transcript" ? "recorded" : "slides"} · {l.conceptCount} concepts

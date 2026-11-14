@@ -57,8 +57,8 @@ export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, cla
               type="button"
               onClick={() => onPick(c.id)}
               className={cn(
-                "flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left text-base outline-none transition-colors duration-150 ease-out hover:bg-muted focus-visible:bg-muted",
-                c.id === selectedId && "bg-muted font-semibold text-primary",
+                "flex min-h-11 w-full items-center gap-3 px-4 py-2 text-left text-base outline-none transition-colors duration-150 ease-out hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset",
+                c.id === selectedId && "bg-primary-soft font-semibold text-primary-strong hover:bg-primary-soft",
               )}
             >
               <TopicDot slot={slotOf(c.topicId)} />

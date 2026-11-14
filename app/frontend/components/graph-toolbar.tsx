@@ -33,7 +33,7 @@ export function GraphToolbar(props: Props) {
         <Button
           variant="outline"
           size="icon"
-          className="pointer-events-auto bg-card shadow-float aria-pressed:border-primary aria-pressed:text-primary"
+          className="pointer-events-auto bg-card shadow-float aria-pressed:border-primary aria-pressed:bg-primary-soft aria-pressed:text-primary-strong"
           onClick={props.onToggleList}
           aria-pressed={props.listOpen}
           aria-label="Concept list"
@@ -73,7 +73,7 @@ export function GraphToolbar(props: Props) {
             >
               <div className="mx-auto h-1.5 w-12 rounded-full bg-muted" aria-hidden />
               <DrawerPrimitive.Title className="text-lg font-semibold">Topics</DrawerPrimitive.Title>
-              <div className="overflow-y-auto">
+              <div className="overflow-y-auto overscroll-contain">
                 <TopicChips {...props} />
               </div>
             </DrawerPrimitive.Content>
@@ -98,8 +98,8 @@ function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics
             onClick={() => onToggleTopic(t.id)}
             title={t.summary}
             className={cn(
-              "inline-flex min-h-11 max-w-full shrink-0 items-center gap-2 rounded-full border bg-card px-4 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-              on ? "border-primary text-foreground" : "text-muted-foreground hover:text-foreground",
+              "inline-flex min-h-11 max-w-full shrink-0 items-center gap-2 rounded-full border bg-card px-4 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring",
+              on ? "border-primary bg-primary-soft text-foreground ring-1 ring-primary ring-inset" : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
             <TopicDot slot={slotOf(t.id)} />
@@ -111,7 +111,7 @@ function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics
         <button
           type="button"
           onClick={onClearTopics}
-          className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring"
         >
           <X className="size-4" aria-hidden /> All
         </button>
@@ -166,7 +166,7 @@ function ConceptSearch({ concepts, onPick }: { concepts: GraphConcept[]; onPick:
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(c.id)}
-                className="flex min-h-11 w-full items-center px-4 text-left text-base outline-none hover:bg-muted focus-visible:bg-muted"
+                className="flex min-h-11 w-full items-center px-4 text-left text-base outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset"
               >
                 {c.name}
               </button>

@@ -6,7 +6,6 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Info, Users } from "lucide-react";
-import { toast } from "sonner";
 import { ApiError, classeApi, esameApi, type ExamQuestion } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useShell } from "@/components/app-shell";
@@ -17,6 +16,7 @@ import { ClassBoard } from "@/components/class/class-board";
 import { ClassSummary } from "@/components/class/class-summary";
 import { StudentDetail } from "@/components/class/student-detail";
 import { useClassRun } from "@/components/class/use-class-run";
+import { toastError } from "@/components/ui/sonner";
 
 export default function ClassePage() {
   return (
@@ -43,7 +43,7 @@ function Classe() {
         setQuestions(qs);
         setStudents((await classeApi.students(course.id)).length);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error");
+        setError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again.");
       }
     })();
   }, [course]);
@@ -103,8 +103,8 @@ function QuestionPicker({ questions, selected, onSelect }: { questions: ExamQues
           aria-pressed={selected === q.id}
           onClick={() => onSelect(q.id)}
           className={cn(
-            "flex min-h-11 flex-col gap-1 rounded-lg border bg-card p-4 text-left transition-colors duration-150 ease-out outline-none hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50",
-            selected === q.id && "border-primary ring-1 ring-primary",
+            "flex min-h-11 flex-col gap-1 rounded-lg border bg-card p-4 text-left transition-colors duration-150 ease-out outline-none hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring",
+            selected === q.id && "border-primary bg-primary-soft ring-1 ring-primary",
           )}
         >
           <span className="text-sm font-semibold">
@@ -135,7 +135,7 @@ function QuestionRun({ questionId, disabled }: { questionId: string; disabled: b
       const { runId } = await classeApi.start(questionId);
       setRunId(runId);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "The class did not start. Try again.");
+      toastError(e instanceof ApiError ? e.message : "The class did not start. Try again.");
     } finally {
       setStarting(false);
     }

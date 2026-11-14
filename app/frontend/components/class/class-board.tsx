@@ -70,9 +70,9 @@ function StudentCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        "flex min-h-11 flex-col gap-3 rounded-lg border bg-card p-4 text-left transition-colors duration-150 ease-out outline-none hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50",
+        "flex min-h-11 flex-col gap-3 rounded-lg border bg-card p-4 text-left transition-colors duration-150 ease-out outline-none hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring",
         working && "border-accent",
-        selected && "border-primary ring-1 ring-primary",
+        selected && "border-primary bg-primary-soft ring-1 ring-primary",
       )}
     >
       <div className="flex items-start justify-between gap-3">

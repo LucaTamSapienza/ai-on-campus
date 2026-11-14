@@ -8,9 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const STATUS: Record<SourceStatus, { label: string; icon: typeof Check; className: string }> = {
   queued: { label: "Queued", icon: Clock, className: "text-muted-foreground" },
-  processing: { label: "Reading", icon: Loader2, className: "text-accent [&>svg]:animate-spin" },
+  processing: { label: "Reading", icon: Loader2, className: "text-accent-strong [&>svg]:animate-spin" },
   done: { label: "Read", icon: Check, className: "text-success" },
-  error: { label: "Error", icon: AlertCircle, className: "text-destructive" },
+  error: { label: "Reading failed", icon: AlertCircle, className: "text-destructive" },
 };
 
 export function SourceList({ sources }: { sources: Source[] | null }) {
@@ -30,7 +30,7 @@ export function SourceList({ sources }: { sources: Source[] | null }) {
         return (
           <li key={s.id} className="flex min-h-(--row-height) items-center gap-4 px-4 py-3">
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-medium">{s.title}</p>
+              <p className="text-base font-medium break-words">{s.title}</p>
               <p className="text-sm text-muted-foreground">
                 {s.passageCount} passages · {s.conceptCount} concepts
                 {s.thinCount > 0 && ` · ${s.thinCount} without extracted text`}

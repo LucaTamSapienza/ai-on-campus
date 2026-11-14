@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setCourse(courses[0] ?? null);
       setCourseError(null);
     } catch (e) {
-      setCourseError(e instanceof Error ? e.message : "Error");
+      setCourseError(e instanceof Error ? e.message : "Unable to reach the server. Check the connection and try again.");
     } finally {
       setCourseLoading(false);
     }
@@ -95,6 +95,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <ShellContext.Provider value={{ course, courseLoading, courseError, reloadCourse, role }}>
+      <a
+        href="#main"
+        className="pointer-events-none fixed top-(--space-2) left-(--space-2) z-50 rounded-lg bg-card px-4 py-3 text-base font-medium whitespace-nowrap opacity-0 shadow-float outline-none focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:ring-3 focus-visible:ring-ring"
+      >
+        Skip to content
+      </a>
       <div className="flex h-dvh w-full overflow-hidden">
         {/* Desktop: barra a sinistra */}
         <aside className="hidden w-(--nav-width) shrink-0 flex-col border-r bg-card lg:flex">
@@ -104,7 +110,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <img src="/brand/prisma-mark.svg" alt="" className="size-8" />
               {BRAND.name}
             </p>
-            <CourseName course={course} loading={courseLoading} className="mt-1 text-sm text-muted-foreground" />
           </div>
           <nav className="flex flex-col gap-1 px-3" aria-label="Main navigation">
             {nav.map((item) => (
@@ -113,8 +118,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
-                  isActive(item.href) && "bg-muted text-foreground",
+                  "flex h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring",
+                  isActive(item.href) && "bg-primary-soft font-semibold text-primary-strong hover:bg-primary-soft hover:text-primary-strong",
                 )}
               >
                 <item.icon className="size-5" aria-hidden />
@@ -122,7 +127,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="mt-auto p-4">
+          {/* stessi bordi delle voci di menu (12 px dal lato della barra) */}
+          <div className="mt-auto px-3 pb-4">
             <RoleSwitch role={role} onChange={setRole} />
           </div>
         </aside>
@@ -136,12 +142,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <img src="/brand/prisma-mark.svg" alt="" className="size-4" />
                 {BRAND.name}
               </p>
-              <CourseName course={course} loading={courseLoading} className="truncate text-sm font-semibold" />
+              <CourseName course={course} loading={courseLoading} className="line-clamp-2 text-sm leading-tight font-semibold" />
             </div>
             <RoleSwitch role={role} onChange={setRole} compact />
           </header>
 
-          <main key={/* blocco 2 */ role} className="relative min-h-0 flex-1 overflow-hidden">
+          <main id="main" tabIndex={-1} key={/* blocco 2 */ role} className="relative min-h-0 flex-1 overflow-hidden outline-none">
             {allowed ? children : null}
           </main>
 
@@ -156,11 +162,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
                 className={cn(
-                  "flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:bg-muted",
-                  isActive(item.href) && "text-primary",
+                  "group/nav flex h-16 flex-col items-center justify-center gap-1 text-xs font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-inset",
+                  isActive(item.href) && "font-semibold text-primary-strong",
                 )}
               >
-                <item.icon className="size-5" aria-hidden />
+                {/* la voce attiva ha anche una forma, non solo un colore */}
+                <span
+                  className={cn(
+                    "flex h-7 w-12 items-center justify-center rounded-full transition-colors duration-150 ease-out",
+                    isActive(item.href) && "bg-primary-soft",
+                  )}
+                >
+                  <item.icon className="size-5" aria-hidden />
+                </span>
                 {item.label}
               </Link>
             ))}
@@ -179,8 +193,8 @@ function CourseName({ course, loading, className }: { course: Course | null; loa
 // Selettore di ruolo: simulato, sostituisce il login d'ateneo.
 function RoleSwitch({ role, onChange, compact }: { role: Role; onChange: (r: Role) => void; compact?: boolean }) {
   return (
-    <div className={cn("flex flex-col gap-1.5", compact && "items-end")}>
-      {!compact && <p className="text-xs font-medium text-muted-foreground">Role (simulated)</p>}
+    <div className={cn("flex flex-col", compact && "items-end")}>
+      {/* niente etichetta visibile: il gruppo resta dichiarato simulato per i lettori di schermo */}
       <div role="group" aria-label="Simulated role" className="flex rounded-lg bg-muted p-0.5">
         {(["docente", "studente"] as Role[]).map((r) => (
           <button
@@ -189,7 +203,7 @@ function RoleSwitch({ role, onChange, compact }: { role: Role; onChange: (r: Rol
             aria-pressed={role === r}
             onClick={() => onChange(r)}
             className={cn(
-              "h-11 flex-1 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "h-11 flex-1 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring",
               role === r && "bg-card text-foreground shadow-sm",
             )}
           >

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toastError } from "@/components/ui/sonner";
 
 const MAX_CHARS = 300_000;
 const ACCEPT = ".md,.markdown,.txt,text/plain,text/markdown";
@@ -23,12 +24,12 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
 
   const readFile = async (file: File) => {
     if (!/\.(md|markdown|txt)$/i.test(file.name)) {
-      toast.error("Only text or Markdown files (.md, .txt).");
+      toastError("Only text or Markdown files (.md, .txt).");
       return;
     }
     const content = await file.text();
     if (content.length > MAX_CHARS) {
-      toast.error("The file exceeds 300,000 characters. Split it into several sources.");
+      toastError("The file exceeds 300,000 characters. Split it into several sources.");
       return;
     }
     setText(content);
@@ -56,7 +57,7 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
           reset();
           onUploaded();
         } catch (err) {
-          toast.error(err instanceof ApiError ? err.message : "Upload failed.");
+          toastError(err instanceof ApiError ? err.message : "Upload failed.");
         } finally {
           setBusy(false);
         }
@@ -72,7 +73,7 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
           </TabsTrigger>
         </TabsList>
         <TabsContent value="file" className="pt-2">
-          <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-center transition-colors duration-150 ease-out hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50">
+          <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-center transition-colors duration-150 ease-out hover:bg-muted focus-within:ring-3 focus-within:ring-ring">
             <FileUp className="size-6 text-muted-foreground" aria-hidden />
             <span className="text-base font-medium">{fileName ?? "Choose a .md or .txt file"}</span>
             <span className="text-sm text-muted-foreground">

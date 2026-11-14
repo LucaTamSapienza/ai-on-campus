@@ -69,7 +69,7 @@ export function RunProgress({ run, live }: { run: RunDetail; live: AttaccoState 
           </span>
           <span className="flex min-w-0 flex-col">
             <span className="text-sm font-semibold">{s.label}</span>
-            <span className="truncate text-xs text-muted-foreground">{s.detail}</span>
+            <span className="text-xs break-words text-muted-foreground">{s.detail}</span>
           </span>
         </li>
       ))}
@@ -101,7 +101,7 @@ export function RetrievalPath({ run }: { run: RunDetail }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring"
       >
         <span className="flex flex-col">
           <span className="text-base font-semibold">Retrieval path</span>
@@ -130,7 +130,7 @@ export function RetrievalPath({ run }: { run: RunDetail }) {
                 {r.concepts.map((c) => (
                   <span
                     key={c.id}
-                    className={cn("rounded-full px-3 py-1 text-sm", c.via === "diretto" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}
+                    className={cn("rounded-full px-3 py-1 text-sm", c.via === "diretto" ? "bg-primary-soft text-primary-strong" : "bg-muted text-muted-foreground")}
                     title={c.via === "vicino" ? `neighbour of ${c.from}` : "named in the question"}
                   >
                     {c.name}

@@ -112,7 +112,7 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
             )}
           >
             <span className="text-xs tabular-nums text-muted-foreground">{i + 1}</span>
-            <span className="min-w-0 truncate">{c.name}</span>
+            <span className="min-w-0 break-words">{c.name}</span>
             {c.evidence === 0 && <span className="shrink-0 text-xs text-muted-foreground">no evidence</span>}
           </li>
         ))}
@@ -145,7 +145,7 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
           type="button"
           onClick={() => setShowOrder((o) => !o)}
           aria-expanded={showOrder}
-          className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring"
         >
           Order in the graph
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-150", showOrder && "rotate-180")} aria-hidden />
