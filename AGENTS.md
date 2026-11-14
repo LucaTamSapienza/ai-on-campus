@@ -48,9 +48,11 @@ Durante il brainstorming Luca discute con i compagni e la conversazione è regis
 
 Luca dialoga con un solo orchestratore. L'orchestratore tiene il piano, decide l'ordine, lancia gli agenti e porta il lavoro su `main`; il codice lo scrivono gli agenti che lancia: Opus su Claude Code, il modello di lavoro equivalente sugli altri runtime. Dopo l'approvazione della proposta l'orchestratore non torna da Luca a chiedere conferme: va fino in fondo.
 
-- **Prima in verticale.** Un solo filo che attraversa tutto: una schermata, una rotta, una tabella, un agente del prodotto che risponde, online. Finché questo filo non gira non si parallelizza niente. Il filo verticale costruisce anche il guscio comune del frontend: layout, navigazione, tema con i token di `docs/design-system.md`, i componenti condivisi e `lib/api.ts`. I moduli ci entrano dentro, non se ne fanno uno ciascuno.
+- **Prima in verticale.** Un solo filo che attraversa tutto: una schermata, una rotta, una tabella, un agente del prodotto che risponde, online. Finché questo filo non gira non si parallelizza niente. Il filo serve anche a provare subito che il modello economico regge il lavoro vero degli agenti del prodotto: se non lo regge, l'orchestratore lo dice a Luca in una riga, con l'alternativa e quanto costa, e intanto va avanti con il resto. Il filo verticale costruisce anche il guscio comune del frontend: layout, navigazione, tema con i token di `docs/design-system.md`, i componenti condivisi e `lib/api.ts`. I moduli ci entrano dentro, non se ne fanno uno ciascuno.
 - **Poi in parallelo, per moduli.** Il piano divide il resto in moduli con confini chiari (file e rotte di ciascuno). Ogni modulo va a un agente, nella sua worktree e sul suo branch. I contratti fra moduli (forma delle rotte, tabelle) si fissano nel piano prima di lanciarli, così non si pestano i piedi. Il compito che l'orchestratore dà a ogni agente dice il modulo, i suoi file, i contratti e le skill da usare: chi tocca il frontend riceve sempre `docs/design-system.md`, le skill `design-system` e `ui-styling`, l'indicazione di riusare il guscio e i componenti esistenti e la regola «minima e fluida» della sezione «Interfaccia». Un agente non deve indovinare quali skill servono.
-- **L'orchestratore integra.** Mergia le PR una alla volta, nell'ordine che evita conflitti, e controlla che su `main` l'app parta ancora.
+- **Ogni worktree è autonoma.** Chi lavora in parallelo fa `npm install` nella sua worktree, applica migrazioni e semina al suo D1 locale (lo stato di `.wrangler/` non è condiviso) e usa porte sue, che l'orchestratore assegna nel compito, per non scontrarsi con gli altri su `3000` e `8787`.
+- **I file comuni hanno un padrone.** `wrangler.jsonc`, il guscio del frontend, `lib/api.ts` e la numerazione delle migrazioni sono dell'orchestratore. Il piano assegna a ogni modulo i numeri delle sue migrazioni e i punti in cui si aggancia al guscio; se a un modulo serve altro in un file comune, lo chiede all'orchestratore invece di modificarlo.
+- **L'orchestratore integra e pubblica.** Mergia le PR una alla volta, nell'ordine che evita conflitti, e controlla che su `main` l'app parta ancora. Il deploy e le migrazioni sul D1 online li fa solo lui: al filo verticale, quando entra un gruppo di moduli, e alla fine.
 - **Un avviso a metà, senza fermarsi.** Quando il filo verticale è online l'orchestratore lo dice a Luca in una riga con l'URL, e prosegue con i moduli. Luca ci dà un'occhiata quando vuole: un problema visto lì costa minuti, visto alla fine costa ore.
 - **Alla fine tutto è su `main`, e funziona davvero.** Tutti gli agenti del prodotto rispondono e tutto il backend esegue: un modulo che non funziona si dice, non si copre con dati finti. Nessun branch o worktree aperto. L'orchestratore dice a Luca cosa c'è, cosa è rimasto fuori e cosa è simulato, e gli lascia i comandi per provare su `localhost` e l'URL online.
 
@@ -76,7 +78,7 @@ Il giro, per ogni pezzo di lavoro:
 2. **Commit piccoli e push frequenti del branch.** Il push è anche il backup: niente lavoro di ore solo sul Mac. Sul branch si può pushare anche un lavoro a metà.
 3. **PR verso `main` con `gh pr create`** quando il passo funziona, con una riga su cosa cambia per la demo, come è stato provato e cosa resta simulato. L'agente apre la PR da sé, senza chiedere.
 4. **Il merge lo fa l'agente, subito e senza aspettare Luca**: `gh pr merge --squash --delete-branch`. Su `main` ogni PR diventa un solo commit, che è quello che permette di tornare indietro. È una regola di questo repository per oggi: negli altri progetti di Luca il merge lo decide lui. Se l'app non parte non si mergia, e lo si dice.
-5. **Deploy solo da `main`**, dopo il merge: `git switch main`, `git pull`, `wrangler deploy`. Online gira sempre un commit di `main`.
+5. **Deploy solo da `main`, e solo dall'orchestratore**: `git switch main`, `git pull`, migrazioni sul D1 online, `wrangler deploy`. Non a ogni merge: quando c'è qualcosa di nuovo da vedere. Online gira sempre un commit di `main`.
 
 Tornare indietro:
 
@@ -113,7 +115,7 @@ Ambienti: due, e basta.
 
 Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non c'è staging né pipeline. Si fa solo da `main`, dopo il merge della PR.
 
-**Account Cloudflare.** `wrangler` su questo Mac è collegato a più account, alcuni di lavoro e di clienti con sistemi in produzione. Questo progetto va solo sull'account personale di Luca: l'`account_id` si fissa in `wrangler.jsonc` alla prima fase di build e Luca lo conferma. Prima di ogni comando remoto che crea, scrive o cancella, controlla account e nome della risorsa. Non si tocca nessuna risorsa senza il prefisso `aoc-` o il nome `ai-on-campus`.
+**Account Cloudflare.** `wrangler` su questo Mac è collegato a più account, alcuni di lavoro e di clienti con sistemi in produzione. Questo progetto va solo sull'account personale di Luca: il nome dell'account scelto compare nella proposta visiva, così Luca lo conferma insieme al resto e nessuno si ferma a chiederlo dopo; l'`account_id` si fissa in `wrangler.jsonc` con lo scheletro. Prima di ogni comando remoto che crea, scrive o cancella, controlla account e nome della risorsa. Non si tocca nessuna risorsa senza il prefisso `aoc-` o il nome `ai-on-campus`.
 
 ## Interfaccia
 
@@ -123,7 +125,7 @@ La giuria giudica quello che vede. Una schermata per passo della demo, testo leg
 
 La struttura del frontend non la deve dettare Luca. La propone l'agente nella proposta visiva, con le bozze delle schermate e come si passa dall'una all'altra, e Luca la corregge lì. Il piano la traduce in pagine, rotte e componenti condivisi, e il filo verticale la costruisce.
 
-Il design si decide una volta e poi si rispetta. Nella fase del piano si genera il design system dell'idea scelta con `ui-ux-pro-max` (`--design-system`) e lo si salva in `docs/design-system.md`: stile, palette, font, componenti. Da lì in poi quel file è la regola, e si cambia solo se Luca lo chiede. Le proposte delle skill sono un punto di partenza: sceglie Luca, e quello che su un proiettore si legge male si scarta.
+Il design si decide una volta e poi si rispetta. Nella fase del piano si genera il design system dell'idea scelta con `ui-ux-pro-max` (`--design-system`) e lo si salva in `docs/design-system.md`: stile, palette, font, componenti. Da lì in poi quel file è la regola, e si cambia solo se Luca lo chiede. Le proposte delle skill sono un punto di partenza: l'agente sceglie da solo la più sobria, coerente con «minima e fluida», scarta quello che su un proiettore si legge male e non si ferma a chiedere. Se Luca vuole un altro stile lo cambia in rifinitura.
 
 ## Skill: quando usarle
 
@@ -141,7 +143,7 @@ Le skill nel repository stanno in `.agents/skills/` e valgono per ogni runtime (
 | Build, frontend | `design-system`, `ui-styling` | repository | Alla prima schermata, per portare i token di `docs/design-system.md` in Tailwind e scegliere i componenti shadcn/ui. Sulle schermate successive si riusa quello che c'è |
 | Quando lo chiede Luca | Playwright (`npm run e2e`) | repository | Solo su richiesta di Luca, mai in automatico. Non è una skill: è il percorso della demo in `e2e/` |
 | Build | `run` | Claude Code | Quando serve guardare l'app con gli occhi, per uno screenshot o un difetto che il test non descrive |
-| Rifinitura | `interfaces` | plugin, lo installa Luca | Solo su schermate che funzionano già: `interface-review` prima di considerarne finita una, `better-ui` e `variant` per migliorarla. Non decide il design system, lo rispetta. Mai mentre il percorso della demo è ancora rotto |
+| Rifinitura | `interfaces` | plugin, lo installa Luca | La rifinitura è di Luca: si usa quando la chiede lui, su schermate che funzionano già (`interface-review`, `better-ui`, `variant`). Durante il build non si usa. Non decide il design system, lo rispetta |
 | Pitch | `slides`, `banner-design` | repository | Slide in HTML con lo stesso design system della demo; `banner-design` per la copertina. Solo quando tutto funziona: il pitch non si comincia prima |
 | Pitch, video | skill Remotion | `ad-studio` | Solo se Luca decide di fare il video, in una sessione aperta su quel repository |
 | Sempre | `karpathy-guidelines` | plugin | Codice minimo e modifiche chirurgiche: è lo spirito di tutto «Come si costruisce» |
