@@ -8,11 +8,12 @@ interface __BaseEnv_Env {
 	OPENROUTER_API_KEY: string;
 	REDACT_TERMS: string;
 	Cartografo: DurableObjectNamespace<import("./src/index").Cartografo>;
+	Attacco: DurableObjectNamespace<import("./src/index").Attacco>;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
 		mainModule: typeof import("./src/index");
-		durableNamespaces: "Cartografo";
+		durableNamespaces: "Cartografo" | "Attacco";
 	}
 	interface Env extends __BaseEnv_Env {}
 }

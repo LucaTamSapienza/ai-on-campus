@@ -144,3 +144,126 @@ export const api = {
   deleteConcept: (id: string) => request<{ ok: true }>(`/concepts/${id}`, { method: "DELETE" }),
   usage: () => request<Usage>("/usage"),
 };
+
+// fase 03: esame e triplo attacco.
+
+export type RubricItem = { id: string; criterion: string; points: number; expected?: string };
+export type RubricInput = { criterion: string; points: number; expected?: string };
+export type AttackAgent = "esterno" | "letterale" | "cavillatore";
+
+export type VerdictKind = "supera_soglia" | "prove_insufficienti" | "ambiguita" | "nessun_controesempio" | "incompleta";
+export type Verdict = {
+  kind: VerdictKind;
+  title: string;
+  detail: string;
+  agent?: AttackAgent;
+  model?: string;
+  total?: number;
+  max?: number;
+  threshold?: number;
+};
+export type VerdictLabel = { kind: VerdictKind; title: string };
+
+export type QuestionVersion = {
+  id: string;
+  questionId: string;
+  version: number;
+  text: string;
+  rubric: RubricItem[];
+  maxPoints: number;
+  origin: "docente" | "proposta_approvata" | "proposta_modificata";
+  createdAt: string;
+};
+
+export type Exam = { id: string; title: string; createdAt: string };
+export type ExamQuestion = {
+  id: string;
+  ordinal: number;
+  version: { id: string; version: number; text: string; maxPoints: number };
+  lastRun: { id: string; status: RunStatus; onCurrentVersion: boolean; verdicts: VerdictLabel[] } | null;
+};
+
+export type RunStatus = "running" | "done" | "error";
+export type AttackStatus = "pending" | "running" | "done" | "error";
+export type PerCriterion = { id: string; criterion: string; awarded: number; max: number; why: string };
+export type Grade = { readingIndex: number; total: number | null; max: number; perCriterion: PerCriterion[]; error: string | null };
+export type LetteraleFinding = {
+  answer: string;
+  citations: { passageId: string; quote: string }[];
+  discarded: { passageId: string; quote: string; why: string }[];
+  missing: boolean;
+};
+export type CavillatoreFinding = { found: boolean; phrase: string; assumption: string; readings: { interpretation: string; answer: string }[] };
+export type Attack = {
+  id: string;
+  agent: AttackAgent;
+  status: AttackStatus;
+  answer: string | null;
+  finding: LetteraleFinding | CavillatoreFinding | { answer: string } | null;
+  error: string | null;
+  model: string;
+  grades: Grade[];
+};
+export type RetrievalReason =
+  | { via: "termine"; terms: string[] }
+  | { via: "concetto"; concept: string }
+  | { via: "vicino"; concept: string; from: string; relation: RelationType };
+export type RunPassage = { id: string; rank: number; locator: string; sourceTitle: string; text: string; reasons: RetrievalReason[] };
+export type TouchedConcept = { id: string; name: string; via: "diretto" | "vicino"; from?: string; relation?: RelationType };
+export type Review = { id: string; verdicts: Verdict[]; proposedText: string | null; rationale: string | null; error: string | null };
+export type RunDetail = {
+  id: string;
+  questionId: string;
+  status: RunStatus;
+  error: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  version: QuestionVersion;
+  retrieval: { terms: string[]; concepts: TouchedConcept[]; passages: RunPassage[] } | null;
+  attacks: Attack[];
+  review: Review | null;
+};
+
+export type QuestionDetail = {
+  question: { id: string; examId: string; courseId: string; ordinal: number; currentVersionId: string | null };
+  version: QuestionVersion | null;
+  lastRun: { id: string; status: RunStatus; versionId: string } | null;
+  lastDecision: { reviewId: string | null; action: DecisionAction; toVersionId: string | null } | null;
+};
+
+export type DecisionAction = "approvata" | "modificata" | "tenuta";
+export type VersionOutcome = {
+  version: QuestionVersion;
+  decision: { action: DecisionAction; createdAt: string } | null;
+  outcome: {
+    runId: string;
+    status: RunStatus;
+    agents: { agent: AttackAgent; status: AttackStatus; found?: boolean; grades: { readingIndex: number; total: number | null; max: number }[] }[];
+    verdicts: VerdictLabel[];
+  } | null;
+};
+
+// Stato del coordinatore trasmesso via WebSocket (stessa forma del backend).
+export type LiveAgent = { status: AttackStatus; text: string; note: string | null };
+export type AttaccoState = {
+  runId: string | null;
+  status: "idle" | "running" | "done" | "error";
+  step: "recupero" | "attacco" | "revisione" | "fatto" | null;
+  agents: Record<AttackAgent | "recupero" | "correttore" | "revisore", LiveAgent>;
+  version: number;
+};
+
+export const esameApi = {
+  exams: (courseId: string) => request<{ exams: Exam[] }>(`/courses/${courseId}/exams`).then((r) => r.exams),
+  createExam: (courseId: string, title: string) => request<{ id: string; title: string }>(`/courses/${courseId}/exams`, json("POST", { title })),
+  exam: (examId: string) => request<{ exam: Exam; questions: ExamQuestion[] }>(`/exams/${examId}`),
+  createQuestion: (examId: string, data: { text: string; rubric: RubricInput[] }) =>
+    request<{ id: string; versionId: string }>(`/exams/${examId}/questions`, json("POST", data)),
+  question: (id: string) => request<QuestionDetail>(`/questions/${id}`),
+  attack: (id: string) => request<{ runId: string }>(`/questions/${id}/attack`, { method: "POST" }),
+  run: (runId: string) => request<{ run: RunDetail }>(`/runs/${runId}`).then((r) => r.run),
+  decide: (id: string, data: { reviewId: string; expectedVersionId: string; action: DecisionAction; text?: string }) =>
+    request<{ versionId: string; decisionId: string }>(`/questions/${id}/decision`, json("POST", data)),
+  versions: (id: string) => request<{ versions: VersionOutcome[] }>(`/questions/${id}/versions`).then((r) => r.versions),
+};
+// fine fase 03

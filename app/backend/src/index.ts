@@ -13,6 +13,12 @@ import { segment } from "./segment";
 import { Cartografo } from "./cartografo";
 export { Cartografo };
 
+// fase 03: triplo attacco
+import { Attacco } from "./esame/attacco";
+import { esame } from "./esame/routes";
+export { Attacco };
+// fine fase 03
+
 const VERSION = "0.2.0";
 const MAX_SOURCE_CHARS = 300_000;
 const MAX_SOURCES_PER_COURSE = 40;
@@ -333,6 +339,10 @@ app.get("/usage", async (c) => {
   return c.json({ today: today.results[0], total: total.results[0], budgetUsd: dailyBudget(c.env) });
 });
 
+// fase 03: rotte dell'esame
+app.route("/", esame);
+// fine fase 03
+
 app.notFound((c) => fail(c, 404, "not_found", "Rotta inesistente."));
 app.onError((err, c) => {
   console.error(err);
@@ -373,6 +383,14 @@ export default {
       if (env.DEMO_CODE && !timingSafeEqual(url.searchParams.get("code") ?? "", env.DEMO_CODE)) {
         return deny(401, "demo_code", "Serve il codice della demo.");
       }
+      // fase 03: il coordinatore del triplo attacco, solo per un'esecuzione che esiste.
+      const run = url.pathname.match(/^\/agents\/attacco\/([^/]+)$/);
+      if (run) {
+        const exists = await env.DB.prepare("SELECT 1 FROM attack_runs WHERE id = ?").bind(decodeURIComponent(run[1])).first();
+        if (!exists) return deny(404, "not_found", "Esecuzione non trovata.");
+        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+      }
+      // fine fase 03
       // Solo il Cartografo, solo per un corso che esiste.
       const m = url.pathname.match(/^\/agents\/cartografo\/([^/]+)$/);
       if (!m || !(await courseExists(env.DB, decodeURIComponent(m[1])))) return deny(404, "not_found", "Agente non trovato.");

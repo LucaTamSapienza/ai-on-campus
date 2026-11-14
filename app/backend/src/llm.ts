@@ -22,6 +22,8 @@ export type CompleteOptions = {
   ref?: string;
   // Schema JSON per l'uscita strutturata; senza schema la risposta è testo libero.
   jsonSchema?: { name: string; schema: Record<string, unknown> };
+  // fase 03: facoltativo, chi non lo passa non cambia comportamento. Se presente la risposta arriva in streaming: riceve il testo accumulato finora.
+  onText?: (textSoFar: string) => void;
 };
 
 export class LlmError extends Error {
@@ -92,6 +94,7 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
     reasoning: { effort: "low" },
     usage: { include: true },
   };
+  if (opts.onText) body.stream = true;
   if (opts.jsonSchema) {
     body.response_format = {
       type: "json_schema",
@@ -120,10 +123,16 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
     const detail = (await res.text()).slice(0, 300);
     throw new LlmError("upstream", `Il modello non ha risposto (${res.status}): ${detail}`, res.status === 429 || res.status >= 500);
   }
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-    usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
-  };
+  let data: CompletionData;
+  if (opts.onText) {
+    // fase 03: uno stream interrotto (rete, timeout) vale come errore transitorio.
+    try {
+      data = await readStream(res, opts.onText);
+    } catch (err) {
+      await settle(0, 0, 0);
+      throw err instanceof LlmError ? err : new LlmError("upstream", "La risposta in streaming si è interrotta.", true);
+    }
+  } else data = (await res.json()) as CompletionData;
 
   const promptTokens = data.usage?.prompt_tokens ?? 0;
   const completionTokens = data.usage?.completion_tokens ?? 0;
@@ -140,4 +149,47 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
     }
   }
   return content;
+}
+
+// fase 03: lettura dello streaming SSE di OpenRouter, con l'uso dei token nell'ultimo blocco.
+type CompletionData = {
+  choices?: { message?: { content?: string } }[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number; cost?: number };
+};
+
+async function readStream(res: Response, onText: (textSoFar: string) => void): Promise<CompletionData> {
+  if (!res.body) throw new LlmError("upstream", "Il modello non ha restituito uno stream.");
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  let text = "";
+  let usage: CompletionData["usage"];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += value;
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const chunk = JSON.parse(payload) as {
+          choices?: { delta?: { content?: string } }[];
+          usage?: CompletionData["usage"];
+          error?: { message?: string };
+        };
+        if (chunk.error) throw new LlmError("upstream", `Il modello si è interrotto: ${chunk.error.message ?? "errore"}`);
+        const delta = chunk.choices?.[0]?.delta?.content;
+        if (delta) {
+          text += delta;
+          onText(text);
+        }
+        if (chunk.usage) usage = chunk.usage;
+      } catch (err) {
+        if (err instanceof LlmError) throw err;
+      }
+    }
+  }
+  return { choices: [{ message: { content: text } }], usage };
 }

@@ -5,7 +5,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, Network, type LucideIcon } from "lucide-react";
+import { ClipboardList, FileText, Network, type LucideIcon } from "lucide-react";
 import { api, DEMO_CODE_EVENT, setDemoCode, type Course } from "@/lib/api";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,8 @@ type NavItem = { href: string; label: string; icon: LucideIcon; roles: Role[] };
 const NAV: NavItem[] = [
   { href: "/", label: "Grafo", icon: Network, roles: ["docente", "studente"] },
   { href: "/materiali", label: "Materiali", icon: FileText, roles: ["docente"] },
+  // fase 03
+  { href: "/esame", label: "Esame", icon: ClipboardList, roles: ["docente"] },
 ];
 
 type ShellValue = {

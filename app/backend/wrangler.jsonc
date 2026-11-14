@@ -26,9 +26,17 @@
     }
   ],
   "durable_objects": {
-    "bindings": [{ "name": "Cartografo", "class_name": "Cartografo" }]
+    "bindings": [
+      { "name": "Cartografo", "class_name": "Cartografo" },
+      // fase 03: coordinatore del triplo attacco, un'istanza per esecuzione
+      { "name": "Attacco", "class_name": "Attacco" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Cartografo"] }],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["Cartografo"] },
+    // fase 03
+    { "tag": "v2-attacco", "new_sqlite_classes": ["Attacco"] }
+  ],
   "vars": {
     // Tetto di spesa giornaliero sui modelli, in dollari.
     "DAILY_BUDGET_USD": "1.50"
