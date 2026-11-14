@@ -9,6 +9,7 @@ import { z } from "zod";
 import { dailyBudget } from "./llm";
 import { CONCEPT_KINDS, EVIDENCE_ROLES, slugify, upsertTopics, writeOntology, type Rejected } from "./ontology";
 import { segment } from "./segment";
+import { checkCredentials, MAX_CREDENTIAL_CHARS, sessionGuard, signSession, timingSafeEqual, verifySession, type Session } from "./auth";
 
 import { Cartografo } from "./cartografo";
 export { Cartografo };
@@ -37,7 +38,7 @@ const VERSION = "0.2.0";
 const MAX_SOURCE_CHARS = 300_000;
 const MAX_SOURCES_PER_COURSE = 40;
 
-type App = { Bindings: Env };
+type App = { Bindings: Env; Variables: { session: Session } };
 const app = new Hono<App>().basePath("/api");
 
 function fail(c: Context<App>, status: ContentfulStatusCode, code: string, message: string) {
@@ -61,7 +62,7 @@ app.use(
     origin: (origin, c) => {
       return isLocal(new URL(c.req.url)) && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) ? origin : null;
     },
-    allowHeaders: ["content-type", "x-demo-code", /* blocco 2 */ "x-role"],
+    allowHeaders: ["content-type", "x-demo-code", "authorization"],
     allowMethods: ["GET", "POST", "PATCH", "DELETE", /* blocco 2 */ "PUT"],
   }),
 );
@@ -76,11 +77,32 @@ app.use(async (c, next) => {
   return next();
 });
 
+// Sessione: senza token valido tutte le rotte tranne /api/health e /api/login rispondono 401.
+app.use(sessionGuard);
+
 // blocco 2: con ruolo studente ogni scrittura ed esame, classe e proposte rispondono 403.
 app.use(studentGuard);
 // fine blocco 2
 
 app.get("/health", (c) => c.json({ ok: true, version: VERSION }));
+
+// Accesso di demo: credenziali contro i due account fissi, token firmato con ruolo e scadenza.
+app.post("/login", bodyLimit({ maxSize: 4 * 1024 }), async (c) => {
+  const body = await readBody(
+    c,
+    z.object({ email: z.string().max(MAX_CREDENTIAL_CHARS), password: z.string().max(MAX_CREDENTIAL_CHARS) }),
+  );
+  if (body instanceof Response) return body;
+  const account = checkCredentials(body.email, body.password);
+  if (!account) return fail(c, 401, "invalid_credentials", "Email or password is not correct.");
+  const { token, session } = await signSession(c.env, account);
+  return c.json({ token, user: { email: session.email, name: session.name, role: session.role }, expiresAt: session.exp });
+});
+
+app.get("/me", (c) => {
+  const s = c.get("session");
+  return c.json({ user: { email: s.email, name: s.name, role: s.role }, expiresAt: s.exp });
+});
 
 // Corsi
 
@@ -388,14 +410,6 @@ async function sha256(text: string) {
 
 const isLocal = (url: URL) => ["localhost", "127.0.0.1"].includes(url.hostname);
 
-function timingSafeEqual(a: string, b: string): boolean {
-  const ea = new TextEncoder().encode(a);
-  const eb = new TextEncoder().encode(b);
-  let diff = ea.length ^ eb.length;
-  for (let i = 0; i < Math.max(ea.length, eb.length); i++) diff |= (ea[i] ?? 0) ^ (eb[i] ?? 0);
-  return diff === 0;
-}
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -410,8 +424,11 @@ export default {
       if (env.DEMO_CODE && !timingSafeEqual(url.searchParams.get("code") ?? "", env.DEMO_CODE)) {
         return deny(401, "demo_code", "The demo code is required.");
       }
+      // Sessione: il token firmato arriva come parametro, perché il WebSocket non porta intestazioni.
+      const session = await verifySession(env, url.searchParams.get("token"));
+      if (!session) return deny(401, "unauthorized", "Sign in to continue.");
       // blocco 2: lo studente vede solo il Cartografo; la classe solo per un'esecuzione che esiste.
-      if (studentAgentForbidden(url)) return deny(403, "forbidden_role", "This part is not visible with the student role.");
+      if (studentAgentForbidden(url, session.role)) return deny(403, "forbidden_role", "This part is not visible with the student role.");
       const classRun = url.pathname.match(/^\/agents\/classe\/([^/]+)$/);
       if (classRun) {
         const exists = await env.DB.prepare("SELECT 1 FROM class_runs WHERE id = ?").bind(decodeURIComponent(classRun[1])).first();

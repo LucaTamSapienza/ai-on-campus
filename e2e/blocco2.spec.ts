@@ -1,5 +1,6 @@
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
+import { authHeaders, signIn, switchRole } from "./auth";
 
 // Blocco 2 in un browser vero: classe simulata, lezioni (con il microfono finto di Chromium) e
 // ruolo studente. Controlla che ogni passo arrivi a schermo, non il testo dei modelli.
@@ -42,6 +43,11 @@ async function noHorizontalScroll(page: Page) {
 const visible = (page: Page, role: "button" | "link", name: string | RegExp) => page.getByRole(role, { name }).filter({ visible: true });
 
 test.describe("blocco 2", () => {
+  // Ogni prova parte dall'accesso di demo come docente.
+  test.beforeEach(async ({ page }) => {
+    await signIn(page, "teacher");
+  });
+
   test("Classe: domanda, otto studenti dal vivo, voti, riepilogo, dettaglio", async ({ page }) => {
     test.setTimeout(180_000);
     const errors = watch(page);
@@ -83,22 +89,32 @@ test.describe("blocco 2", () => {
     await page.goto("/lessons");
     await expect(page.getByRole("heading", { name: "Lessons", exact: true })).toBeVisible();
 
-    // Segna una lezione svolta e torna com'era.
+    // Segna L01 svolta (anche su D1 appena seminato, dove nessuna lezione lo è), controlla che
+    // resti dopo il ricaricamento e le proposte che ne nascono, poi torna com'era.
     const lessons = page.getByRole("region", { name: "Lessons taught" });
     const lesson = lessons.getByRole("button", { name: /^L01/ });
-    const before = await lesson.getAttribute("aria-pressed");
-    await lesson.click();
-    await expect(lesson).toHaveAttribute("aria-pressed", before === "true" ? "false" : "true");
-    await page.reload();
-    await expect(lesson).toHaveAttribute("aria-pressed", before === "true" ? "false" : "true");
-    await lesson.click();
-    await expect(lesson).toHaveAttribute("aria-pressed", before ?? "false");
+    const before = (await lesson.getAttribute("aria-pressed")) ?? "false";
+    const toggle = async (want: string) => {
+      await lesson.click();
+      await expect(lesson).toHaveAttribute("aria-pressed", want);
+    };
+    if (before === "true") {
+      await toggle("false");
+      await page.reload();
+      await expect(lesson).toHaveAttribute("aria-pressed", "false");
+      await toggle("true");
+    } else {
+      await toggle("true");
+      await page.reload();
+      await expect(lesson).toHaveAttribute("aria-pressed", "true");
+    }
 
     // Proposte con le prove (citazioni «L08 · slide 31»).
     const proposals = page.getByRole("region", { name: "Suggested topics" });
     await expect(proposals.getByRole("heading", { name: "What to ask about" })).toBeVisible();
     await expect(proposals.getByRole("listitem").first()).toBeVisible();
     await expect(proposals.getByRole("button", { name: /· slide \d+/ }).first()).toBeVisible();
+    if (before === "false") await toggle("false");
 
     // Registrazione con il microfono finto, fino alla trascrizione; poi si scarta.
     await page.getByRole("button", { name: "Record", exact: true }).click();
@@ -119,9 +135,10 @@ test.describe("blocco 2", () => {
     const errors = watch(page);
     await page.goto("/class");
     await expect(page.getByRole("heading", { name: "Simulated class" })).toBeVisible();
-    await visible(page, "button", /^student$/i).click();
-
-    // Da una pagina del docente si torna al grafo; restano solo Grafo e Materiali.
+    // Cambio di ruolo: si esce e si rientra come studente.
+    await switchRole(page, "student");
+    // Una pagina del docente porta al grafo; restano solo Grafo e Materiali.
+    await page.goto("/class");
     await expect(page).toHaveURL(new URL("/", DEMO_URL).href);
     await expect(visible(page, "link", "Graph")).toBeVisible();
     await expect(visible(page, "link", "Materials")).toBeVisible();
@@ -133,12 +150,17 @@ test.describe("blocco 2", () => {
     await noHorizontalScroll(page);
     expect(errors, "errori in console").toEqual([]);
 
-    // Il server: con ruolo studente scritture ed esame rispondono 403, il grafo si legge.
-    const student = { "x-role": "studente" };
-    const courseId = (await (await request.get(`${API_URL}/api/courses`)).json()).courses[0].id as string;
-    const examId = (await (await request.get(`${API_URL}/api/courses/${courseId}/exams`)).json()).exams[0].id as string;
-    const questionId = (await (await request.get(`${API_URL}/api/exams/${examId}`)).json()).questions[0].id as string;
-    const sourceId = (await (await request.get(`${API_URL}/api/courses/${courseId}/lessons`)).json()).lessons[0].id as string;
+    // Il server: con il token dello studente scritture ed esame rispondono 403, il grafo si legge;
+    // senza token tutto risponde 401 e la vecchia intestazione x-role non vale più.
+    const teacher = await authHeaders(request, API_URL, "teacher");
+    const student = await authHeaders(request, API_URL, "student");
+    const courseId = (await (await request.get(`${API_URL}/api/courses`, { headers: teacher })).json()).courses[0].id as string;
+    const examId = (await (await request.get(`${API_URL}/api/courses/${courseId}/exams`, { headers: teacher })).json()).exams[0].id as string;
+    const questionId = (await (await request.get(`${API_URL}/api/exams/${examId}`, { headers: teacher })).json()).questions[0].id as string;
+    const sourceId = (await (await request.get(`${API_URL}/api/courses/${courseId}/lessons`, { headers: teacher })).json()).lessons[0].id as string;
+
+    expect((await request.get(`${API_URL}/api/courses/${courseId}/graph`)).status(), "senza token").toBe(401);
+    expect((await request.get(`${API_URL}/api/courses/${courseId}/graph`, { headers: { "x-role": "docente" } })).status(), "x-role").toBe(401);
 
     expect((await request.get(`${API_URL}/api/courses/${courseId}/graph`, { headers: student })).status()).toBe(200);
     expect((await request.get(`${API_URL}/api/courses/${courseId}/sources`, { headers: student })).status()).toBe(200);

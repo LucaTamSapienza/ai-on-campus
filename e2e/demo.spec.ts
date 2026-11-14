@@ -1,5 +1,5 @@
 // Il percorso della demo, blocco 1: grafo, dettaglio, filtri, caricamento dal vivo, triplo attacco,
-// decisione e riattacco, domanda nuova, rifiuto senza griglia, ruolo studente.
+// decisione e riattacco, domanda nuova, rifiuto senza griglia, uscita e accesso come studente.
 // Controlla che ogni passo arrivi a schermo, non il testo dei modelli. Su ogni schermata misura:
 // scorrimento orizzontale, errori in console, bersagli sotto i 44 px, elementi tagliati o sovrapposti.
 // Le chiamate ai modelli sono vere e il percorso scrive nel D1: fra due corse si risemina
@@ -7,9 +7,10 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { authHeaders, signIn, switchRole } from "./auth";
 
 const SHOTS = process.env.E2E_SHOTS ?? "test-results/e2e-shots";
-const API = process.env.DEMO_URL ?? process.env.API_URL ?? "http://localhost:8787";
+const API = process.env.API_URL ?? process.env.DEMO_URL ?? "http://localhost:8787";
 const LIVE_FILE = process.env.LIVE_FILE ?? "materiale-locale/dal-vivo/Lab06-session-slides.md";
 const TOPIC_COUNT_BEFORE = 179;
 
@@ -151,6 +152,13 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
   const desktop = info.project.name === "desktop";
 
   try {
+    await test.step("accesso di demo come docente", async () => {
+      await page.goto("/");
+      await expect(page).toHaveURL(/\/login/);
+      await screen("accesso");
+      await signIn(page, "teacher");
+    });
+
     await test.step("grafo con l'ontologia del corso", async () => {
       await page.goto("/");
       await expect(page.locator("canvas").first()).toBeVisible();
@@ -176,18 +184,21 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
     });
 
     await test.step("filtro per argomento", async () => {
-      if (!desktop) {
-        await page.getByRole("button", { name: "Filter by topic" }).click();
-        await expect(page.getByText("Topics", { exact: true })).toBeVisible();
-      }
-      const chips = page.getByRole("group", { name: "Filter by topic" }).getByRole("button");
+      // Pulsante «Topics» accanto alla ricerca: legenda con tutti gli argomenti, a capo.
+      await page.getByRole("button", { name: /^Topics/ }).click();
+      const legend = page.getByRole("group", { name: "Filter by topic" });
+      await expect(legend).toBeVisible();
+      const chips = legend.getByRole("button");
+      expect(await chips.count()).toBeGreaterThanOrEqual(12);
       const chip = chips.first();
       await chip.click();
       await expect(chip).toHaveAttribute("aria-pressed", "true");
+      await expect(page.getByText(/^1 of \d+ selected$/)).toBeVisible();
       await screen("filtro-argomento");
-      await page.getByRole("button", { name: "All", exact: true }).click();
+      await page.getByRole("button", { name: "Clear", exact: true }).click();
       await expect(chip).toHaveAttribute("aria-pressed", "false");
-      if (!desktop) await page.keyboard.press("Escape");
+      await page.keyboard.press("Escape");
+      await expect(legend).toBeHidden();
     });
 
     await test.step("caricamento dal vivo da Materials, il Cartografo porta concetti nuovi", async () => {
@@ -280,9 +291,13 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
       await screen("domanda-senza-griglia");
 
       // Anche il server la rifiuta, con il messaggio.
-      const course = (await (await page.request.get(`${API}/api/courses`)).json()).courses[0];
-      const exam = (await (await page.request.get(`${API}/api/courses/${course.id}/exams`)).json()).exams[0];
-      const res = await page.request.post(`${API}/api/exams/${exam.id}/questions`, { data: { text: "Test question without a rubric.", rubric: [] } });
+      const headers = await authHeaders(page.request, API, "teacher");
+      const course = (await (await page.request.get(`${API}/api/courses`, { headers })).json()).courses[0];
+      const exam = (await (await page.request.get(`${API}/api/courses/${course.id}/exams`, { headers })).json()).exams[0];
+      const res = await page.request.post(`${API}/api/exams/${exam.id}/questions`, {
+        headers,
+        data: { text: "Test question without a rubric.", rubric: [] },
+      });
       expect(res.status()).toBe(422);
       expect((await res.json()).error.message).toBe("A grading rubric is required.");
 
@@ -298,11 +313,9 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
       await screen("domanda-nuova-salvata");
     });
 
-    await test.step("selettore studente", async () => {
-      await page.getByRole("link", { name: "Graph" }).click();
+    await test.step("uscita e accesso come studente", async () => {
+      await switchRole(page, "student");
       await expect(page.locator("canvas").first()).toBeVisible();
-      await page.getByRole("button", { name: "Student", exact: true }).click();
-      await expect(page.getByRole("button", { name: "Student", exact: true })).toHaveAttribute("aria-pressed", "true");
       // Dal blocco 2 lo studente legge anche i materiali (senza caricamento); esame, classe e lezioni no.
       await expect(page.getByRole("link", { name: "Materials" })).toBeVisible();
       for (const name of ["Exam", "Class", "Lessons"]) await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);

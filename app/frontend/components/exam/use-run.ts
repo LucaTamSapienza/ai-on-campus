@@ -5,7 +5,7 @@
 // Se il WebSocket non c'è, si rilegge ogni 2 secondi; se c'è, ogni 5 per sicurezza.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAgent } from "agents/react";
-import { AGENT_HOST, demoCode, esameApi, type AttaccoState, type RunDetail } from "@/lib/api";
+import { AGENT_HOST, agentQuery, esameApi, type AttaccoState, type RunDetail } from "@/lib/api";
 
 export function useRun(runId: string) {
   const [run, setRun] = useState<RunDetail | null>(null);
@@ -27,10 +27,7 @@ export function useRun(runId: string) {
     }
   }, [runId]);
 
-  const query = useMemo(() => {
-    const code = demoCode();
-    return code ? { code } : undefined;
-  }, []);
+  const query = useMemo(() => agentQuery(), []);
 
   useAgent<AttaccoState>({
     agent: "attacco",

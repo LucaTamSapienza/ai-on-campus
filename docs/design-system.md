@@ -114,14 +114,23 @@ La tela li legge dai token con `readGraphTheme()` in `lib/graph-style.ts`: si ca
 
 | | Telefono (sotto 768 px) | Desktop (da 1024 px) |
 |---|---|---|
-| Navigazione | barra in basso, da 2 a 5 voci con icona ed etichetta | barra a sinistra, 232 px, icona ed etichetta |
-| Intestazione | 56 px: marchio, nome del corso, selettore di ruolo | nella barra laterale: solo logo e scritta Prisma in alto, selettore di ruolo in fondo allineato alle voci di menu. Il selettore non ha etichetta visibile: il gruppo si chiama «Simulated role» per i lettori di schermo e il README dice che il ruolo è simulato |
+| Navigazione | barra in basso con le stesse voci in ordine, al massimo 5 (docente 5, studente 3), icona ed etichetta, la voce attiva con la pillola `primary-soft` | barra a sinistra, 232 px: in alto solo logo e scritta Prisma (niente nome del corso, per scelta di Luca), poi le voci in gruppi con intestazione in maiuscoletto (`Course`: Graph, Materials, Lessons; `Assessment`: Exam, Class; per lo studente `My study`: Study), 24 px fra i gruppi e 4 px fra le voci; in fondo, sopra un filo, l'utente entrato (avatar con l'iniziale, ruolo in chiaro, email intera) e «Sign out» |
+| Intestazione | 56 px: marchio, nome del corso e a destra l'avatar dell'utente (44 px), che apre un foglio dal basso con ruolo, email e «Sign out» | nella barra laterale |
+| Accesso | `/login`, fuori dal guscio: colonna da `--login-width` (440 px) in alto, margine 16 px | stessa colonna, centrata in altezza |
 | Tela del grafo | tutto lo schermo fra intestazione e barra | tutto lo spazio a destra della barra |
 | Dettaglio | foglio dal basso, a metà e a tutta altezza, si trascina | pannello a destra, 400 px, la tela si restringe |
-| Ricerca e filtri | campo in alto sulla tela; filtri in un foglio | campo e chip in alto sulla tela |
+| Ricerca e filtri | in alto sulla tela: elenco, campo, pulsante a icona con il numero degli argomenti attivi; la legenda in un foglio dal basso | in alto sulla tela: elenco, campo, pulsante «Topics» con pallini e numero degli argomenti attivi; la legenda in un pannello sotto la barra, largo fino a `--topic-panel-width` (600 px) |
 | Pagine a elenco | una colonna, margine 16 px | colonna centrale fino a 880 px |
 
 Fra 768 e 1024 px vale la disposizione del telefono con la tela più larga. Altezze con `100dvh`. Margini di sicurezza con `env(safe-area-inset-*)` su intestazione e barra in basso. Bersagli da almeno 44 × 44 px con 8 px fra l'uno e l'altro. Nessuno scorrimento orizzontale della pagina.
+
+### Filtro per argomento
+
+Il filtro è anche la legenda dei colori, e a legenda chiusa la tela resta scoperta. Il pulsante «Topics» sta accanto alla ricerca e dice in poco spazio cosa è attivo: senza filtri solo il nome, con filtri il pulsante passa a `primary-soft` e mostra fino a tre pallini e il numero; il nome accessibile dice «Topics, showing all» o «Topics, N selected». Il contenuto è uno solo per le due misure: titolo «Topics» con «N of 12 selected», «Clear» (spento se non c'è niente da togliere), poi tutti gli argomenti a capo, su due colonne da 640 px in su e su una sul telefono. Ogni riga è un bersaglio da 44 px con pallino, nome intero (va a capo, mai troncato), numero dei concetti e una casella che si spunta: la selezione si legge dalla spunta e dallo sfondo, non solo dal colore. Selezione multipla; con almeno un argomento acceso il grafo mostra solo quelli. Su desktop il pannello si chiude con Esc (il fuoco torna al pulsante), toccando fuori o con lo stesso pulsante; sul telefono il foglio si chiude trascinando, toccando fuori o con Esc. Niente dipende dal passaggio del mouse.
+
+### Accesso di demo
+
+Una colonna sola: logo, nome e frase del prodotto, poi la scheda «Demo sign-in» con una riga che dice che sostituisce il login d'ateneo, email, password e «Sign in» (unica azione principale). Sotto, «Demo accounts»: due schede, Teacher e Student, con email e cosa fa quel ruolo; un tocco riempie i due campi (la password è uguale all'email, e la pagina lo dice). L'errore è uno solo per email o password sbagliate, in `destructive-strong` sotto i campi, e dice di ricontrollarli tutti e due. Campi lunghi al massimo 200 caratteri.
 
 ## Componenti
 
@@ -131,7 +140,8 @@ Componenti condivisi del guscio, in `app/frontend/components/`:
 
 | Componente | Cosa fa |
 |---|---|
-| `AppShell` | navigazione nelle due forme, intestazione, selettore di ruolo |
+| `AppShell` | sessione (senza, porta a `/login`), navigazione a gruppi nelle due forme, intestazione, utente entrato e «Sign out» |
+| `GraphToolbar` | elenco, ricerca e pulsante «Topics» con la legenda-filtro degli argomenti |
 | `GraphCanvas` | la tela a forze, con fuoco, etichette, gesti |
 | `DetailPanel` | pannello a destra su desktop e foglio dal basso su telefono, stesso contenuto |
 | `AgentStrip` | la striscia che dice quale agente lavora e a che punto è |

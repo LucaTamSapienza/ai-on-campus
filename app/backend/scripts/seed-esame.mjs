@@ -13,8 +13,22 @@ const opt = (name) => {
 const API = (opt("--api") ?? "http://localhost:8787").replace(/\/$/, "");
 const code = opt("--code") ?? process.env.DEMO_CODE;
 
+// Entra come docente con l'account di demo (la password è uguale all'email).
+let token = null;
+async function login() {
+  const res = await fetch(`${API}/api/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(code ? { "x-demo-code": code } : {}) },
+    body: JSON.stringify({ email: "teacher@prisma.edu", password: "teacher@prisma.edu" }),
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`POST /login: ${res.status} ${body?.error?.message ?? ""}`);
+  return body.token;
+}
+
 async function call(path, init = {}) {
-  const headers = { "content-type": "application/json", ...(code ? { "x-demo-code": code } : {}) };
+  token ??= await login();
+  const headers = { "content-type": "application/json", authorization: `Bearer ${token}`, ...(code ? { "x-demo-code": code } : {}) };
   const res = await fetch(`${API}/api${path}`, { ...init, headers });
   const body = await res.json().catch(() => null);
   if (!res.ok) throw new Error(`${init.method ?? "GET"} ${path}: ${res.status} ${body?.error?.message ?? ""}`);

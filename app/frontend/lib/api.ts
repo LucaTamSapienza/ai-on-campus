@@ -106,13 +106,63 @@ export function demoCode(): string | null {
   }
 }
 
+// Sessione dell'accesso di demo: il token firmato dal Worker sta in sessionStorage e va al
+// server con ogni chiamata (Authorization) e con ogni WebSocket degli agenti (parametro token).
+// Il ruolo lo decide il server dal token; qui serve solo a mostrare la navigazione giusta.
+export type Role = "docente" | "studente";
+export type User = { email: string; name: string; role: Role };
+export type Session = { token: string; user: User; expiresAt: number };
+
+const SESSION_KEY = "prisma-session";
+export const SESSION_EVENT = "prisma:session";
+
+export function getSession(): Session | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw) as Session;
+    if (!s?.token || !s.user || s.expiresAt * 1000 < Date.now()) return null;
+    return s;
+  } catch {
+    return null;
+  }
+}
+
+function setSession(s: Session | null) {
+  try {
+    if (s) sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    else sessionStorage.removeItem(SESSION_KEY);
+  } catch {}
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(SESSION_EVENT));
+}
+
+export async function signIn(email: string, password: string): Promise<Session> {
+  const s = await request<Session>("/login", json("POST", { email, password }));
+  setSession(s);
+  return s;
+}
+
+export function signOut() {
+  setSession(null);
+}
+
+// Parametri dei WebSocket degli agenti: il browser non manda intestazioni sul WebSocket.
+export function agentQuery(): Record<string, string> {
+  const q: Record<string, string> = {};
+  const code = demoCode();
+  if (code) q.code = code;
+  const token = getSession()?.token;
+  if (token) q.token = token;
+  return q;
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body) headers.set("content-type", "application/json");
   const code = demoCode();
   if (code) headers.set("x-demo-code", code);
-  // blocco 2: ruolo simulato, fatto valere dal server
-  if (currentRole) headers.set("x-role", currentRole);
+  const token = getSession()?.token;
+  if (token) headers.set("authorization", `Bearer ${token}`);
 
   let res: Response;
   try {
@@ -124,6 +174,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!res.ok) {
     const err = body?.error ?? { code: "http", message: `Error ${res.status}` };
     if (err.code === "demo_code" && typeof window !== "undefined") window.dispatchEvent(new Event(DEMO_CODE_EVENT));
+    // Sessione scaduta o non valida: si torna all'accesso.
+    if (res.status === 401 && err.code === "unauthorized") setSession(null);
     throw new ApiError(res.status, err.code, err.message);
   }
   return body as T;
@@ -270,17 +322,8 @@ export const esameApi = {
 };
 // fine fase 03
 
-// blocco 2: ruolo simulato, classe simulata, lezioni.
-
-// Il selettore di ruolo del guscio lo imposta; il server con ruolo studente risponde 403 a
-// scritture, esame e classe.
-let currentRole: string | null = null;
-export function setApiRole(role: string) {
-  currentRole = role;
-}
-export function apiRole(): string | null {
-  return currentRole;
-}
+// blocco 2: classe simulata e lezioni. Il ruolo arriva dalla sessione (sopra): con ruolo
+// studente il server risponde 403 a scritture, esame e classe.
 
 export type Student = { id: string; name: string; priorGrade: number; style: string; lessons: { id: string; title: string }[] };
 export type ClassAnswerStatus = "pending" | "running" | "done" | "error";

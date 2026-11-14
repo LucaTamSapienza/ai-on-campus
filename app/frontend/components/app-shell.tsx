@@ -1,43 +1,50 @@
 "use client";
 
-// Guscio comune: navigazione a sinistra su desktop e in basso su telefono, corso corrente,
-// selettore di ruolo (simulato) e richiesta del codice demo. File comune dell'orchestratore.
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+// Guscio comune: barra laterale a gruppi su desktop (logo e scritta, niente nome del corso), intestazione e barra in basso su telefono,
+// corso corrente, utente entrato con «Sign out» e richiesta del codice demo. Senza sessione ogni
+// pagina porta a /login, che sta fuori dal guscio. File comune dell'orchestratore.
+import { createContext, useCallback, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ClipboardList, FileText, Network, type LucideIcon } from "lucide-react";
-import { api, DEMO_CODE_EVENT, setDemoCode, type Course } from "@/lib/api";
-// blocco 2
-import { useRouter } from "next/navigation";
-import { CalendarCheck, Users } from "lucide-react";
-import { setApiRole } from "@/lib/api";
-// fine blocco 2
-import { Route } from "lucide-react"; // blocco 3
+import { usePathname, useRouter } from "next/navigation";
+import { Drawer as DrawerPrimitive } from "vaul";
+import { CalendarCheck, ClipboardList, FileText, LogOut, Network, Route, Users, type LucideIcon } from "lucide-react";
+import { api, DEMO_CODE_EVENT, getSession, SESSION_EVENT, setDemoCode, signOut, type Course, type Role, type Session } from "@/lib/api";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export type Role = "docente" | "studente";
+export type { Role };
 
 // Il valore resta quello dell'API; a schermo si legge l'etichetta inglese.
-const ROLE_LABEL: Record<Role, string> = { docente: "Teacher", studente: "Student" };
+export const ROLE_LABEL: Record<Role, string> = { docente: "Teacher", studente: "Student" };
 
 type NavItem = { href: string; label: string; icon: LucideIcon; roles: Role[] };
+type NavGroup = { label: string; items: NavItem[] };
 
-// Le pagine delle fasi successive si aggiungono qui quando esistono.
-const NAV: NavItem[] = [
-  { href: "/", label: "Graph", icon: Network, roles: ["docente", "studente"] },
-  // blocco 2: i materiali si leggono anche con ruolo studente
-  { href: "/materials", label: "Materials", icon: FileText, roles: ["docente", "studente"] },
-  // fase 03
-  { href: "/exam", label: "Exam", icon: ClipboardList, roles: ["docente"] },
-  // blocco 2
-  { href: "/class", label: "Class", icon: Users, roles: ["docente"] },
-  { href: "/lessons", label: "Lessons", icon: CalendarCheck, roles: ["docente"] },
-  // blocco 3: il piano di studio, solo per lo studente (al docente la barra del telefono avrebbe sei voci)
-  { href: "/study", label: "Study", icon: Route, roles: ["studente"] },
+// Gruppi della barra laterale. Sul telefono le stesse voci, in ordine, nella barra in basso:
+// al massimo cinque per ruolo (docente cinque, studente tre).
+const GROUPS: NavGroup[] = [
+  {
+    label: "Course",
+    items: [
+      { href: "/", label: "Graph", icon: Network, roles: ["docente", "studente"] },
+      { href: "/materials", label: "Materials", icon: FileText, roles: ["docente", "studente"] },
+      { href: "/lessons", label: "Lessons", icon: CalendarCheck, roles: ["docente"] },
+    ],
+  },
+  {
+    label: "Assessment",
+    items: [
+      { href: "/exam", label: "Exam", icon: ClipboardList, roles: ["docente"] },
+      { href: "/class", label: "Class", icon: Users, roles: ["docente"] },
+    ],
+  },
+  {
+    label: "My study",
+    items: [{ href: "/study", label: "Study", icon: Route, roles: ["studente"] }],
+  },
 ];
 
 type ShellValue = {
@@ -56,12 +63,60 @@ export function useShell() {
   return value;
 }
 
+// Sessione letta da sessionStorage; null finché il browser non l'ha letta (export statico).
+const subscribeSession = (cb: () => void) => {
+  window.addEventListener(SESSION_EVENT, cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    window.removeEventListener(SESSION_EVENT, cb);
+    window.removeEventListener("storage", cb);
+  };
+};
+let cachedRaw: string | null = null;
+let cachedSession: Session | null = null;
+function readSession() {
+  const s = getSession();
+  const raw = s ? JSON.stringify(s) : null;
+  if (raw !== cachedRaw) {
+    cachedRaw = raw;
+    cachedSession = s;
+  }
+  return cachedSession;
+}
+export function useSession() {
+  const session = useSyncExternalStore(subscribeSession, readSession, () => null);
+  const ready = useSyncExternalStore(subscribeSession, () => true, () => false);
+  return { session, ready };
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { session, ready } = useSession();
+  const onLogin = pathname === "/login" || pathname.startsWith("/login/");
+
+  // Senza sessione si va all'accesso; con la sessione l'accesso porta al grafo.
+  useEffect(() => {
+    if (!ready) return;
+    if (!session && !onLogin) router.replace("/login");
+    if (session && onLogin) router.replace("/");
+  }, [ready, session, onLogin, router]);
+
+  if (onLogin) return <>{children}</>;
+  if (!ready || !session) return null;
+  return (
+    <SignedInShell session={session} pathname={pathname}>
+      {children}
+    </SignedInShell>
+  );
+}
+
+function SignedInShell({ session, pathname, children }: { session: Session; pathname: string; children: React.ReactNode }) {
+  const router = useRouter();
+  const role = session.user.role;
   const [course, setCourse] = useState<Course | null>(null);
   const [courseLoading, setCourseLoading] = useState(true);
   const [courseError, setCourseError] = useState<string | null>(null);
-  const [role, setRole] = useState<Role>("docente");
 
   const reloadCourse = useCallback(async () => {
     try {
@@ -79,19 +134,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     reloadCourse();
   }, [reloadCourse]);
 
-  const nav = NAV.filter((n) => n.roles.includes(role));
+  const groups = GROUPS.map((g) => ({ ...g, items: g.items.filter((n) => n.roles.includes(role)) })).filter((g) => g.items.length > 0);
+  const nav = groups.flatMap((g) => g.items);
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-  // blocco 2: il ruolo va al server con ogni richiesta; una pagina del docente con ruolo
-  // studente porta al grafo. Le pagine si rimontano al cambio di ruolo e rileggono i dati.
-  const router = useRouter();
-  setApiRole(role);
-  const allowed = NAV.some((n) => n.roles.includes(role) && isActive(n.href))
-    || pathname.startsWith("/study/plan"); // study plan page: documento a pagina intera, per entrambi i ruoli
+  // blocco 2: una pagina del docente con ruolo studente porta al grafo (il server risponde comunque 403).
+  const allowed = nav.some((n) => isActive(n.href)) || pathname.startsWith("/study/plan"); // piano a pagina intera, per entrambi i ruoli
   useEffect(() => {
     if (!allowed) router.replace("/");
   }, [allowed, router]);
-  // fine blocco 2
 
   return (
     <ShellContext.Provider value={{ course, courseLoading, courseError, reloadCourse, role }}>
@@ -102,8 +153,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         Skip to content
       </a>
       <div className="flex h-dvh w-full overflow-hidden">
-        {/* Desktop: barra a sinistra */}
+        {/* Desktop: barra a sinistra, logo in alto, gruppi al centro, utente in fondo */}
         <aside className="hidden w-(--nav-width) shrink-0 flex-col border-r bg-card lg:flex">
+          {/* solo logo e scritta: il nome del corso sta nell'intestazione del telefono, non qui */}
           <div className="px-6 pt-8 pb-6">
             <p className="flex items-center gap-2 text-lg font-bold tracking-wide" title={BRAND.tagline}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -111,30 +163,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {BRAND.name}
             </p>
           </div>
-          <nav className="flex flex-col gap-1 px-3" aria-label="Main navigation">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive(item.href) ? "page" : undefined}
-                className={cn(
-                  "flex h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring",
-                  isActive(item.href) && "bg-primary-soft font-semibold text-primary-strong hover:bg-primary-soft hover:text-primary-strong",
-                )}
-              >
-                <item.icon className="size-5" aria-hidden />
-                {item.label}
-              </Link>
+          <nav className="flex flex-col gap-6 px-3" aria-label="Main navigation">
+            {groups.map((g) => (
+              <div key={g.label} className="flex flex-col gap-1" role="group" aria-labelledby={`nav-${g.label}`}>
+                <p id={`nav-${g.label}`} className="px-3 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  {g.label}
+                </p>
+                {g.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={isActive(item.href) ? "page" : undefined}
+                    className={cn(
+                      "flex h-11 items-center gap-3 rounded-lg px-3 text-base font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring",
+                      isActive(item.href) && "bg-primary-soft font-semibold text-primary-strong hover:bg-primary-soft hover:text-primary-strong",
+                    )}
+                  >
+                    <item.icon className="size-5" aria-hidden />
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             ))}
           </nav>
-          {/* stessi bordi delle voci di menu (12 px dal lato della barra) */}
-          <div className="mt-auto px-3 pb-4">
-            <RoleSwitch role={role} onChange={setRole} />
+          <div className="mt-auto flex flex-col gap-2 border-t px-3 pt-4 pb-4">
+            <UserBadge session={session} />
+            <SignOutButton />
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          {/* Telefono: intestazione */}
+          {/* Telefono: intestazione con marchio, corso e utente */}
           <header className="flex shrink-0 items-center justify-between gap-3 border-b bg-card px-4 pt-(--safe-top) lg:hidden">
             <div className="flex h-14 min-w-0 flex-col justify-center">
               <p className="flex items-center gap-1 text-xs font-semibold tracking-wide text-muted-foreground">
@@ -144,14 +203,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </p>
               <CourseName course={course} loading={courseLoading} className="line-clamp-2 text-sm leading-tight font-semibold" />
             </div>
-            <RoleSwitch role={role} onChange={setRole} compact />
+            <AccountSheet session={session} />
           </header>
 
           <main id="main" tabIndex={-1} key={/* blocco 2 */ role} className="relative min-h-0 flex-1 overflow-hidden outline-none">
             {allowed ? children : null}
           </main>
 
-          {/* Telefono: barra in basso */}
+          {/* Telefono: barra in basso, al massimo cinque voci */}
           <nav
             className="grid shrink-0 auto-cols-fr grid-flow-col border-t bg-card pb-(--safe-bottom) lg:hidden"
             aria-label="Main navigation"
@@ -187,31 +246,76 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function CourseName({ course, loading, className }: { course: Course | null; loading: boolean; className?: string }) {
-  return <p className={className}>{loading ? " " : (course?.name ?? "No course")}</p>;
+  return <p className={className}>{loading ? "\u00a0" : (course?.name ?? "No course")}</p>;
 }
 
-// Selettore di ruolo: simulato, sostituisce il login d'ateneo.
-function RoleSwitch({ role, onChange, compact }: { role: Role; onChange: (r: Role) => void; compact?: boolean }) {
+function Avatar({ session, className }: { session: Session; className?: string }) {
   return (
-    <div className={cn("flex flex-col", compact && "items-end")}>
-      {/* niente etichetta visibile: il gruppo resta dichiarato simulato per i lettori di schermo */}
-      <div role="group" aria-label="Simulated role" className="flex rounded-lg bg-muted p-0.5">
-        {(["docente", "studente"] as Role[]).map((r) => (
-          <button
-            key={r}
-            type="button"
-            aria-pressed={role === r}
-            onClick={() => onChange(r)}
-            className={cn(
-              "h-11 flex-1 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring",
-              role === r && "bg-card text-foreground shadow-sm",
-            )}
-          >
-            {ROLE_LABEL[r]}
-          </button>
-        ))}
+    <span
+      className={cn("flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-base font-semibold text-primary-strong", className)}
+      aria-hidden
+    >
+      {session.user.name.slice(0, 1).toUpperCase()}
+    </span>
+  );
+}
+
+// Utente entrato: ruolo in chiaro, email sotto. Il ruolo arriva dall'account di demo.
+function UserBadge({ session }: { session: Session }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 px-3 py-1">
+      <Avatar session={session} />
+      <div className="flex min-w-0 flex-col">
+        <p className="text-sm font-semibold">{ROLE_LABEL[session.user.role]}</p>
+        <p className="text-xs break-all text-muted-foreground">
+          {session.user.email}
+        </p>
       </div>
     </div>
+  );
+}
+
+function SignOutButton({ className }: { className?: string }) {
+  return (
+    <Button variant="ghost" className={cn("h-11 justify-start gap-3 px-3 text-base text-muted-foreground", className)} onClick={() => signOut()}>
+      <LogOut className="size-5" aria-hidden />
+      Sign out
+    </Button>
+  );
+}
+
+// Telefono: l'avatar apre un foglio dal basso con utente, ruolo e «Sign out».
+function AccountSheet({ session }: { session: Session }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <DrawerPrimitive.Root open={open} onOpenChange={setOpen}>
+      <DrawerPrimitive.Trigger asChild>
+        <button
+          type="button"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring"
+          aria-label={`Account: ${ROLE_LABEL[session.user.role]}, ${session.user.email}`}
+        >
+          <Avatar session={session} />
+        </button>
+      </DrawerPrimitive.Trigger>
+      <DrawerPrimitive.Portal>
+        <DrawerPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay" />
+        <DrawerPrimitive.Content
+          aria-describedby={undefined}
+          className="fixed inset-x-0 bottom-0 z-50 flex flex-col gap-4 rounded-t-2xl border-t bg-card px-4 pt-2 pb-(--sheet-padding-bottom) outline-none"
+        >
+          <div className="mx-auto h-1.5 w-12 rounded-full bg-muted" aria-hidden />
+          <DrawerPrimitive.Title className="text-lg font-semibold">Account</DrawerPrimitive.Title>
+          <div className="-mx-3">
+            <UserBadge session={session} />
+          </div>
+          <Button variant="outline" className="h-11 gap-3 text-base" onClick={() => signOut()}>
+            <LogOut className="size-5" aria-hidden />
+            Sign out
+          </Button>
+        </DrawerPrimitive.Content>
+      </DrawerPrimitive.Portal>
+    </DrawerPrimitive.Root>
   );
 }
 

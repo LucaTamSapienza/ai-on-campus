@@ -5,7 +5,7 @@
 // Senza WebSocket si rilegge ogni 2 secondi, con il WebSocket ogni 5 per sicurezza.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAgent } from "agents/react";
-import { AGENT_HOST, apiRole, demoCode, studioApi, type PianificatoreState, type StudyPlan } from "@/lib/api";
+import { AGENT_HOST, agentQuery, studioApi, type PianificatoreState, type StudyPlan } from "@/lib/api";
 
 export function usePlan(planId: string) {
   const [plan, setPlan] = useState<StudyPlan | null>(null);
@@ -26,14 +26,7 @@ export function usePlan(planId: string) {
     }
   }, [planId]);
 
-  const query = useMemo(() => {
-    const q: Record<string, string> = {};
-    const code = demoCode();
-    if (code) q.code = code;
-    const role = apiRole();
-    if (role) q.role = role;
-    return q;
-  }, []);
+  const query = useMemo(() => agentQuery(), []);
 
   useAgent<PianificatoreState>({
     agent: "pianificatore",

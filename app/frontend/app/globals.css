@@ -129,6 +129,9 @@
   --row-height: 72px;
   --header-height: 56px;
   --measure: 65ch; /* riga di testo lungo: 60-75 caratteri */
+  --login-width: 440px; /* colonna della pagina di accesso */
+  --topic-panel-width: 600px; /* pannello-legenda degli argomenti sopra la tela */
+  --topic-panel-max-height: calc(100dvh - 120px); /* resta sotto la barra della tela */
   /* Foglio del dettaglio su telefono: lascia scoperti 72 px in alto quando è a tutta altezza */
   --sheet-height: calc(100dvh - 72px);
   --sheet-max-height: 80dvh;

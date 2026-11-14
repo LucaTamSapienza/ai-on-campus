@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { authHeaders, signIn, switchRole } from "./auth";
 
 // Blocco 3, piano di studio: lo studente sceglie giorni e cosa conosce, il backend ordina dal
 // grafo, il Pianificatore spiega ogni sessione con le slide di prova. Chiamate ai modelli vere:
@@ -36,10 +37,10 @@ test.describe("blocco 3", () => {
     page.on("pageerror", (e) => errors.push(e.message));
 
     // Il docente non ha la voce Study; lo studente sì, accanto a Graph e Materials.
-    await page.goto("/");
+    await signIn(page, "teacher");
     await expect(visible(page, "link", "Graph")).toBeVisible();
     await expect(visible(page, "link", /^Study$/)).toHaveCount(0);
-    await visible(page, "button", /^student$/i).click();
+    await switchRole(page, "student");
     for (const name of ["Exam", "Class", "Lessons"]) await expect(visible(page, "link", new RegExp(`^${name}$`))).toHaveCount(0);
     await visible(page, "link", /^Study$/).click();
     await expect(page).toHaveURL(new URL("/study", DEMO_URL).href);
@@ -98,8 +99,9 @@ test.describe("blocco 3", () => {
     expect(errors, "errori in console").toEqual([]);
 
     // Lato server lo studente apre solo il piano di studio: l'esame resta chiuso.
-    const courseId = (await (await request.get(`${API_URL}/api/courses`)).json()).courses[0].id as string;
-    const exams = await request.get(`${API_URL}/api/courses/${courseId}/exams`, { headers: { "x-role": "studente" } });
+    const headers = await authHeaders(request, API_URL, "student");
+    const courseId = (await (await request.get(`${API_URL}/api/courses`, { headers })).json()).courses[0].id as string;
+    const exams = await request.get(`${API_URL}/api/courses/${courseId}/exams`, { headers });
     expect(exams.status()).toBe(403);
   });
 });

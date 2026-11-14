@@ -5,7 +5,7 @@
 // scrive in D1. Senza WebSocket si rilegge ogni 2 secondi, con il WebSocket ogni 5 per sicurezza.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAgent } from "agents/react";
-import { AGENT_HOST, apiRole, classeApi, demoCode, type ClasseState, type ClassRunDetail } from "@/lib/api";
+import { AGENT_HOST, agentQuery, classeApi, type ClasseState, type ClassRunDetail } from "@/lib/api";
 
 export function useClassRun(runId: string) {
   const [run, setRun] = useState<ClassRunDetail | null>(null);
@@ -26,14 +26,7 @@ export function useClassRun(runId: string) {
     }
   }, [runId]);
 
-  const query = useMemo(() => {
-    const q: Record<string, string> = {};
-    const code = demoCode();
-    if (code) q.code = code;
-    const role = apiRole();
-    if (role) q.role = role;
-    return q;
-  }, []);
+  const query = useMemo(() => agentQuery(), []);
 
   useAgent<ClasseState>({
     agent: "classe",

@@ -117,7 +117,7 @@ Stile Obsidian nella meccanica, sobria nell'aspetto. Token e componenti in `docs
 
 Desktop: barra di navigazione a sinistra, tela al centro, dettaglio in un pannello a destra che non copre la tela. Telefono: barra in basso, tela a tutto schermo, dettaglio in un foglio dal basso che si trascina a metà o a tutta altezza, ricerca in alto, gesti di trascinamento e pizzico sulla tela. Niente dipende dal passaggio del mouse. Bersagli da almeno 44 px, `100dvh`, margini di sicurezza dei telefoni.
 
-Pagine del guscio: `/` grafo del corso, `/materiali` fonti e caricamento, poi `/esame`, `/classe`, `/studente` nelle fasi successive (nel guscio compaiono solo quando esistono). In alto il nome del corso e il selettore di ruolo, dichiarato simulato.
+Pagine del guscio: `/` grafo del corso, `/materiali` fonti e caricamento, poi `/esame`, `/classe`, `/studente` nelle fasi successive (nel guscio compaiono solo quando esistono). In alto il nome del corso e il selettore di ruolo, dichiarato simulato. Dalla fase 07 il selettore è sostituito dall'accesso di demo `/login` (due account dichiarati nella pagina, token firmato dal Worker): vedi `docs/fase-07-login-navigazione-filtri.md`.
 
 ## Sicurezza
 

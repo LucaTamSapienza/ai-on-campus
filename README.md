@@ -87,6 +87,8 @@ cd ../frontend && npm install
 #    OPENROUTER_API_KEY=sk-or-...
 #    DAILY_BUDGET_USD=0.30          # optional, default 1.50
 #    REDACT_TERMS=Name,Surname      # optional, terms removed from uploaded material
+#    SESSION_SECRET=...             # signs session tokens; online: wrangler secret put SESSION_SECRET
+#                                   # (if missing locally, a declared development secret in src/auth.ts is used)
 #    DEMO_CODE=...                  # optional; if set, every /api route except /api/health asks for it
 
 # 3. build the frontend: the Worker serves app/frontend/out
@@ -102,6 +104,7 @@ node scripts/seed.mjs <folder with .md lessons> --api http://localhost:8787     
 node scripts/seed.mjs <folder with .md lessons> --api http://localhost:8787 --ontologia   # or: lessons without extraction + <folder>/ontologia.json
 node scripts/seed-esame.mjs --api http://localhost:8787     # mock exam with questions A, B, C
 node scripts/seed-classe.mjs --api http://localhost:8787    # eight synthetic students
+# the seed scripts sign in as the demo teacher through POST /api/login
 ```
 
 For frontend work with hot reload: `cd app/frontend && npx next dev --port 3000` (it reads `NEXT_PUBLIC_API_BASE=http://localhost:8787` from `.env.development`). To reset the local database: `rm -rf app/backend/.wrangler/state` and apply the migrations again.
@@ -114,7 +117,7 @@ The demo path in a real browser, only when asked: `npm run e2e` from the reposit
 
 **Simulated** (approved before the build, declared in the interface):
 
-- **Login and roles.** A role selector sends `x-role: studente` (WebSocket: `?role=studente`). The server enforces it: with that header every write except the study plan, and every read of exams, runs, class and usage, answers 403. But the role comes from the client: without the header the caller is the teacher. It stands in for the university login; it is not authentication. The optional `DEMO_CODE` protects a public URL; it is not a login either.
+- **Login (demo sign-in).** `/login` replaces the old role selector. Two demo accounts are declared on the page itself: `teacher@prisma.edu` and `student@prisma.edu`, and the password is the same as the email. `POST /api/login` checks them in constant time against constants in the Worker and returns a session token signed with HMAC-SHA256 (`SESSION_SECRET`), carrying role and expiry (12 hours). The browser keeps it in `sessionStorage` and sends it as `Authorization: Bearer` (WebSocket: `?token=`). Without a valid token every `/api` route except `/api/health` and `/api/login` answers 401, and so do the agent WebSockets; the role comes only from the verified token (the old `x-role` header no longer counts). With the student token every write except the study plan, and every read of exams, runs, class and usage, answers 403. It is real and server-side, but it stands in for the university's single sign-on: two fixed accounts, no user database, no password reset. The optional `DEMO_CODE` protects a public URL; it is not a login.
 
 **Synthetic** (data invented, stored in D1 by seed scripts, processed for real):
 

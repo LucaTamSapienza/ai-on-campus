@@ -1,10 +1,12 @@
 "use client";
 
-// Ricerca e filtri sopra la tela. Desktop: campo e chip degli argomenti. Telefono: campo e
-// pulsante che apre i filtri in un foglio dal basso.
-import { useMemo, useState } from "react";
+// Ricerca e filtri sopra la tela. Accanto alla ricerca il pulsante «Topics» riassume gli argomenti
+// attivi e apre la legenda: su desktop un pannello sotto la barra, sul telefono un foglio dal
+// basso, con lo stesso contenuto (tutti gli argomenti a capo, colore, nome intero, concetti,
+// selezione multipla e «Clear»). A legenda chiusa la tela resta scoperta.
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { List, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, List, Search, SlidersHorizontal } from "lucide-react";
 import type { GraphConcept, Topic } from "@/lib/api";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
@@ -26,9 +28,35 @@ type Props = {
 
 export function GraphToolbar(props: Props) {
   const isDesktop = useIsDesktop();
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
+  const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Pannello desktop: si chiude con Esc (il fuoco torna al pulsante) o toccando fuori.
+  useEffect(() => {
+    if (!legendOpen || !isDesktop) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setLegendOpen(false);
+      triggerRef.current?.focus();
+    };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target as Node;
+      if (panelRef.current?.contains(t) || triggerRef.current?.contains(t)) return;
+      setLegendOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [legendOpen, isDesktop]);
+
+  const hasTopics = props.topics.length > 0;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col gap-3 p-4">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col gap-2 p-4">
       <div className="flex gap-2">
         <Button
           variant="outline"
@@ -41,40 +69,42 @@ export function GraphToolbar(props: Props) {
           <List className="size-5" />
         </Button>
         <ConceptSearch concepts={props.concepts} onPick={props.onPick} />
-        {!isDesktop && props.topics.length > 0 && (
-          <Button
-            variant="outline"
-            size="icon"
-            className="pointer-events-auto relative bg-card shadow-float"
-            onClick={() => setFiltersOpen(true)}
-            aria-label="Filter by topic"
-          >
-            <SlidersHorizontal className="size-5" />
-            {props.activeTopics.size > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                {props.activeTopics.size}
-              </span>
-            )}
-          </Button>
+        {hasTopics && (
+          <TopicsButton
+            ref={triggerRef}
+            compact={!isDesktop}
+            topics={props.topics}
+            activeTopics={props.activeTopics}
+            slotOf={props.slotOf}
+            open={legendOpen}
+            controls={isDesktop ? panelId : undefined}
+            onClick={() => setLegendOpen((o) => !o)}
+          />
         )}
       </div>
-      {isDesktop && (
-        <div className="pointer-events-auto -mx-4 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-          <TopicChips {...props} nowrap />
+      {isDesktop && legendOpen && hasTopics && (
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="region"
+          aria-label="Topics"
+          className="pointer-events-auto flex max-h-(--topic-panel-max-height) w-full max-w-(--topic-panel-width) flex-col gap-3 overflow-y-auto overscroll-contain rounded-xl border bg-card p-4 shadow-float animate-in duration-150 ease-out fade-in-0 motion-safe:slide-in-from-top-1"
+        >
+          <TopicLegend {...props} />
         </div>
       )}
       {!isDesktop && (
-        <DrawerPrimitive.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <DrawerPrimitive.Root open={legendOpen} onOpenChange={setLegendOpen}>
           <DrawerPrimitive.Portal>
             <DrawerPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay" />
             <DrawerPrimitive.Content
               aria-describedby={undefined}
-              className="fixed inset-x-0 bottom-0 z-50 flex max-h-(--sheet-max-height) flex-col gap-4 rounded-t-2xl border-t bg-card px-4 pt-2 pb-(--sheet-padding-bottom) outline-none"
+              className="fixed inset-x-0 bottom-0 z-50 flex max-h-(--sheet-max-height) flex-col gap-3 rounded-t-2xl border-t bg-card px-4 pt-2 pb-(--sheet-padding-bottom) outline-none"
             >
               <div className="mx-auto h-1.5 w-12 rounded-full bg-muted" aria-hidden />
-              <DrawerPrimitive.Title className="text-lg font-semibold">Topics</DrawerPrimitive.Title>
-              <div className="overflow-y-auto overscroll-contain">
-                <TopicChips {...props} />
+              <DrawerPrimitive.Title className="sr-only">Topics</DrawerPrimitive.Title>
+              <div className="flex min-h-0 flex-col gap-3 overflow-y-auto overscroll-contain">
+                <TopicLegend {...props} />
               </div>
             </DrawerPrimitive.Content>
           </DrawerPrimitive.Portal>
@@ -84,39 +114,132 @@ export function GraphToolbar(props: Props) {
   );
 }
 
-function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics, nowrap }: Props & { nowrap?: boolean }) {
-  if (topics.length === 0) return null;
+// Pulsante «Topics»: su desktop nome, pallini degli argomenti attivi e quanti sono; sul telefono
+// solo icona e numero. Il nome accessibile dice sempre quanti argomenti filtrano il grafo.
+function TopicsButton({
+  ref,
+  compact,
+  topics,
+  activeTopics,
+  slotOf,
+  open,
+  controls,
+  onClick,
+}: {
+  ref: React.Ref<HTMLButtonElement>;
+  compact: boolean;
+  topics: Topic[];
+  activeTopics: Set<string>;
+  slotOf: Props["slotOf"];
+  open: boolean;
+  controls?: string;
+  onClick: () => void;
+}) {
+  const active = topics.filter((t) => activeTopics.has(t.id));
+  const label = active.length === 0 ? "Topics, showing all" : `Topics, ${active.length} selected`;
+  if (compact)
+    return (
+      <Button
+        ref={ref}
+        variant="outline"
+        size="icon"
+        className="pointer-events-auto relative bg-card shadow-float"
+        onClick={onClick}
+        aria-label={label}
+        aria-expanded={open}
+      >
+        <SlidersHorizontal className="size-5" />
+        {active.length > 0 && (
+          <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground tabular-nums">
+            {active.length}
+          </span>
+        )}
+      </Button>
+    );
   return (
-    <div className={cn("pointer-events-auto flex gap-2", nowrap ? "w-max whitespace-nowrap" : "flex-wrap")} role="group" aria-label="Filter by topic">
-      {topics.map((t) => {
-        const on = activeTopics.has(t.id);
-        return (
-          <button
-            key={t.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onToggleTopic(t.id)}
-            title={t.summary}
-            className={cn(
-              "inline-flex min-h-11 max-w-full shrink-0 items-center gap-2 rounded-full border bg-card px-4 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring",
-              on ? "border-primary bg-primary-soft text-foreground ring-1 ring-primary ring-inset" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <TopicDot slot={slotOf(t.id)} />
-            {t.name}
-          </button>
-        );
-      })}
-      {activeTopics.size > 0 && (
-        <button
-          type="button"
-          onClick={onClearTopics}
-          className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring"
-        >
-          <X className="size-4" aria-hidden /> All
-        </button>
+    <Button
+      ref={ref}
+      variant="outline"
+      className={cn(
+        "pointer-events-auto h-11 gap-2 bg-card px-4 text-base shadow-float",
+        active.length > 0 && "border-primary bg-primary-soft text-primary-strong hover:bg-primary-soft",
       )}
-    </div>
+      onClick={onClick}
+      aria-label={label}
+      aria-expanded={open}
+      aria-controls={controls}
+    >
+      <SlidersHorizontal className="size-5" aria-hidden />
+      Topics
+      {active.length > 0 && (
+        <span className="flex items-center gap-1" aria-hidden>
+          <span className="flex -space-x-0.5">
+            {active.slice(0, 3).map((t) => (
+              <TopicDot key={t.id} slot={slotOf(t.id)} className="ring-2 ring-card" />
+            ))}
+          </span>
+          <span className="tabular-nums">{active.length}</span>
+        </span>
+      )}
+      <ChevronDown className={cn("size-4 duration-150 ease-out motion-safe:transition-transform", open && "rotate-180")} aria-hidden />
+    </Button>
+  );
+}
+
+// Legenda e filtro insieme: ogni riga è un argomento (pallino, nome intero, concetti) che si
+// accende o si spegne; con almeno un argomento acceso il grafo mostra solo quelli.
+function TopicLegend({ topics, concepts, slotOf, activeTopics, onToggleTopic, onClearTopics }: Props) {
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const c of concepts) if (c.topicId) m.set(c.topicId, (m.get(c.topicId) ?? 0) + 1);
+    return m;
+  }, [concepts]);
+  return (
+    <>
+      <div className="flex min-h-11 items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-col">
+          <p className="text-base font-semibold">Topics</p>
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {activeTopics.size === 0 ? `All ${topics.length} shown. Pick one or more to filter.` : `${activeTopics.size} of ${topics.length} selected`}
+          </p>
+        </div>
+        <Button variant="ghost" className="h-11 px-3 text-base text-primary" onClick={onClearTopics} disabled={activeTopics.size === 0}>
+          Clear
+        </Button>
+      </div>
+      <div className="grid gap-1 sm:grid-cols-2" role="group" aria-label="Filter by topic">
+        {topics.map((t) => {
+          const on = activeTopics.has(t.id);
+          const n = counts.get(t.id) ?? 0;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onToggleTopic(t.id)}
+              aria-label={`${t.name}, ${n} concepts`}
+              className={cn(
+                "grid min-h-11 grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring",
+                on && "bg-primary-soft hover:bg-primary-soft",
+              )}
+            >
+              <TopicDot slot={slotOf(t.id)} />
+              <span className="text-pretty">{t.name}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
+              <span
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-sm border border-input transition-colors duration-150 ease-out",
+                  on && "border-primary bg-primary text-primary-foreground",
+                )}
+                aria-hidden
+              >
+                {on && <Check className="size-3.5" strokeWidth={3} />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
