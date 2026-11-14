@@ -299,6 +299,21 @@ For every rubric criterion: id, awarded (points from 0 to the criterion's maximu
 
 const revisoreOutput = z.object({ proposedText: z.string(), rationale: z.string() });
 
+// Copertura decisa dal codice (courseCoverage in data.ts), non dal modello:
+// - covered: i passaggi bastano, riscrittura libera;
+// - uncovered: la domanda non è coperta dai materiali recuperati, nessuna riscrittura;
+// - ambiguity_only: i passaggi non bastano ma c'è un'ambiguità candidata, la riscrittura può solo
+//   rendere esplicita l'assunzione, senza attribuire nulla al corso.
+export type ReviewCoverage = "covered" | "uncovered" | "ambiguity_only";
+
+const COVERAGE_RULES: Record<ReviewCoverage, string> = {
+  covered: "",
+  uncovered: `
+IMPORTANT, decided by the system: the course materials do not cover this question (no passages were retrieved, or the Literalist declared them not enough). proposedText MUST be empty. Do not rewrite the question and never attribute to the course any content, notation or account that is not in the verified passages. rationale: say that the question is not covered by the course materials that were retrieved, name briefly what is missing, and leave the decision to the teacher (keep, rewrite around what the course covers, or add the material).`,
+  ambiguity_only: `
+IMPORTANT, decided by the system: the retrieved course passages are not enough to answer this question. You may propose a new text ONLY to make explicit the assumption that separates the two readings. Do not add course notation, examples or phrases such as "according to the course" or "the course's convention", and do not attribute to the course anything that is not in the verified passages. rationale: also say that the course materials retrieved do not cover the expected answer, and that the teacher decides.`,
+};
+
 export async function runRevisore(
   env: Env,
   input: {
@@ -306,6 +321,7 @@ export async function runRevisore(
     rubric: RubricItem[];
     findings: string;
     verifiedPassages: ContextPassage[];
+    coverage: ReviewCoverage;
   },
   ref: string,
   onText: (t: string) => void,
@@ -328,9 +344,8 @@ export async function runRevisore(
 Propose a new text for the question that addresses the problems found and can be graded with the same rubric, which does not change: the rubric stays the teacher's.
 - If a model clears the pass mark without the materials: anchor the question to what is specific to the course (notation, examples, passages), without turning it into a memory exercise.
 - If there is a candidate ambiguity: make explicit the assumption that separates the two readings.
-- If the passages lack evidence: rephrase around what the course actually covers.
 - If no problem emerged: proposedText empty.
-proposedText: only the question text, in English, plain text. rationale: two or three sentences in English on what changes and why. Never use the words "fair", "valid", "AI-proof" or "cheat-proof". Reply only with the JSON.`,
+proposedText: only the question text, in English, plain text. rationale: two or three sentences in English on what changes and why. Never use the words "fair", "valid", "AI-proof" or "cheat-proof". Reply only with the JSON.${COVERAGE_RULES[input.coverage]}`,
         },
         {
           role: "user",
@@ -342,7 +357,9 @@ proposedText: only the question text, in English, plain text. rationale: two or 
     },
     (content) => {
       const out = parseJson(revisoreOutput)(content);
-      return { proposedText: out.proposedText.trim().slice(0, 4000), rationale: out.rationale.trim().slice(0, 2000) };
+      // Il confine nel codice: senza copertura nessuna riscrittura, qualunque cosa scriva il modello.
+      const proposedText = input.coverage === "uncovered" ? "" : out.proposedText.trim().slice(0, 4000);
+      return { proposedText, rationale: out.rationale.trim().slice(0, 2000) };
     },
   );
 }

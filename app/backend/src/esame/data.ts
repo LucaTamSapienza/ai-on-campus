@@ -170,8 +170,18 @@ export function answersToGrade(agent: AttackAgent, finding: Attack["finding"], a
 const NAMES: Record<AttackAgent, string> = { esterno: "The Outsider", letterale: "The Literalist", cavillatore: "The Quibbler" };
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
+// Copertura del corso, dai dati salvati: quanti passaggi ha dato il recupero e se il Letterale
+// ha trovato abbastanza. passages è null per le esecuzioni senza recupero salvato.
+export function courseCoverage(run: Pick<RunDetail, "attacks" | "retrieval">): { passages: number | null; insufficient: boolean } {
+  const passages = run.retrieval ? run.retrieval.passages.length : null;
+  const letterale = run.attacks.find((a) => a.agent === "letterale");
+  const lf = letterale?.status === "done" ? (letterale.finding as LetteraleFinding | null) : null;
+  const insufficient = passages === 0 || (!!lf && (lf.missing || lf.citations.length === 0));
+  return { passages, insufficient };
+}
+
 // I verdetti li calcola il backend sui voti, con parole fisse.
-export function computeVerdicts(run: Pick<RunDetail, "attacks" | "version">): Verdict[] {
+export function computeVerdicts(run: Pick<RunDetail, "attacks" | "version" | "retrieval">): Verdict[] {
   const out: Verdict[] = [];
   const failed: string[] = [];
   const get = (agent: AttackAgent) => run.attacks.find((a) => a.agent === agent);
@@ -196,19 +206,30 @@ export function computeVerdicts(run: Pick<RunDetail, "attacks" | "version">): Ve
 
   const letterale = get("letterale");
   const lf = letterale?.finding as LetteraleFinding | null | undefined;
+  const coverage = courseCoverage(run);
   if (letterale?.status !== "done" || !lf) {
     failed.push(`${NAMES.letterale} did not finish${letterale?.error ? `: ${letterale.error}` : ""}`);
-  } else if (lf.citations.length === 0) {
+  } else if (!coverage.insufficient && !letterale.grades.some((g) => g.total !== null)) {
+    failed.push(`${NAMES.letterale}: grading failed`);
+  }
+  // Prove insufficienti: nessun passaggio recuperato, nessuna citazione verificata, oppure il
+  // Letterale dichiara che i passaggi non bastano. Si calcola sui dati salvati, senza modello.
+  if (coverage.insufficient) {
+    const discarded = lf?.discarded.length ?? 0;
+    const why =
+      coverage.passages === 0
+        ? "Retrieval found no course passages for this question"
+        : lf && lf.citations.length === 0
+          ? `The Literalist found no verifiable sentences in the retrieved passages${
+              discarded === 1 ? " (1 citation discarded because it is not in the passages)" : discarded ? ` (${discarded} citations discarded because they are not in the passages)` : ""
+            }`
+          : `The Literalist verified ${lf!.citations.length} ${lf!.citations.length === 1 ? "sentence" : "sentences"} but declared the retrieved passages not enough to answer`;
     out.push({
       kind: "prove_insufficienti",
       title: "Insufficient evidence in the retrieved passages",
-      detail: `The Literalist found no verifiable sentences in the retrieved passages${
-        lf.discarded.length === 1 ? " (1 citation discarded because it is not in the passages)" : lf.discarded.length ? ` (${lf.discarded.length} citations discarded because they are not in the passages)` : ""
-      }. This does not mean the topic is missing from the course: retrieval may not have found it.`,
+      detail: `${why}. This does not mean the topic is missing from the course: retrieval may not have found it.`,
       agent: "letterale",
     });
-  } else if (!letterale.grades.some((g) => g.total !== null)) {
-    failed.push(`${NAMES.letterale}: grading failed`);
   }
 
   const cav = get("cavillatore");

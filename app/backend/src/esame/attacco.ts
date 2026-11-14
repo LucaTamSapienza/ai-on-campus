@@ -14,8 +14,9 @@ import {
   type CavillatoreFinding,
   type ContextPassage,
   type LetteraleFinding,
+  type ReviewCoverage,
 } from "./agents";
-import { AGENTS, answersToGrade, computeVerdicts, loadRun, type AttackAgent, type RunDetail } from "./data";
+import { AGENTS, answersToGrade, computeVerdicts, courseCoverage, loadRun, type AttackAgent, type RunDetail } from "./data";
 import { clipPassage, retrievePassages, technicalTokens } from "./retrieval";
 
 export type LiveStatus = "pending" | "running" | "done" | "error";
@@ -249,6 +250,11 @@ export class Attacco extends Agent<Env, AttaccoState> {
     this.live("correttore", { status: "done", note: null });
     this.live("revisore", { status: "running", text: "", note: "Writing the report" });
     const verdicts = computeVerdicts(run);
+    // Copertura calcolata nel codice: zero passaggi → mai riscrittura; passaggi insufficienti →
+    // riscrittura solo per un'ambiguità candidata, senza attribuire nulla al corso.
+    const cov = courseCoverage(run);
+    const ambiguity = verdicts.some((v) => v.kind === "ambiguita");
+    const coverage: ReviewCoverage = !cov.insufficient ? "covered" : cov.passages !== 0 && ambiguity ? "ambiguity_only" : "uncovered";
     const letterale = run.attacks.find((a) => a.agent === "letterale")?.finding as LetteraleFinding | null | undefined;
     const verifiedIds = new Set(letterale?.citations?.map((c) => c.passageId) ?? []);
     const verified = passages.filter((p) => verifiedIds.has(p.id));
@@ -271,7 +277,7 @@ export class Attacco extends Agent<Env, AttaccoState> {
     try {
       const out = await runRevisore(
         this.env,
-        { question: run.version.text, rubric: run.version.rubric, findings, verifiedPassages: verified },
+        { question: run.version.text, rubric: run.version.rubric, findings, verifiedPassages: verified, coverage },
         `run:${run.id}`,
         (t) => this.streamText("revisore", partialFields(t, ["proposedText", "rationale"])),
       );

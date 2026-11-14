@@ -69,7 +69,7 @@ flowchart LR
 | 2 · an action | At least one action beyond replying | Builds the graph in D1; runs attacks, grades per criterion, verdicts; proposes a rewrite; creates question versions on the teacher's decision; runs the class; transcribes a lesson into the graph; builds a study plan |
 | 2 · boundaries | Stays on the line; guardrails in code | Only the teacher's decision creates a question version; no rubric, no attack (422); each agent's context is built by a function that receives only what it may see; student role read-only on the server; the Planner cannot query exam or class tables; citations verified as substrings; totals and verdicts computed in code. See `docs/architecture.md` |
 | 3 · A, multi-agent | Specialised agents, compared and combined, human control | Three attackers with distinct perspectives on the same question, a blind Grader, a Reviewer that combines the outcomes, and the teacher as the decision point (approve, edit, keep). There is no adaptive interview agent: the "clarification" is a hard stop (no rubric, no attack) |
-| 3 · B, knowledge graph | Ontology, populated graph, graph-grounded agent, says when the graph lacks the answer | Ontology: course → topic → concept, five relation types (`prerequisito`, `parte_di`, `generalizza`, `usa`, `contrasta`), evidence slides on every concept. 179 concepts, 342 relations in the demo course. Retrieval and the study plan follow graph edges and show the path; "Insufficient evidence in the retrieved passages" when nothing verifiable is found. Concepts editable by the teacher |
+| 3 · B, knowledge graph | Ontology, populated graph, graph-grounded agent, says when the graph lacks the answer | Ontology: course → topic → concept, five relation types (`prerequisito`, `parte_di`, `generalizza`, `usa`, `contrasta`), evidence slides on every concept. 179 concepts, 342 relations in the demo course. Retrieval and the study plan follow graph edges and show the path; "Insufficient evidence in the retrieved passages" when retrieval finds nothing or the Literalist finds the passages not enough, and then the Reviewer proposes no rewrite. Concepts editable by the teacher |
 | 3 · C, launch campaign | Name, tagline, channels, timing | Name and tagline only. No channel plan or calendar |
 
 **How the graph was built and checked.** The initial ontology of the demo course was extracted beforehand by a more capable model (Claude) and imported through `POST /api/courses/:id/ontology`, which applies the same validation as the Cartographer: a concept without an evidence slide is dropped, a slide without extracted text does not count as evidence, a relation with an unknown endpoint is rejected. On import, 37 evidence references were rejected, all for slides without extracted text. Anything uploaded from the app is read live by the Cartographer with `openai/gpt-6-luna`. In the pitch the starting graph is presented as prepared beforehand, not as Luna's output.
@@ -129,24 +129,20 @@ From `model_calls` on a local run of 14/11/2026, `openai/gpt-6-luna` at $0.10 / 
 
 | Operation | Calls | Cost | Time |
 |---|---|---|---|
-| Triple attack (terms, 3 attacks, 3–4 grades, Reviewer) | 7–9 | $0.0007–0.0019 | 11–24 s |
+| Triple attack (terms, 3 attacks, 3–4 grades, Reviewer) | 7–9 | $0.0006–0.0019 | 10–24 s |
 | Simulated class, 8 students (terms, 8 answers, 8 grades) | 17 | $0.0031 | 13 s |
 | Study plan, 2 sessions | 2 | $0.0013 | 3 s |
 | Cartographer on a short source (2–4 slides) | 1–2 | $0.0003–0.0004 | a few seconds |
 | Cartographer on a full lecture (phase 02 measure) | 3–4 | $0.002–0.004 | 20–50 s |
 | Transcription of 57 s of audio, `google/gemini-3.8-flash` (phase 04 measure) | 1 | $0.0020 | 4 s |
 
-All the examples in `docs/interaction-examples.md` together: 66 calls, $0.0137. Reading the whole 13-lecture course with the Cartographer costs about $0.04.
+All the examples in `docs/interaction-examples.md` together, in two sessions: 96 calls, $0.0187. Reading the whole 13-lecture course with the Cartographer costs about $0.04.
 
 ## Honest limits
 
 - **The agents know the subject anyway.** "Limited access to the course passages" limits what the Literalist, the Students and the Planner receive, not what the model already knows. On a standard calculation (question A) almost every student scores full marks even without the right lessons.
 - **The verdicts depend on one model.** "Clears the pass mark without the course materials" is about `openai/gpt-6-luna`; a stronger or weaker model may score differently. The Quibbler does not always find the same ambiguity on the same text: that is why it is a "candidate" left to the teacher.
 - **Retrieval is lexical.** FTS5 plus graph edges, no embeddings: a passage phrased with different words can be missed, which is why the verdict says "in the retrieved passages" and not "not in the course".
-- **Known defects found while preparing these examples** (not fixed, the app code was out of scope):
-  - When the Literalist cites at least one verified sentence but still declares the passages insufficient (`missing: true`), no "Insufficient evidence" verdict appears (question B, version 2: Literalist 0/10, verdict list silent on it).
-  - On a question outside the course the Reviewer still proposes a rewrite that refers to "the course's account" of a topic the course does not cover, instead of saying the question is off-course.
-  - One server error message in the study-plan route is still in Italian (`app/backend/src/studio/routes.ts`, "Il Pianificatore non è partito").
 - **Prompt injection** is contained, not impossible: untrusted text is fenced and no agent has tools, but a model can still follow an injected sentence. What limits the damage is in code: JSON schemas, evidence and citation checks, totals and verdicts computed by the backend, and no agent can write a question version.
 - **Not deployed.** The remote D1 database does not exist yet (`database_id` placeholder in `wrangler.jsonc`).
 - **Real microphone not verified end to end**; the recorded lesson was tested with Chromium's fake microphone and synthetic speech.

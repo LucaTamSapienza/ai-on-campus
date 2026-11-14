@@ -1,68 +1,78 @@
 # Interaction examples
 
-Every example below was run on 14/11/2026, between 14:21 and 14:27, against a local instance (`wrangler dev --port 8792`) with a fresh D1 database seeded with the commands in the README: the 13 lectures of the Reinforcement Learning course, the imported ontology (179 concepts, 342 relations), the mock exam (questions A, B, C) and the eight synthetic students. Model: `openai/gpt-6-luna` for every agent. Requests, agent outputs, grades and verdicts are copied from the API responses; long answers are cut only where marked with […]. Nothing was re-run to get a better outcome: each example is the first and only run.
+Every example below was run on 14/11/2026 against a local instance (`wrangler dev --port 8792`) with a fresh D1 database seeded with the commands in the README: the 13 lectures of the Reinforcement Learning course, the imported ontology (179 concepts, 342 relations), the mock exam (questions A, B, C) and, for the first session, the eight synthetic students. Model: `openai/gpt-6-luna` for every agent. Requests, agent outputs, grades and verdicts are copied from the API responses; long answers are cut only where marked with […]. Nothing was re-run to get a better outcome.
 
-Total spent for all examples: 66 model calls, $0.0137 (from `model_calls`).
+Two sessions:
+
+- **14:21–14:27**, examples 2, 3a–3e and 5, plus the first runs of examples 1 and 4: 66 model calls, $0.0137.
+- **14:37**, examples 1 and 4, re-run after the fix to the verdicts and to the Reviewer (insufficient evidence now also when the Literalist declares the passages not enough or retrieval finds nothing; no rewrite when the course does not cover the question): 30 model calls, $0.0050. The examples of the first session do not depend on the changed code: in all of them the Literalist found the passages sufficient or no attack ran.
 
 The case study asks for a normal request, an incomplete request and a case where the agent recognises its limit; the boundary cases are in section 3.
 
 | # | Case | Outcome |
 |---|---|---|
-| 1 | Normal request: triple attack on question B, rewrite, re-attack | Ambiguity found on v1; teacher approves the rewrite; on v2 the Quibbler finds no second reading, the Outsider still clears the pass mark |
+| 1 | Normal request: triple attack on question B, rewrite, re-attack | Ambiguity and insufficient evidence on v1; the rewrite only makes the assumption explicit; teacher approves; on v2 no second reading, the Outsider still clears the pass mark |
 | 2 | Incomplete request: question without a rubric | 422, nothing created |
 | 3a | Boundary: student role on exam and class | 403 on 11 routes and on the attack WebSocket |
 | 3b | Boundary: the Planner and exam tables | Plan built from the graph only; queries on exam and class tables refused |
 | 3c | Boundary: course material with hostile instructions | Treated as data by the Cartographer and the Literalist |
 | 3d | Boundary: each student sees only the lessons attended | The two students without L08 answer "I don't know" and score 0 |
 | 3e | Boundary: only the teacher creates a version | Replaying an approval on a stale version: 409 |
-| 4 | Insufficient context: question outside the course | "Insufficient evidence in the retrieved passages"; plus a case where the verdict is missing (known defect) |
+| 4 | Insufficient context: question outside the course, topic only mentioned | "Insufficient evidence in the retrieved passages" in both; no rewrite, the teacher decides |
 | 5 | Edge case: the model answers without the course | "This model clears the pass mark without the course materials" |
 
 ---
 
 ## 1. Normal request: triple attack on question B, rewrite and re-attack
 
+Run at 14:37 on the corrected code (PR "fix/verdetti-e-revisore"), fresh database.
+
 **Request.** The teacher attacks question B of the mock exam (seeded by `seed-esame.mjs`), 10 points, rubric of four criteria: explicit assumption (2), formula consistent with the assumption (3), consistent result (3), bootstrap (2).
 
 ```
-POST /api/questions/df963f61-…/attack        → 202 {"runId":"1fe8954b-…"}
+POST /api/questions/1c05fa08-…/attack        → 202 {"runId":"5ced9747-…"}
 ```
 
 > Question B, version 1 (teacher): *A transition ends the simulator's episode. Q(s,a)=2, alpha=0.5, gamma=0.9, reward 1; before the reset the table shows max_b Q(s',b)=4. Perform the Q-learning update and justify the target.*
 
-**What the agents did** (run finished in 24 s, 9 calls, $0.0019).
+**What the agents did** (run finished in 17 s, 9 calls, $0.0018).
 
-- **Retrieval.** Terms extracted: `Q-learning, terminal transition, Bellman target, learning rate, discount factor, terminal state`. Concepts touched in the graph: Discount factor, Q-learning, Reward, and neighbours such as Temporal difference learning (Q-learning *usa*), Off-policy learning (Q-learning *generalizza*), Finite-horizon MDP (Discount factor *contrasta*). 12 passages, among them L08 · slide 67 (via concept Q-learning and term), L03 · slide 29 (via concept Discount factor).
-- **Outsider** (question only), graded 9.5/10:
-  > Because the transition ends the episode, the target is the reward only; there is no future value to bootstrap from. Thus, the table's value max_b Q(s′,b) = 4 is not used. Q_new(s,a) = Q(s,a) + α[r − Q(s,a)] = 2 + 0.5(1 − 2) = 1.5.
+- **Retrieval.** Terms extracted: `Q-learning, Terminal state, Q-learning update, Bellman target, Learning rate (α), Discount factor (γ)`. 12 passages, the first L03 · slide 29 (via concept Discount factor and term Q-learning).
+- **Outsider** (question only), graded 7.5/10:
+  > Because the transition ends the episode, the Q-learning target is just the reward; there is no future value to bootstrap from. The displayed max_b Q(s′, b) = 4 is therefore ignored. Q_new(s,a) = Q(s,a) + α[r − Q(s,a)] = 2 + 0.5(1 − 2) = 1.5
 
-  Grader on "Explicit assumption", 1.5/2: *"The answer implicitly assumes a true terminal state by saying there is no future value, though it does not explicitly distinguish terminality from an external interruption."*
-- **Literalist** (question and passages), graded 6.5/10, one verified citation (L08 · slide 67: *"Q-learning: the target action is greedy with respect to Q"*), `missing: true`:
-  > The passages do not provide the Q-learning update equation or specify that a terminal transition has no bootstrap term, so they are insufficient to justify the target. If terminal transitions use no bootstrap, the target is 1 and the update is Q(s,a) ← 2 + 0.5(1 − 2) = 1.5 […] This terminal-state rule is not stated in the passages.
-- **Quibbler** found an ambiguity in *"A transition ends the simulator's episode."*, assumption: *"Whether ending the simulator episode means the next state is truly terminal, or only that the episode is truncated and the next state still has value."* Reading 1 (terminal): target 1, Q = 1.5, graded 10/10. Reading 2 (truncation): target 4.6, Q = 3.3, graded 10/10.
+  Grader on "Explicit assumption", 1/2: *"The answer implicitly treats the transition as a true terminal state, but does not explicitly distinguish it from an external interruption."*
+- **Literalist** (question and passages), graded 8.5/10, two verified citations (L08 · slide 19: *"The return is the sum of rewards ∑h=0Terminationγhrh"*; L08 · slide 67: *"Q-learning: the target action is greedy with respect to Q"*), `missing: true`:
+  > Using the terminal-transition convention, the target is the immediate reward, 1 […] The update is Q(s,a) ← 2 + 0.5(1 − 2) = 1.5. The passages describe returns up to termination and say Q-learning uses a greedy target action, but do not explicitly state that terminal transitions omit the bootstrap term; that terminal-update rule is missing.
+- **Quibbler** found an ambiguity in *"A transition ends the simulator's episode."*: reading 1, *"The transition reaches a true terminal state, so no future value is bootstrapped"*, graded 8.5/10; reading 2, *"The episode boundary is only a simulator reset or truncation, and s' remains a valid nonterminal next state in the MDP"*, graded 10/10.
 - **Verdicts** (computed by the backend):
-  - *This model clears the pass mark without the course materials*: "openai/gpt-6-luna scores 9.5 out of 10 without seeing the course. Pass mark: 7 (70%)."
-  - *Candidate ambiguity*: "“A transition ends the simulator's episode.”: Whether ending the simulator episode means the next state is truly terminal, or only that the episode is truncated and the next state still has value. Reading 1: 10/10; reading 2: 10/10. The teacher decides."
-- **Reviewer**, proposed text:
-  > Using the course's Q-learning convention that the target action is greedy with respect to Q, consider Q(s,a)=2, α=0.5, γ=0.9, r=1, and max_b Q(s′,b)=4. Calculate the update in each of these two cases: (1) the transition reaches a true terminal state; (2) the episode ends because of an external interruption, but s′ is not terminal and still has value. For each case, state the target and updated Q(s,a), and explain whether the update bootstraps from s′.
+  - *This model clears the pass mark without the course materials*: "openai/gpt-6-luna scores 7.5 out of 10 without seeing the course. Pass mark: 7 (70%)."
+  - *Insufficient evidence in the retrieved passages*: "The Literalist verified 2 sentences but declared the retrieved passages not enough to answer. This does not mean the topic is missing from the course: retrieval may not have found it."
+  - *Candidate ambiguity*: "“A transition ends the simulator's episode.”: Whether episode termination means the transition reaches a terminal state of the task, or only ends a simulator episode while the MDP continues after reset. Reading 1: 8.5/10; reading 2: 10/10. The teacher decides."
+- **Reviewer.** The passages are not enough but there is a candidate ambiguity, so the code allows a rewrite only to make the assumption explicit, without attributing anything to the course. Proposed text:
+  > A transition ends the simulator's episode. For this update, assume it reaches a true terminal state of the task, not an external interruption such as a timeout or truncation with the task continuing after reset. Q(s,a)=2, alpha=0.5, gamma=0.9, reward 1; before the reset the table shows max_b Q(s',b)=4. Perform the Q-learning update and justify the target.
 
-**The teacher decides.** After the run the question is still at version 1 (`origin: docente`): no agent wrote a version. The teacher approves:
+  Rationale: *"The added assumption distinguishes a true terminal state from an external interruption while preserving the requested update and justification. The retrieved course materials do not cover the expected terminal-update rule; the teacher decides whether this revision is appropriate."*
+
+**The teacher decides.** After the run the question is still at version 1: no agent wrote a version. The teacher approves:
 
 ```
-POST /api/questions/df963f61-…/decision
-{"reviewId":"94e37f27-…","expectedVersionId":"c9447ede-…","action":"approvata"}
-→ 200 {"versionId":"6c7bf079-…","decisionId":"75e2a5c0-…"}
+POST /api/questions/1c05fa08-…/decision
+{"reviewId":"af21702b-…","expectedVersionId":"<version 1>","action":"approvata"}
+→ 200 {"versionId":"e4950225-…","decisionId":"da058d8b-…"}
 ```
 
-**Re-attack on version 2** (21 s, 7 calls, $0.0016):
+**Re-attack on version 2** (15 s, 7 calls, $0.0015):
 
-- Outsider 10/10: it answers both cases (1.5 without bootstrap, 3.3 with bootstrap).
-- Literalist 0/10, two verified citations from L08 · slide 67, `missing: true`: *"The passages establish that Q-learning selects the target action greedily with respect to Q, but they do not specify how to handle a true terminal state or give the Q-value update rule. […] What is missing is the terminal-state bootstrapping rule and the update equation."*
+- Outsider 10/10: target 1, Q = 1.5, *"The displayed value 4 at s′ is irrelevant."*
+- Literalist 7/10, `missing: false`, one verified citation (L08 · slide 19, the return up to termination) and one citation discarded by the code: *"Q-learning: the target is greedy with respect to Q"*, reason *"sentence not in the passage"* (the slide says "the target action is greedy").
 - Quibbler: `found: false`, no second reading.
-- Verdict: *This model clears the pass mark without the course materials* ("scores 10 out of 10 without seeing the course").
-- The Reviewer proposes a further rewrite that states both conventions in the text.
+- Verdict: only *This model clears the pass mark without the course materials* ("scores 10 out of 10 without seeing the course").
+- Reviewer: with the passages now judged sufficient, it proposes anchoring the question to the course's definition of the return (*"Using the course slide's notation, where G is the return—the sum of rewards up to termination—…"*), a definition that is in the verified citation.
 
-**Outcome.** The ambiguity reported on v1 is not reported on v2. The question is still answered in full without the course, and the scorecard says so. The Literalist's 0/10 on v2 means the retrieved passages do not contain the update rule: the scorecard does not turn that into a verdict (see the known defect in section 4).
+**Outcome.** The ambiguity reported on v1 is not reported on v2. The question is still answered in full without the course, and the scorecard says so. The rewrite on v1 stayed within what the teacher asked to clarify and did not claim course content that was not retrieved.
+
+The first run of this example, at 14:21 on the code before the fix, had the same shape (ambiguity on v1, none on v2) but no "Insufficient evidence" verdict, although the Literalist declared `missing: true` on both versions.
 
 ---
 
@@ -206,7 +216,7 @@ Summary computed in code: mean 7.5/10; lesson L08: 2 students without it, averag
 
 ### 3e. Only the teacher creates a version
 
-Right after the approval in example 1, the same decision sent again with the old version id:
+First session, 14:22: right after the teacher approved the Reviewer's rewrite of question B (an earlier run of example 1), the same decision sent again with the old version id:
 
 ```
 POST /api/questions/df963f61-…/decision
@@ -220,35 +230,42 @@ The decision route is the only code path that writes `question_versions`, and on
 
 ## 4. Insufficient context
 
+Both runs at 14:37 on the corrected code, fresh database.
+
 ### A question outside the course
 
 **Request.** A biochemistry question added to the Reinforcement Learning exam:
 
 > *In the citric acid cycle, which enzyme converts isocitrate into alpha-ketoglutarate, and which reduced cofactor and gas are released in that step?* (rubric: enzyme 4, cofactor 3, gas 3)
 
-**What the agents did** (run `cf4fc2be-…`, 11 s, 7 calls, $0.0007).
+**What the agents did** (run `6bec770f-…`, 10 s, 7 calls, $0.0006).
 
 - Retrieval: terms `Citric acid cycle, Isocitrate dehydrogenase, Isocitrate, Alpha-ketoglutarate, NADH, Carbon dioxide`; no concept of the graph touched; **0 passages** retrieved.
-- Outsider 10/10: *"Isocitrate dehydrogenase catalyzes the oxidative decarboxylation of isocitrate to alpha-ketoglutarate. NAD+ is reduced to NADH, and CO2 is released."*
-- Literalist 0/10, no citations, `missing: true`: *"The provided passages do not identify the enzyme or the reduced cofactor and gas released in this step."*
+- Outsider 10/10 (isocitrate dehydrogenase, NADH, CO2).
+- Literalist 0/10, no citations, `missing: true`: *"The passages do not provide the enzyme or the reduced cofactor and gas released in this step."*
 - Quibbler: no second reading.
 - Verdicts:
   - *This model clears the pass mark without the course materials*: "openai/gpt-6-luna scores 10 out of 10 without seeing the course. Pass mark: 7 (70%)."
-  - *Insufficient evidence in the retrieved passages*: "The Literalist found no verifiable sentences in the retrieved passages. This does not mean the topic is missing from the course: retrieval may not have found it."
+  - *Insufficient evidence in the retrieved passages*: "Retrieval found no course passages for this question. This does not mean the topic is missing from the course: retrieval may not have found it."
+- Reviewer: **no proposed text** (the code discards any text when coverage is missing). Rationale: *"No course passages were retrieved, so there is no verified course material to anchor this question to or confirm its coverage. The teacher can keep it, rewrite it around material the course does cover, or add the relevant material."*
 
-**Outcome.** The Literalist does not invent an answer from the course and the scorecard says the evidence is not there. Weak point, reported as is: the Reviewer still proposed *"According to the course's account of the citric acid cycle, which enzyme converts isocitrate into alpha-ketoglutarate […]"*, a course account that does not exist. The rewrite is only a proposal and the teacher can keep the question as it is, but the Reviewer should say the question is outside the course.
+**Outcome.** The Literalist does not invent an answer from the course, the scorecard says the evidence is not there, and the Reviewer leaves the decision to the teacher instead of rewriting. Before the fix (run at 14:23), the same question got a rewrite beginning *"According to the course's account of the citric acid cycle…"*, a course account that does not exist.
 
-### A topic the course only mentions: the verdict is missing
+### A topic the course only mentions
 
-**Request.** *Write the clipped surrogate objective of PPO (Proximal Policy Optimization), explain the role of the probability ratio and of the clipping parameter epsilon, and say how the advantage is estimated with GAE.* (rubric: objective 4, ratio and clipping 3, GAE 3). The course mentions PPO in passing (L11 · slide 23) and never gives its objective.
+**Request.** *Write the clipped surrogate objective of PPO (Proximal Policy Optimization), explain the role of the probability ratio and of the clipping parameter epsilon, and say how the advantage is estimated with GAE.* (rubric: objective 4, ratio and clipping 3, GAE 3). The course mentions PPO in passing and never gives its objective.
 
-**What the agents did** (run `59e4724c-…`, 20 s, 7 calls, $0.0014).
+**What the agents did** (run `e6b4e302-…`, 13 s, 7 calls, $0.0012).
 
+- Retrieval: 12 passages, the first L05 · slide 36 (via concept Advantage function).
 - Outsider 10/10, with the full objective and the GAE formula.
-- Literalist 0/10, `missing: true`, two verified citations (L11 · slide 23: *"common in actor-critic methods like traditional PPO (Proximal Policy Optimization) where evaluation is on-policy"*; L05 · slide 37: *"the advantage function tells us how good an action is compared to the average value of the state"*). Its answer: *"The passages do not provide the clipped PPO surrogate objective, define the probability ratio or clipping parameter ε, or explain how GAE estimates the advantage. They only state that traditional PPO is an on-policy actor-critic method and describe advantage intuitively […]"*
-- Verdict: only *This model clears the pass mark without the course materials*.
+- Literalist 0/10, `missing: true`, two verified citations: *"The passages do not provide the clipped PPO surrogate objective, define its probability ratio or clipping parameter ε, or explain how GAE estimates the advantage. They only describe the advantage intuitively as how good an action is compared with the average value of its state, and note that traditional PPO is on-policy."*
+- Verdicts:
+  - *This model clears the pass mark without the course materials* ("scores 10 out of 10 without seeing the course").
+  - *Insufficient evidence in the retrieved passages*: "The Literalist verified 2 sentences but declared the retrieved passages not enough to answer. This does not mean the topic is missing from the course: retrieval may not have found it."
+- Reviewer: no proposed text. Rationale: *"The retrieved course passages give only an intuitive description of the advantage function and note that traditional PPO is on-policy; they do not cover the clipped surrogate objective, the probability ratio or clipping parameter, or GAE. The teacher can keep the question, rewrite it around what the course covers, or add the missing material."*
 
-**Outcome, with a defect.** The Literalist recognised its limit, but "Insufficient evidence in the retrieved passages" did not appear, because the backend raises it only when there are zero verified citations (`computeVerdicts` in `app/backend/src/esame/data.ts`). The same happened on question B version 2 (example 1). The teacher sees the 0/10 and the Literalist's text, not a verdict.
+**Outcome.** The Literalist recognised its limit and now the scorecard says so as a verdict. Before the fix (run at 14:23) the verdict was missing, because the backend raised it only with zero verified citations, and the Reviewer proposed a rewrite that framed PPO details as "building on" course concepts.
 
 ---
 

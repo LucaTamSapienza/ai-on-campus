@@ -96,7 +96,7 @@ classe.post("/questions/:id/class", async (c) => {
     await agent.start(runId, students.map((s) => s.id));
   } catch (err) {
     console.error(err);
-    await db.prepare("UPDATE class_runs SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?").bind("Il coordinatore non è partito", runId).run();
+    await db.prepare("UPDATE class_runs SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?").bind("The class coordinator did not start.", runId).run();
     return fail(c, 503, "agent_unavailable", "The class coordinator did not start. Try again.");
   }
   return c.json({ runId }, 202);

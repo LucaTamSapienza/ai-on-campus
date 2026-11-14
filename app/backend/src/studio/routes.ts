@@ -92,7 +92,7 @@ studio.post("/courses/:id/study-plans", bodyLimit({ maxSize: 32 * 1024 }), async
     await agent.start(planId, sessionIds);
   } catch (err) {
     console.error(err);
-    await studioQuery(db, "UPDATE study_plans SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?", "Il Pianificatore non è partito", planId).run();
+    await studioQuery(db, "UPDATE study_plans SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?", "The Planner did not start.", planId).run();
     return fail(c, 503, "agent_unavailable", "The Planner did not start. Try again.");
   }
   return c.json({ planId }, 202);
