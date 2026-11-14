@@ -5,7 +5,7 @@ Hackathon del 14/11/2026, tema «AI on Campus». Un'idea B2B per le università,
 ## Stato
 
 - **Fase:** 02, scheletro, ontologia e grafo. Piano in `docs/fase-01-piano.md`, design system in `docs/design-system.md`.
-- **Idea:** Controesame. Il docente carica il corso e ne esce il grafo dei concetti; scrive una domanda d'esame e tre agenti la attaccano (si supera senza il corso, non si ricava dal materiale, ammette due letture) portando la prova; il docente riscrive e si riattacca. Poi classe simulata, lezione registrata, lato studente in lettura.
+- **Idea:** Prisma (nome di lavoro fino alle 13:25: Controesame). «Ogni domanda d'esame, guardata da tre lati prima dell'appello.» Il docente carica il corso e ne esce il grafo dei concetti; scrive una domanda d'esame e tre agenti la attaccano (si supera senza il corso, non si ricava dal materiale, ammette due letture) portando la prova; il docente riscrive e si riattacca. Poi classe simulata, lezione registrata, lato studente in lettura.
 - **Corso della demo:** Reinforcement Learning, materiale vero in `materiale-locale/`, fuori da Git.
 - **Alle 15:00** gli esperti passano in aula: 60 secondi di pitch senza slide, in italiano o in inglese. Non è chiaro se sia già la prima valutazione: da chiedere.
 - **Criteri:** creatività e innovazione 40%, impatto 20%, tecnica 20%, presentazione 20%. Fuori tema amministrazione e logistica.

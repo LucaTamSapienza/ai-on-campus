@@ -1,4 +1,4 @@
-# Design system di Controesame
+# Design system di Prisma
 
 Generato con `ui-ux-pro-max --design-system` il 14/11/2026 e ridotto dall'orchestratore alla proposta più sobria. Dalla skill restano palette e font. Scartati: lo stile «glassmorphism» (sfocature e trasparenze si leggono male su un proiettore) e lo schema da landing page, che qui non serve. Questo file è la regola: si cambia solo se lo chiede Luca.
 

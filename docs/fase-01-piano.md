@@ -1,5 +1,7 @@
 # Fase 01, piano
 
+> **Nome.** Dalle 13:25 il prodotto si chiama **Prisma**, scelto da Luca: «Ogni domanda d'esame, guardata da tre lati prima dell'appello.» In questo documento e in quelli precedenti «Controesame» è il nome di lavoro e indica la stessa cosa. Nel codice il nome sta in una sola costante del frontend; il Worker resta `ai-on-campus` e le risorse `aoc-`.
+
 Contratto per gli agenti che implementano Controesame. Idea e funzionalità stanno in `docs/fase-00-brainstorming.md` e in `docs/proposta.html` (versione 2). Se il codice deve fare una cosa che qui non c'è, prima si corregge questo file.
 
 Scritto alle 13:05 del 14/11/2026. Alle 15:00 passano gli esperti. Stop alle funzioni nuove alle 16:15.
