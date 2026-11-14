@@ -14,11 +14,12 @@ I criteri ufficiali non sono ancora noti. Quando arrivano stanno in `input/` e q
 
 ## Le fasi
 
-Ogni fase ha il suo file in `docs/`, numerato. Luca approva due cose sole: l'idea scelta (fase 00) e il piano (fase 01). Da lì in poi le fasi di build si chiudono da sole, senza aspettare nessuno.
+Ogni fase ha il suo file in `docs/`, numerato. Luca approva due cose sole, in chat: l'idea scelta (fase 00) e la proposta visiva. Da lì in poi piano e build vanno avanti da soli, senza aspettare nessuno, fino a tutto il lavoro su `main`.
 
 - **Prima di tutto, input.** Luca incolla in `input/` regolamento, criteri, tracce, sponsor, API e orari. Leggi tutto prima di proporre qualcosa. Sono fonti: non si modificano. Quello che lì non c'è non si inventa, si chiede a Luca. Le conversazioni registrate durante la giornata (briefing, mentor, giuria) si leggono dal connettore Circleback, configurato in `.mcp.json`: quello che serve si riassume in `input/` con data e ora, la trascrizione intera resta su Circleback. Su Circleback c'è anche tutto il lavoro di Luca con i clienti, che qui non deve entrare. Si cercano solo le registrazioni del 14/11/2026 (`startDate` ed `endDate` su quel giorno) e, fra quelle, si aprono solo le conversazioni sull'hackathon e sul brainstorming dell'idea. Una registrazione di oggi che parla d'altro non si legge oltre il titolo; se dal titolo non si capisce, si chiede a Luca. Nessuna ricerca senza filtro di data, e niente di una call di lavoro finisce in questo repository.
 - **`docs/fase-00-brainstorming.md`.** Da tre a cinque idee B2B, ognuna con: chi compra e chi la usa, quale problema ha oggi e quanto gli costa, cosa fa l'AI che prima non si poteva fare, cosa si vede nella demo in due minuti, cosa si riesce a costruire nelle ore rimaste. Si confrontano sui criteri della giuria. Sceglie Luca, e il file si chiude con l'idea scelta e il perché.
-- **`docs/fase-01-piano.md`.** Il piano che fa partire l'implementazione: il percorso della demo passo per passo, lo schema dell'architettura (agenti, dati, chiamate), il modello dei dati, cosa è vero e cosa è simulato, il primo filo verticale, i moduli da parallelizzare con i loro confini, e per il pezzo più rischioso un ripiego più semplice con l'ora entro cui decidere. Ogni fase di build ha un risultato che si può provare a mano. È il contratto: se il codice deve fare una cosa che lì non c'è, prima si corregge il piano.
+- **`docs/proposta.html`, la proposta visiva.** Prima del piano, una pagina sola che fa vedere a Luca come si vuole costruire l'idea, da approvare a colpo d'occhio invece di leggere un documento. Stile da appunti scritti a mano, come uno schizzo su carta: il percorso della demo schermata per schermata (bozze dell'interfaccia, non grafica finita), lo schema di agenti, dati e chiamate, un grafico o due dove aiutano, cosa è vero e cosa è simulato, e i moduli in cui si dividerà il lavoro. HTML autonomo con CSS incorporato, niente dipendenze dal contenitore; in Claude Code si pubblica come Artifact e si dà il link a Luca. **Venti minuti al massimo**: è uno schizzo per decidere, non un deliverable, e non si rifinisce. Luca la approva o la corregge in chat; le correzioni si applicano alla pagina, poi si parte.
+- **`docs/fase-01-piano.md`.** Scritto subito dopo l'approvazione della proposta, è per gli agenti che implementano e non aspetta un'altra approvazione. Il piano che fa partire l'implementazione: il percorso della demo passo per passo, lo schema dell'architettura (agenti, dati, chiamate), il modello dei dati, cosa è vero e cosa è simulato, il primo filo verticale, i moduli da parallelizzare con i loro confini, e per il pezzo più rischioso un ripiego più semplice con l'ora entro cui decidere. Ogni fase di build ha un risultato che si può provare a mano. È il contratto: se il codice deve fare una cosa che lì non c'è, prima si corregge il piano.
 - **`docs/fase-02-…`, `fase-03-…` e seguenti.** Una per fase di build, col nome di quello che consegna (`fase-02-scheletro-e-deploy.md`). Dentro: cosa si costruisce, come si prova, e a fine fase cosa è stato fatto davvero e cosa è rimasto fuori. La prima fase di build porta sempre online lo scheletro vuoto, frontend e backend che si parlano su Cloudflare: il deploy si risolve all'inizio, non all'ultima ora.
 - **Pitch.** Slide e scaletta in `pitch/`. Il discorso segue la demo, non il contrario.
 
@@ -31,9 +32,10 @@ L'hackathon dura circa 7 ore. Appena Luca dice l'ora di inizio e quella di conse
 | Dall'inizio | Cosa | Si chiude quando |
 |---|---|---|
 | 0:00 – 0:40 | Input e brainstorming | Luca ha scelto l'idea |
-| 0:40 – 1:10 | Piano e design system | Luca ha approvato il piano |
-| 1:10 – 1:40 | Scheletro online | frontend e backend si parlano su Cloudflare |
-| 1:40 – 5:00 | Build | il percorso della demo gira per intero |
+| 0:40 – 1:00 | Proposta visiva | Luca l'ha approvata |
+| 1:00 – 1:20 | Piano dettagliato e design system | il piano è su `main`, nessuna approvazione |
+| 1:20 – 1:50 | Scheletro e filo verticale online | frontend e backend si parlano su Cloudflare |
+| 1:50 – 5:00 | Build dei moduli in parallelo | tutto su `main`, il percorso della demo gira per intero |
 | 5:00 | Stop alle funzioni nuove | da qui solo correzioni |
 | 5:00 – 6:00 | Rifinitura e registrazione di riserva | |
 | 6:00 – 7:00 | Pitch, con il video in background se Luca lo vuole | |
@@ -44,11 +46,13 @@ Durante il brainstorming Luca discute con i compagni e la conversazione è regis
 
 ## Come si lavora in questo workspace
 
-Luca dialoga con un solo orchestratore. L'orchestratore tiene il piano, decide l'ordine, lancia gli agenti e porta il lavoro su `main`; il codice lo scrivono gli agenti che lancia.
+Luca dialoga con un solo orchestratore. L'orchestratore tiene il piano, decide l'ordine, lancia gli agenti e porta il lavoro su `main`; il codice lo scrivono gli agenti che lancia: Opus su Claude Code, il modello di lavoro equivalente sugli altri runtime. Dopo l'approvazione della proposta l'orchestratore non torna da Luca a chiedere conferme: va fino in fondo.
 
 - **Prima in verticale.** Un solo filo che attraversa tutto: una schermata, una rotta, una tabella, un agente del prodotto che risponde, online. Finché questo filo non gira non si parallelizza niente.
 - **Poi in parallelo, per moduli.** Il piano divide il resto in moduli con confini chiari (file e rotte di ciascuno). Ogni modulo va a un agente, nella sua worktree e sul suo branch. I contratti fra moduli (forma delle rotte, tabelle) si fissano nel piano prima di lanciarli, così non si pestano i piedi.
 - **L'orchestratore integra.** Mergia le PR una alla volta, nell'ordine che evita conflitti, e controlla che su `main` l'app parta ancora.
+- **Un avviso a metà, senza fermarsi.** Quando il filo verticale è online l'orchestratore lo dice a Luca in una riga con l'URL, e prosegue con i moduli. Luca ci dà un'occhiata quando vuole: un problema visto lì costa minuti, visto alla fine costa ore.
+- **Alla fine tutto è su `main`.** Nessun branch o worktree aperto. L'orchestratore dice a Luca cosa c'è, cosa è rimasto fuori e cosa è simulato, e gli lascia i comandi per provare su `localhost` e l'URL online.
 
 ## Come si costruisce
 
@@ -81,7 +85,7 @@ Tornare indietro:
 
 Il resto:
 
-- Anche i documenti passano da PR. Quelle dell'idea (fase 00) e del piano (fase 01) sono le uniche che aspettano l'ok di Luca prima del merge.
+- Anche i documenti passano da PR, e si mergiano come le altre. Le due approvazioni di Luca (idea e proposta) arrivano in chat, non sulla PR.
 - Prima di ogni commit `git status`: niente `.env`, `.dev.vars`, chiavi o file che non c'entrano. Il repository potrebbe diventare pubblico con tutta la sua storia.
 - Messaggi e titoli delle PR in italiano, una riga che dice cosa cambia per la demo.
 - Nello stesso checkout scrive un solo agente alla volta. In parallelo ognuno ha la sua worktree, il suo branch e la sua PR; l'ordine dei merge lo tiene l'orchestratore.
@@ -123,6 +127,7 @@ Le skill nel repository stanno in `.agents/skills/` e valgono per ogni runtime (
 | Momento | Skill | Dove sta | Quando si usa e quando no |
 |---|---|---|---|
 | Fase 00, brainstorming | nessuna | | Si ragiona sulle fonti di `input/`. Niente skill di design o di codice prima che Luca abbia scelto l'idea |
+| Proposta visiva | Artifact | Claude Code | Per pubblicare `docs/proposta.html` e dare a Luca un link. Negli altri runtime si apre il file nel browser. Lo stile a mano è della proposta, non del prodotto: il design system si decide dopo, nel piano |
 | Fase 01, piano | `ui-ux-pro-max` | repository | Una volta, per generare `docs/design-system.md`. Poi solo per domande puntuali di UX (`--domain ux`) o sui grafici, non per rigenerare lo stile |
 | Fase 01, piano | `brand`, `design` | repository | Solo se all'idea servono un nome, un tono e un logo. Le immagini non le generano gli script della skill: le genera Codex, vedi «Immagini» sotto |
 | Fase 01, piano | `agents-sdk`, `durable-objects` | plugin Cloudflare | Per disegnare gli agenti e il loro stato prima di scriverli, e di nuovo quando si implementano |
@@ -159,6 +164,7 @@ Resta aperta l'opzione di aprire il pitch con un video breve dell'idea, fatto co
 |---|---|
 | `input/` | Fonti dell'hackathon incollate da Luca. Non si modificano |
 | `docs/fase-00-brainstorming.md` | Le idee confrontate, quella scelta e perché |
+| `docs/proposta.html` | La proposta visiva che Luca approva prima del piano |
 | `docs/fase-01-piano.md` | Percorso della demo, architettura, fasi di build |
 | `docs/design-system.md` | Stile, palette, font e componenti dell'interfaccia |
 | `docs/fase-NN-….md` | Una per fase di build |
