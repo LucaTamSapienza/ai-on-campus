@@ -151,6 +151,85 @@ La fase 02 la fa un agente solo. Dalla 03 in poi i moduli indipendenti vanno in 
 
 **Semina.** `app/backend/scripts/seed.mjs` crea il corso e carica le fonti di `materiale-locale/reinforcement-learning/` chiamando l'API, una alla volta, con un parametro per limitarsi alle prime N. In sviluppo si provano una o due lezioni; il corso intero si carica una volta sola.
 
+## Decisioni di Luca delle 13:05
+
+- **Modello.** `openai/gpt-6-luna` per tutti gli agenti del prodotto.
+- **Ontologia iniziale preparata con un modello più capace.** L'ontologia di partenza del corso la estrae un agente Claude dal materiale vero, la scrive in `materiale-locale/reinforcement-learning/ontologia.json` (fuori da Git) e si carica con `seed.mjs --ontologia` attraverso la rotta `POST /api/courses/:id/ontology`, che applica la stessa validazione del Cartografo. I caricamenti fatti dall'app, in demo e in «produzione», li lavora il Cartografo con Luna. Nella demo e nel pitch si dice così: il grafo di partenza è stato preparato prima, quello che si carica dal vivo lo estrae l'agente del prodotto. Non si presenta il grafo iniziale come uscito da Luna.
+- **Ordine dei lavori.** Piano scritto, poi analisi contrastante di Astra sul piano, poi implementazione con più agenti. Tutto il blocco 1 (ontologia e grafo, triplo attacco, scheda e riattacco), poi una validazione con un agente che usa Playwright, poi Luca lo prova su `localhost`. Il resto prosegue in background.
+
+## Fase 03, il triplo attacco: contratto
+
+Parte dal commit dello scheletro della fase 02, in una worktree sua, branch `feat/triplo-attacco`. Porte: backend 8788, frontend 3001.
+
+### Dati (migrazione `0002_esame.sql`)
+
+| Tabella | Colonne |
+|---|---|
+| `exams` | `id`, `course_id`, `title`, `created_at` |
+| `questions` | `id`, `exam_id`, `course_id`, `ordinal`, `current_version_id`, `created_at` |
+| `question_versions` | `id`, `question_id`, `version`, `text`, `rubric` (JSON, elenco di `{criterion, points}`), `max_points`, `origin` (`docente`, `proposta_approvata`, `proposta_modificata`), `created_at` |
+| `attack_runs` | `id`, `question_version_id`, `status` (`running`, `done`, `error`), `created_at`, `finished_at` |
+| `attacks` | `id`, `run_id`, `agent` (`esterno`, `letterale`, `cavillatore`), `status`, `answer`, `finding` (JSON), `created_at` |
+| `grades` | `id`, `attack_id`, `reading_index`, `total`, `max`, `per_criterion` (JSON, `{criterion, awarded, max, why}`), `created_at` |
+| `reviews` | `id`, `run_id`, `verdicts` (JSON), `proposed_text`, `proposed_rubric`, `rationale`, `created_at` |
+| `decisions` | `id`, `question_id`, `from_version_id`, `to_version_id`, `action` (`approvata`, `modificata`, `tenuta`), `created_at` |
+
+### Gli agenti e cosa possono vedere
+
+L'isolamento è nel codice, non nel prompt: la funzione che costruisce il contesto di ogni agente riceve solo ciò che gli spetta.
+
+| Agente | Riceve | Non riceve | Produce (`finding`) |
+|---|---|---|---|
+| Esterno | il testo della domanda | corso, griglia | `{answer}` |
+| Letterale | domanda e passaggi recuperati dal corso | griglia | `{answer, citations: [passageId], missing: bool, verbatim: bool}`; ogni citazione deve essere uno dei passaggi ricevuti, altrimenti si scarta; senza citazioni valide `missing = true` |
+| Cavillatore | domanda e passaggi recuperati | griglia | `{found: bool, readings: [{assumption, answer, passageId?}]}`; al massimo due letture; `found = false` è un esito valido |
+| Correttore | una risposta, la griglia, i passaggi recuperati come riferimento | chi ha scritto la risposta | voto per criterio con il perché |
+| Revisore | domanda, griglia, i tre esiti con i voti | | `verdicts`, proposta di riscrittura, motivazione |
+
+- **Recupero dei passaggi.** Senza embedding: ricerca a testo pieno (FTS5 di D1) sui passaggi del corso con i termini della domanda, più i passaggi di prova dei concetti il cui nome compare nella domanda e dei loro vicini di primo grado nel grafo. Al massimo 12 passaggi. I concetti toccati si salvano con la domanda: servono alla copertura.
+- **Verdetti del Revisore**, uno o più: `copiabile` (l'Esterno prende almeno il 70% dei punti), `non_nel_corso` (`missing`), `ricavabile_copiando` (`verbatim`), `ambigua` (`found` e le due letture prendono voti diversi, oppure sono entrambe da punti pieni con risposte incompatibili), `nessun_controesempio`. Le soglie le applica il backend sui voti; il modello scrive solo la motivazione e la proposta.
+- **Un agente per ruolo** su Durable Objects, istanza per esecuzione. I tre attaccanti partono in parallelo; ogni risposta va al Correttore; con i tre voti parte il Revisore. Il testo arriva al frontend mentre viene scritto.
+
+### Rotte
+
+| Rotta | Cosa fa |
+|---|---|
+| `GET /api/courses/:id/exams`, `POST /api/courses/:id/exams` | elenco e creazione `{title}` |
+| `GET /api/exams/:id` | domande con versione corrente e ultimo esito |
+| `POST /api/exams/:id/questions` | `{text, rubric}`: crea la domanda e la versione 1. Senza griglia risponde 422 «serve la griglia di correzione» |
+| `POST /api/questions/:id/attack` | avvia un'esecuzione sulla versione corrente, risponde `{runId}` |
+| `GET /api/runs/:id` | attacchi, voti, scheda |
+| `POST /api/questions/:id/decision` | `{action, text?, rubric?}`: `approvata` adotta la proposta, `modificata` adotta il testo del docente, `tenuta` non cambia niente. Solo questa rotta crea una nuova versione |
+| `GET /api/questions/:id/versions` | storia delle versioni con gli esiti, per il confronto prima e dopo |
+| WebSocket `/agents/<ruolo>/:runId` | stato e testo in tempo reale |
+
+### Il confine, nel codice
+
+- Nessun agente può scrivere in `question_versions`: lo fa solo la rotta della decisione, chiamata dal docente.
+- Senza griglia non si corregge e non si attacca.
+- L'interfaccia e il Revisore non usano mai «esame valido», «equo» o «a prova di AI». L'esito migliore possibile è «nessun controesempio trovato».
+- Niente sugli studenti veri.
+
+### Interfaccia
+
+Pagina `/esame`, voce «Esame» nel guscio.
+
+- **Elenco delle domande** con l'ultimo esito come etichette. Azione principale: «Nuova domanda».
+- **Nuova domanda**: testo e griglia a righe (criterio, punti).
+- **Domanda**: «Attacca la domanda». I tre agenti in tre colonne su desktop e in tre schede affiancate da scorrere su telefono, ognuno con cosa ha in mano scritto in chiaro, il testo che arriva, poi il voto per criterio.
+- **Scheda**: verdetti con la prova accanto (`SourceRef` per i passaggi), proposta di riscrittura modificabile, tre azioni: «Approva e riattacca», «Modifica e riattacca», «Tieni com'è».
+- **Prima e dopo**: le versioni in fila con i voti dei tre agenti su ciascuna.
+
+Riusa il guscio, `DetailPanel`, `SourceRef`, `AgentStrip`. Minima e fluida, desktop e telefono alla pari, come in `docs/design-system.md`.
+
+### Punti di aggancio ai file comuni
+
+Il modulo aggiunge, in blocchi delimitati da un commento `fase 03`: i binding e il tag di migrazione dei suoi Durable Object in `wrangler.jsonc`, le sue funzioni in fondo a `lib/api.ts`, la voce «Esame» nella navigazione, il montaggio delle sue rotte nell'ingresso del Worker. Nient'altro nei file comuni: i conflitti li risolve l'orchestratore al merge.
+
+### Domande per la demo
+
+Tre domande di Reinforcement Learning scritte dall'orchestratore con Luca, salvate dallo script di semina: una che un modello generico risolve senza il corso, una ambigua, una che dipende da ciò che è specifico del corso. Il comportamento degli agenti su queste domande è quello vero: se non trovano il difetto atteso si cambia la domanda, non l'esito.
+
 ## Il pezzo più rischioso e il ripiego
 
 L'estrazione con un modello economico può dare concetti doppi, relazioni vaghe o JSON non valido.
@@ -163,5 +242,5 @@ L'estrazione con un modello economico può dare concetti doppi, relazioni vaghe 
 
 ## Punti aperti
 
-- **Trascrizione della lezione.** Nel catalogo OpenRouter di oggi non risultano modelli che accettano audio. Luca ha indicato un modello al posto di Workers AI ma il nome non è chiaro: da confermare prima della fase 05.
+- **Trascrizione della lezione.** Nel catalogo OpenRouter di oggi non risultano modelli che accettano audio. Luca ha chiarito che il modello indicato era Luna, per gli agenti: per la trascrizione resta da scegliere fra Whisper su Workers AI e un'alternativa, prima della fase 05.
 - **Ora e formato della consegna finale.**
