@@ -102,9 +102,32 @@ Un agente correttore applica la griglia e un agente revisore mette insieme i tre
 
 Se invece la squadra vuole restare sul teaching, la scelta è la 3 (Leo) nella forma stretta di Codex: un concetto, tre scambi, un nuovo esempio di verifica, esercitazione assegnata dal docente. La 2 scende per via del campione distorto.
 
+## L'idea di Astra, nata da zero (12:20)
+
+Chiesta da Luca a un agente Codex `gpt-6-astra` (effort `high`) con lo stesso contesto, cioè `AGENTS.md` e `input/`, senza vedere questo file.
+
+**Controprova: l'università insegna a verificare l'AI (learning).** Compra il dipartimento, lo usano docente e studenti in esercitazione. Dal materiale del corso tre agenti preparano un elaborato scritto bene ma con una falla concettuale precisa, più i dati per verificarlo; il docente approva e pubblica. Lo studente sceglie la frase da verificare, sceglie i dati, esegue il calcolo e scrive perché conferma o smentisce. Il rapporto numerico lo controlla il backend, non un altro modello. La soluzione resta bloccata dal server finché non c'è un tentativo completo. Il docente vede calcolo e giustificazione.
+
+- **Demo proposta:** probabilità condizionata. «Il sensore riconosce il 90% dei pezzi difettosi, quindi se suona il pezzo è difettoso al 90%.» Con 10.000 pezzi, 100 difettosi, 90 segnalati e 495 sani segnalati, la risposta vera è 90 su 585, circa il 15,4%.
+- **Punto debole che dichiara lui:** rischia di insegnare solo a trovare l'errore annunciato; servono anche elaborati corretti. La prima versione vale solo dove la verifica è numerica.
+- **Le sue due alternative:** «Rubrica sotto stress» (due elaborati sintetici quasi uguali fanno emergere il disaccordo fra correttori su un criterio) e «Laboratorio dell'esperimento mancante» (lo studente sceglie la misura che distingue due spiegazioni).
+
+**Confronto con Controesame.**
+
+| | Controesame a tre attacchi | Controprova |
+|---|---|---|
+| Tema e utente | assessment, docente | learning, studente e docente |
+| Creatività | attaccare la domanda d'esame con prove: nessun esempio di Reply le somiglia | esercizi con l'errore dentro esistono già, lo dice anche Astra; nuovo è il laboratorio generato e verificabile |
+| «Aiuta a pensare?» | il docente decide sulla prova | la più forte: il lavoro è tutto dello studente |
+| Rischio in demo | più alto: tre agenti devono produrre prove sensate dal vivo | più basso: il calcolo lo verifica il backend |
+| Pitch | una frase forte | apre con una sorpresa numerica che la giuria capisce in dieci secondi |
+| Multi-agente | necessario: tre accessi diversi alla conoscenza | tre agenti che preparano un caso: regge, ma uno solo basterebbe |
+
+**Cosa ne tengo.** Resto su Controesame, che è più originale e ha un multi-agente che non si può togliere. Da Astra prendo due cose: dove la risposta è numerica la verifica la fa il backend e non un modello, e il pitch si apre con un caso concreto che sorprende. Controprova è la riserva più sicura se Luca preferisce una demo a rischio basso con lo studente in scena.
+
 ## Cosa serve da Luca per chiudere
 
-1. **L'idea:** Controesame a tre attacchi, Leo, o un'altra.
+1. **L'idea:** Controesame a tre attacchi, Controprova di Astra, Leo, o un'altra.
 2. **Un corso vero.** Dispense e qualche domanda d'esame reale di un corso preciso. Il repository potrebbe diventare pubblico: o materiale con licenza aperta, o materiale di un tuo corso che resta fuori da Git.
 3. **Un episodio vissuto** per il pitch: una domanda d'esame ambigua, o un esame che si passava con un modello generico.
 
