@@ -32,8 +32,27 @@ Lo stato corrente (fase, ora della consegna, cosa manca) sta in cima a `README.m
 - **Modelli via OpenRouter.** Luca ha una chiave con 5 $ di credito: è tutto il budget della giornata. Si usano sempre modelli economici della classe Luna: il predefinito è `openai/gpt-6-luna` (0,10 $ per milione di token in ingresso e 0,50 $ in uscita, catalogo OpenRouter letto il 14/11/2026). Un modello più caro solo se Luca lo dice per quel punto preciso. Ogni chiamata ha un tetto di token in uscita, e le prove ripetute in sviluppo usano risposte brevi. Per cambiare modello o aggiungerne uno di altro tipo (embedding, voce) si rilegge il catalogo del giorno su `https://openrouter.ai/api/v1/models`, non ci si basa su quello che si ricorda. La chiave si chiama `OPENROUTER_API_KEY`, sta nel `.env` alla radice, arriva al Worker da `app/backend/.dev.vars` in locale e da `wrangler secret put` online. Non arriva mai al frontend: il browser chiama solo la nostra API.
 - **Un solo test che conta: il percorso della demo in Playwright.** Playwright e Chromium sono già installati alla radice (`playwright.config.ts`, cartella `e2e/`). `npm run e2e` apre l'applicazione in un browser vero e percorre la demo dall'inizio alla fine come farà Luca davanti alla giuria, in locale oppure contro l'URL online con `DEMO_URL=<url> npm run e2e`. Il test è un solo file, `e2e/demo.spec.ts`, che nasce con la prima fase di build. Cresce insieme alla demo: ogni fase di build aggiunge il suo passo. Si lancia dopo ogni modifica che tocca il percorso e prima di ogni deploy, e l'esito vero si dice a Luca, con lo screenshot del passo che fallisce. Luca può lanciarlo anche da solo, o farlo girare a un agente mentre un altro costruisce. Le chiamate ai modelli nel test sono vere ma poche: una corsa completa deve costare centesimi. Oltre a questo, test quasi nessuno: niente test unitari su codice banale.
 - Piano di riserva se la rete del posto cade: una registrazione dello schermo del percorso completo, fatta appena funziona.
-- Commit piccoli e frequenti su `main`, con push: oggi niente branch e PR. Il push serve anche da backup.
 - Nessun segreto nel repository: chiavi solo in `.env` o `.dev.vars`, gitignorati, con i nomi in `.env.example`. Prima di rendere pubblico il repository si ricontrollano `input/` e la storia Git.
+
+## Commit e push
+
+Luca lavora da solo: si committa e si pusha direttamente su `main`, senza branch e senza PR. L'agente lo fa da sé, senza chiedere ogni volta: in questo repository l'autorizzazione è permanente.
+
+Quando si pusha:
+
+- **A ogni pezzo che funziona.** Un commit per un passo compiuto (una rotta, una schermata, un agente che risponde), con push subito dopo. Il push è anche il backup della giornata: niente lavoro di ore solo sul Mac.
+- **Alla chiusura di ogni fase**, dopo che Luca l'ha approvata: il file `docs/fase-NN-….md` aggiornato e lo stato in `README.md` vanno nello stesso push.
+- **Prima di ogni deploy.** Online gira solo codice già pushato: prima `npm run e2e`, poi commit e push, poi `wrangler deploy`. Così il commit dice sempre cosa c'è in demo.
+- **Prima di una modifica rischiosa** al percorso della demo, per avere un punto a cui tornare.
+
+Come si pusha:
+
+- Su `main` resta codice con cui il percorso della demo gira. Un lavoro a metà si può pushare per non perderlo, ma il messaggio comincia con `WIP:` e dice cosa è rotto.
+- Prima di ogni commit `git status`: niente `.env`, `.dev.vars`, chiavi o file che non c'entrano. Il repository potrebbe diventare pubblico con tutta la sua storia.
+- Messaggi in italiano, una riga che dice cosa cambia per la demo.
+- Mai `--force` e mai riscrivere la storia già pushata. Se il push viene rifiutato, `git pull --rebase` e si riprova.
+- Se più agenti scrivono insieme, ognuno lavora in una worktree sul suo branch e chi coordina lo porta su `main` in locale, sempre senza PR. Nello stesso checkout scrive un solo agente alla volta.
+- La visibilità del repository la cambia solo Luca.
 
 ## Stack e infrastruttura
 

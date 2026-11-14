@@ -1,5 +1,7 @@
 {
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "interfaces@interfaces": true
+  },
   "extraKnownMarketplaces": {
     "interfaces": {
       "source": {
