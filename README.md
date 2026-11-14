@@ -4,8 +4,9 @@ Hackathon del 14/11/2026, tema «AI on Campus». Un'idea B2B per le università,
 
 ## Stato
 
-- **Fase:** proposta visiva, in attesa dell'approvazione di Luca (`docs/proposta.html`). Poi piano e build senza altre conferme.
-- **Idea:** Controesame. Il docente carica materiali e domanda d'esame; tre agenti la attaccano (si supera senza il corso, non si ricava dal materiale, ammette due letture) e portano la prova; il docente riscrive e si riattacca. Grafo di conoscenza del corso sotto.
+- **Fase:** 02, scheletro, ontologia e grafo. Piano in `docs/fase-01-piano.md`, design system in `docs/design-system.md`.
+- **Idea:** Controesame. Il docente carica il corso e ne esce il grafo dei concetti; scrive una domanda d'esame e tre agenti la attaccano (si supera senza il corso, non si ricava dal materiale, ammette due letture) portando la prova; il docente riscrive e si riattacca. Poi classe simulata, lezione registrata, lato studente in lettura.
+- **Corso della demo:** Reinforcement Learning, materiale vero in `materiale-locale/`, fuori da Git.
 - **Alle 15:00** gli esperti passano in aula: 60 secondi di pitch senza slide, in italiano o in inglese. Non è chiaro se sia già la prima valutazione: da chiedere.
 - **Criteri:** creatività e innovazione 40%, impatto 20%, tecnica 20%, presentazione 20%. Fuori tema amministrazione e logistica.
 - **Inizio:** verso le 11:15, orario approssimativo detto da Luca. **Consegna:** non ancora nota; con 7 ore di durata cadrebbe verso le 18:15. Gli orari sotto si correggono appena arrivano quelli ufficiali.
