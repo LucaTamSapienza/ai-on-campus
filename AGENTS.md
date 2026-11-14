@@ -72,7 +72,7 @@ Le skill nel repository stanno in `.agents/skills/` e valgono per ogni runtime (
 |---|---|---|---|
 | Fase 00, brainstorming | nessuna | | Si ragiona sulle fonti di `input/`. Niente skill di design o di codice prima che Luca abbia scelto l'idea |
 | Fase 01, piano | `ui-ux-pro-max` | repository | Una volta, per generare `docs/design-system.md`. Poi solo per domande puntuali di UX (`--domain ux`) o sui grafici, non per rigenerare lo stile |
-| Fase 01, piano | `brand`, `design` | repository | Solo se all'idea servono un nome, un tono e un logo. Gli script di `design` che generano immagini vogliono chiavi che qui non ci sono (`.agents/skills/ORIGINE.md`): prima si chiede a Luca |
+| Fase 01, piano | `brand`, `design` | repository | Solo se all'idea servono un nome, un tono e un logo. Le immagini non le generano gli script della skill: le genera Codex, vedi «Immagini» sotto |
 | Fase 01, piano | `agents-sdk`, `durable-objects` | plugin Cloudflare | Per disegnare gli agenti e il loro stato prima di scriverli, e di nuovo quando si implementano |
 | Fase 01, piano | `generate-diagrams` | macchina di Luca | Lo schema dell'architettura, che serve nel piano e poi nelle slide |
 | Build, scheletro e deploy | `wrangler`, `workers-best-practices` | plugin Cloudflare | Configurazione di `wrangler.jsonc`, D1, binding, deploy. Sempre prima di un comando remoto |
@@ -83,6 +83,17 @@ Le skill nel repository stanno in `.agents/skills/` e valgono per ogni runtime (
 | Pitch | `slides`, `banner-design` | repository | Slide in HTML con lo stesso design system della demo; `banner-design` per la copertina. Solo a demo al sicuro |
 | Pitch, video | skill Remotion | `ad-studio` | Solo se Luca decide di fare il video, in una sessione aperta su quel repository |
 | Sempre | `karpathy-guidelines` | plugin | Codice minimo e modifiche chirurgiche: è lo spirito di tutto «Come si costruisce» |
+
+### Immagini
+
+Logo, illustrazioni, mockup e copertine li genera **Codex**, che ha la generazione di immagini integrata. Gli script di `design` e `banner-design` che chiamano servizi esterni vogliono chiavi che qui non ci sono (`.agents/skills/ORIGINE.md`) e non si lanciano. Delle skill si usa la parte che conta: il prompt.
+
+1. Il prompt si costruisce con la skill, a partire da `docs/design-system.md`: stili e regole in `design/SKILL.md` e `banner-design/SKILL.md`, ricerca degli stili con `design/scripts/logo/search.py`, prompt già pronto con `design/scripts/cip/generate.py --prompt-only`.
+2. Se sei Codex, generi tu. Se sei un altro runtime, lanci un agente Codex e gli passi quel prompt, con formato, dimensioni e cartella di destinazione. In herdr si lancia come agente visibile, secondo le regole globali di Luca.
+3. L'agente scrive solo file immagine, solo in `app/frontend/public/` (demo) o in `pitch/assets/` (slide): nello stesso checkout nessun altro file.
+4. Le immagini sono proposte: due o tre varianti, sceglie Luca, le scartate si cancellano. Niente loghi o marchi di atenei veri.
+
+Si generano solo le immagini che la demo o il pitch mostrano davvero, e mai prima che il percorso della demo funzioni.
 
 Una skill non scavalca questo file: se suggerisce test, astrazioni o passaggi che qui sono esclusi, vale `AGENTS.md`.
 
