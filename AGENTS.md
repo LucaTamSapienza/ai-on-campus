@@ -115,7 +115,7 @@ Ambienti: due, e basta.
 
 Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non c'è staging né pipeline. Si fa solo da `main`, dopo il merge della PR.
 
-**Account Cloudflare.** `wrangler` su questo Mac è collegato a più account, alcuni di lavoro e di clienti con sistemi in produzione. Questo progetto va solo sull'account personale di Luca: il nome dell'account scelto compare nella proposta visiva, così Luca lo conferma insieme al resto e nessuno si ferma a chiederlo dopo; l'`account_id` si fissa in `wrangler.jsonc` con lo scheletro. Prima di ogni comando remoto che crea, scrive o cancella, controlla account e nome della risorsa. Non si tocca nessuna risorsa senza il prefisso `aoc-` o il nome `ai-on-campus`.
+**Account Cloudflare.** `wrangler` su questo Mac è collegato a più account, alcuni di lavoro e di clienti con sistemi in produzione. Questo progetto va solo sull'account personale di Luca, confermato da lui il 14/11/2026: `account_id` `b3eb6ceb7206160b5e492b92a293fc20`. Si fissa in `wrangler.jsonc` con lo scheletro e ogni comando remoto gira con `CLOUDFLARE_ACCOUNT_ID` su questo valore: nessun altro account, per nessun motivo. Tutto quello che si crea lì sopra (D1, R2, Vectorize, Queues) ha il prefisso `aoc-`; il Worker si chiama `ai-on-campus`. Prima di ogni comando remoto che crea, scrive o cancella, controlla account e nome della risorsa. Non si tocca nessuna risorsa senza il prefisso `aoc-` o il nome `ai-on-campus`.
 
 ## Interfaccia
 
