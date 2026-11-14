@@ -29,13 +29,17 @@
     "bindings": [
       { "name": "Cartografo", "class_name": "Cartografo" },
       // fase 03: coordinatore del triplo attacco, un'istanza per esecuzione
-      { "name": "Attacco", "class_name": "Attacco" }
+      { "name": "Attacco", "class_name": "Attacco" },
+      // blocco 2: coordinatore della classe simulata, un'istanza per esecuzione
+      { "name": "Classe", "class_name": "Classe" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["Cartografo"] },
     // fase 03
-    { "tag": "v2-attacco", "new_sqlite_classes": ["Attacco"] }
+    { "tag": "v2-attacco", "new_sqlite_classes": ["Attacco"] },
+    // blocco 2
+    { "tag": "v3-classe", "new_sqlite_classes": ["Classe"] }
   ],
   "vars": {
     // Tetto di spesa giornaliero sui modelli, in dollari.

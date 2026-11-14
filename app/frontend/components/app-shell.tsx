@@ -7,6 +7,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, FileText, Network, type LucideIcon } from "lucide-react";
 import { api, DEMO_CODE_EVENT, setDemoCode, type Course } from "@/lib/api";
+// blocco 2
+import { useRouter } from "next/navigation";
+import { CalendarCheck, Users } from "lucide-react";
+import { setApiRole } from "@/lib/api";
+// fine blocco 2
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,9 +25,13 @@ type NavItem = { href: string; label: string; icon: LucideIcon; roles: Role[] };
 // Le pagine delle fasi successive si aggiungono qui quando esistono.
 const NAV: NavItem[] = [
   { href: "/", label: "Grafo", icon: Network, roles: ["docente", "studente"] },
-  { href: "/materiali", label: "Materiali", icon: FileText, roles: ["docente"] },
+  // blocco 2: i materiali si leggono anche con ruolo studente
+  { href: "/materiali", label: "Materiali", icon: FileText, roles: ["docente", "studente"] },
   // fase 03
   { href: "/esame", label: "Esame", icon: ClipboardList, roles: ["docente"] },
+  // blocco 2
+  { href: "/classe", label: "Classe", icon: Users, roles: ["docente"] },
+  { href: "/lezioni", label: "Lezioni", icon: CalendarCheck, roles: ["docente"] },
 ];
 
 type ShellValue = {
@@ -67,6 +76,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const nav = NAV.filter((n) => n.roles.includes(role));
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
+  // blocco 2: il ruolo va al server con ogni richiesta; una pagina del docente con ruolo
+  // studente porta al grafo. Le pagine si rimontano al cambio di ruolo e rileggono i dati.
+  const router = useRouter();
+  setApiRole(role);
+  const allowed = NAV.some((n) => n.roles.includes(role) && isActive(n.href));
+  useEffect(() => {
+    if (!allowed) router.replace("/");
+  }, [allowed, router]);
+  // fine blocco 2
+
   return (
     <ShellContext.Provider value={{ course, courseLoading, courseError, reloadCourse, role }}>
       <div className="flex h-dvh w-full overflow-hidden">
@@ -109,7 +128,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <RoleSwitch role={role} onChange={setRole} compact />
           </header>
 
-          <main className="relative min-h-0 flex-1 overflow-hidden">{children}</main>
+          <main key={/* blocco 2 */ role} className="relative min-h-0 flex-1 overflow-hidden">
+            {allowed ? children : null}
+          </main>
 
           {/* Telefono: barra in basso */}
           <nav

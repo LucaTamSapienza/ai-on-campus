@@ -303,8 +303,9 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
       await expect(page.locator("canvas").first()).toBeVisible();
       await page.getByRole("button", { name: "Studente" }).click();
       await expect(page.getByRole("button", { name: "Studente" })).toHaveAttribute("aria-pressed", "true");
-      await expect(page.getByRole("link", { name: "Materiali" })).toHaveCount(0);
-      await expect(page.getByRole("link", { name: "Esame" })).toHaveCount(0);
+      // Dal blocco 2 lo studente legge anche i materiali (senza caricamento); esame, classe e lezioni no.
+      await expect(page.getByRole("link", { name: "Materiali" })).toBeVisible();
+      for (const name of ["Esame", "Classe", "Lezioni"]) await expect(page.getByRole("link", { name })).toHaveCount(0);
       const search = page.getByRole("searchbox", { name: "Cerca un concetto" });
       await search.fill("Q-learning");
       await search.press("Enter");

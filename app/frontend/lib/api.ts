@@ -111,6 +111,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (init.body) headers.set("content-type", "application/json");
   const code = demoCode();
   if (code) headers.set("x-demo-code", code);
+  // blocco 2: ruolo simulato, fatto valere dal server
+  if (currentRole) headers.set("x-role", currentRole);
 
   let res: Response;
   try {
@@ -267,3 +269,102 @@ export const esameApi = {
   versions: (id: string) => request<{ versions: VersionOutcome[] }>(`/questions/${id}/versions`).then((r) => r.versions),
 };
 // fine fase 03
+
+// blocco 2: ruolo simulato, classe simulata, lezioni.
+
+// Il selettore di ruolo del guscio lo imposta; il server con ruolo studente risponde 403 a
+// scritture, esame e classe.
+let currentRole: string | null = null;
+export function setApiRole(role: string) {
+  currentRole = role;
+}
+export function apiRole(): string | null {
+  return currentRole;
+}
+
+export type Student = { id: string; name: string; priorGrade: number; style: string; lessons: { id: string; title: string }[] };
+export type ClassAnswerStatus = "pending" | "running" | "done" | "error";
+export type ClassAnswer = {
+  id: string;
+  studentId: string;
+  status: ClassAnswerStatus;
+  answer: string | null;
+  passageIds: string[];
+  missing: { id: string; name: string }[];
+  total: number | null;
+  max: number | null;
+  perCriterion: PerCriterion[];
+  error: string | null;
+};
+export type ClassPassage = { id: string; rank: number; locator: string; sourceId: string; sourceTitle: string; text: string };
+export type Gap = { missingCount: number; avgMissing: number | null; avgFollowed: number | null };
+export type ClassSummary = {
+  graded: number;
+  max: number;
+  mean: number | null;
+  bands: { label: string; count: number }[];
+  criteria: { id: string; criterion: string; max: number; avg: number }[];
+  gaps: ({ id: string; name: string } & Gap)[];
+  lessons: ({ id: string; title: string } & Gap)[];
+};
+export type ClassRunDetail = {
+  id: string;
+  questionId: string;
+  status: RunStatus;
+  error: string | null;
+  createdAt: string;
+  finishedAt: string | null;
+  version: QuestionVersion;
+  retrieval: { terms: string[]; concepts: TouchedConcept[] } | null;
+  passages: ClassPassage[];
+  students: Student[];
+  answers: ClassAnswer[];
+  summary: ClassSummary | null;
+};
+export type LiveStudent = { status: "pending" | "running" | "grading" | "done" | "error"; text: string; note: string | null };
+export type ClasseState = {
+  runId: string | null;
+  status: "idle" | "running" | "done" | "error";
+  step: "recupero" | "risposte" | "fatto" | null;
+  students: Record<string, LiveStudent>;
+  version: number;
+};
+
+export const classeApi = {
+  students: (courseId: string) => request<{ students: Student[] }>(`/courses/${courseId}/students`).then((r) => r.students),
+  start: (questionId: string) => request<{ runId: string }>(`/questions/${questionId}/class`, { method: "POST" }),
+  last: (questionId: string) =>
+    request<{ lastRun: { id: string; status: RunStatus; versionId: string } | null }>(`/questions/${questionId}/class`).then((r) => r.lastRun),
+  run: (runId: string) => request<{ run: ClassRunDetail }>(`/class-runs/${runId}`).then((r) => r.run),
+};
+
+export type Lesson = {
+  id: string;
+  kind: "document" | "transcript";
+  title: string;
+  status: SourceStatus;
+  createdAt: string;
+  doneAt: string | null;
+  conceptCount: number;
+};
+export type Proposal = {
+  id: string;
+  name: string;
+  kind: ConceptKind;
+  definition: string;
+  topicName: string | null;
+  evidence: number;
+  degree: number;
+  asked: boolean;
+  passages: { id: string; locator: string; text: string; sourceTitle: string }[];
+};
+
+export const lezioniApi = {
+  lessons: (courseId: string) => request<{ lessons: Lesson[] }>(`/courses/${courseId}/lessons`).then((r) => r.lessons),
+  setDone: (sourceId: string, done: boolean) => request<{ id: string; done: boolean }>(`/sources/${sourceId}/done`, json("PUT", { done })),
+  proposals: (courseId: string) =>
+    request<{ totals: { concepts: number; covered: number; lessonsDone: number }; proposals: Proposal[] }>(`/courses/${courseId}/proposals`),
+  transcribe: (courseId: string, audio: string) =>
+    request<{ text: string; seconds: number; costUsd: number | null }>(`/courses/${courseId}/lessons/transcribe`, json("POST", { audio, format: "wav" })),
+};
+// fine blocco 2

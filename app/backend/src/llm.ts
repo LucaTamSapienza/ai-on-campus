@@ -5,15 +5,26 @@
 export const MODELS: Record<string, string> = {
   cartografo: "openai/gpt-6-luna",
   default: "openai/gpt-6-luna",
+  // blocco 2: unica eccezione a Luna, solo per trascrivere la lezione registrata (decisione di Luca delle 13:15)
+  trascrittore: "google/gemini-3.8-flash",
 };
 
 // Dollari per milione di token (ingresso, uscita), catalogo OpenRouter letto il 14/11/2026.
 // Serve solo se OpenRouter non restituisce il costo della chiamata.
 const PRICES: Record<string, [number, number]> = {
   "openai/gpt-6-luna": [0.1, 0.5],
+  // blocco 2
+  "google/gemini-3.8-flash": [0.825, 4.125],
 };
 
-export type Message = { role: "system" | "user" | "assistant"; content: string };
+export type Message = { role: "system" | "user" | "assistant"; content: string | ContentPart[] };
+// blocco 2: audio in ingresso per la trascrizione (formato OpenRouter input_audio).
+export type ContentPart = { type: "text"; text: string } | { type: "input_audio"; input_audio: { data: string; format: "wav" } };
+// Caratteri equivalenti per la stima del costo: l'audio WAV a 16 kHz vale circa 32 token al secondo,
+// cioè un token ogni ~1.330 caratteri di base64; qui un «carattere» ogni 400, con margine.
+const contentChars = (c: Message["content"]) =>
+  typeof c === "string" ? c.length : c.reduce((n, p) => n + (p.type === "text" ? p.text.length : Math.ceil(p.input_audio.data.length / 400)), 0);
+// fine blocco 2
 
 export type CompleteOptions = {
   agent: string;
@@ -65,7 +76,7 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
   if (!env.OPENROUTER_API_KEY) throw new LlmError("config", "Chiave dei modelli non configurata sul server.");
   const model = MODELS[opts.agent] ?? MODELS.default;
   const [pin, pout] = PRICES[model] ?? [0.1, 0.5];
-  const promptChars = opts.messages.reduce((n, m) => n + m.content.length, 0);
+  const promptChars = opts.messages.reduce((n, m) => n + contentChars(m.content), 0); // blocco 2: contentChars
   // Stima prudente: 1 token ogni 3 caratteri in ingresso, tutto max_tokens in uscita.
   const maxCost = ((promptChars / 3) * pin + opts.maxTokens * pout) / 1_000_000;
   const budget = dailyBudget(env);

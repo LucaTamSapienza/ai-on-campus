@@ -9,11 +9,13 @@ interface __BaseEnv_Env {
 	REDACT_TERMS: string;
 	Cartografo: DurableObjectNamespace<import("./src/index").Cartografo>;
 	Attacco: DurableObjectNamespace<import("./src/index").Attacco>;
+	// blocco 2
+	Classe: DurableObjectNamespace<import("./src/index").Classe>;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
 		mainModule: typeof import("./src/index");
-		durableNamespaces: "Cartografo" | "Attacco";
+		durableNamespaces: "Cartografo" | "Attacco" | /* blocco 2 */ "Classe";
 	}
 	interface Env extends __BaseEnv_Env {}
 }

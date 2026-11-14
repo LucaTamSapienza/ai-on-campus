@@ -30,6 +30,8 @@ export default function MaterialsPage() {
 }
 
 function CourseMaterials({ courseId }: { courseId: string }) {
+  // blocco 2: con ruolo studente i materiali si leggono soltanto
+  const { role } = useShell();
   const cartografo = useCartografo(courseId);
   const [sources, setSources] = useState<Source[] | null>(null);
   const load = useCallback(() => {
@@ -43,7 +45,7 @@ function CourseMaterials({ courseId }: { courseId: string }) {
 
   return (
     <>
-      <SourceUpload courseId={courseId} onUploaded={load} />
+      {role === "docente" && <SourceUpload courseId={courseId} onUploaded={load} />}
       <AgentStrip state={cartografo} />
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Fonti {sources ? `(${sources.length})` : ""}</h2>

@@ -19,6 +19,14 @@ import { esame } from "./esame/routes";
 export { Attacco };
 // fine fase 03
 
+// blocco 2: classe simulata e ruolo studente
+import { Classe } from "./classe/classe";
+import { classe } from "./classe/routes";
+import { studentAgentForbidden, studentGuard } from "./classe/role";
+export { Classe };
+import { lezioni } from "./lezioni/routes";
+// fine blocco 2
+
 const VERSION = "0.2.0";
 const MAX_SOURCE_CHARS = 300_000;
 const MAX_SOURCES_PER_COURSE = 40;
@@ -47,8 +55,8 @@ app.use(
     origin: (origin, c) => {
       return isLocal(new URL(c.req.url)) && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin) ? origin : null;
     },
-    allowHeaders: ["content-type", "x-demo-code"],
-    allowMethods: ["GET", "POST", "PATCH", "DELETE"],
+    allowHeaders: ["content-type", "x-demo-code", /* blocco 2 */ "x-role"],
+    allowMethods: ["GET", "POST", "PATCH", "DELETE", /* blocco 2 */ "PUT"],
   }),
 );
 
@@ -61,6 +69,10 @@ app.use(async (c, next) => {
   }
   return next();
 });
+
+// blocco 2: con ruolo studente ogni scrittura ed esame, classe e proposte rispondono 403.
+app.use(studentGuard);
+// fine blocco 2
 
 app.get("/health", (c) => c.json({ ok: true, version: VERSION }));
 
@@ -343,6 +355,11 @@ app.get("/usage", async (c) => {
 app.route("/", esame);
 // fine fase 03
 
+// blocco 2: rotte della classe simulata e delle lezioni
+app.route("/", classe);
+app.route("/", lezioni);
+// fine blocco 2
+
 app.notFound((c) => fail(c, 404, "not_found", "Rotta inesistente."));
 app.onError((err, c) => {
   console.error(err);
@@ -383,6 +400,15 @@ export default {
       if (env.DEMO_CODE && !timingSafeEqual(url.searchParams.get("code") ?? "", env.DEMO_CODE)) {
         return deny(401, "demo_code", "Serve il codice della demo.");
       }
+      // blocco 2: lo studente vede solo il Cartografo; la classe solo per un'esecuzione che esiste.
+      if (studentAgentForbidden(url)) return deny(403, "forbidden_role", "Con il ruolo studente questa parte non è visibile.");
+      const classRun = url.pathname.match(/^\/agents\/classe\/([^/]+)$/);
+      if (classRun) {
+        const exists = await env.DB.prepare("SELECT 1 FROM class_runs WHERE id = ?").bind(decodeURIComponent(classRun[1])).first();
+        if (!exists) return deny(404, "not_found", "Esecuzione non trovata.");
+        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+      }
+      // fine blocco 2
       // fase 03: il coordinatore del triplo attacco, solo per un'esecuzione che esiste.
       const run = url.pathname.match(/^\/agents\/attacco\/([^/]+)$/);
       if (run) {
