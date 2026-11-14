@@ -6,7 +6,7 @@ Hackathon del 14/11/2026, tema «AI on Campus». Un'idea B2B per le università,
 
 - **Fase:** input, prima della fase 00. Lo workspace è pronto, i dettagli dell'hackathon non sono ancora in `input/`.
 - **Idea:** non scelta.
-- **Consegna:** orario e formato da leggere in `input/`.
+- **Inizio e consegna:** da scrivere qui appena Luca li dice, con gli orari veri della tabella «L'orario» di `AGENTS.md`.
 
 ## Come si lavora qui
 
