@@ -230,6 +230,52 @@ Il modulo aggiunge, in blocchi delimitati da un commento `fase 03`: i binding e 
 
 Tre domande di Reinforcement Learning scritte dall'orchestratore con Luca, salvate dallo script di semina: una che un modello generico risolve senza il corso, una ambigua, una che dipende da ciò che è specifico del corso. Il comportamento degli agenti su queste domande è quello vero: se non trovano il difetto atteso si cambia la domanda, non l'esito.
 
+## Dopo l'analisi contrastante di Astra (13:15)
+
+Fatta da un agente Codex `gpt-6-astra` sul piano, in sola lettura: 30 punti, 8 bloccanti. Qui quello che cambia; dove questa sezione e il resto del piano differiscono, vale questa. Gli agenti in corso hanno già ricevuto queste correzioni nel loro compito.
+
+**Contratti e dati**
+
+- Il modulo 03 lavora nei suoi file (`app/backend/src/esame/`, `0002_esame.sql`, `app/frontend/app/esame/`, `components/esame/`) e tocca i file comuni solo nei quattro agganci delimitati. Non cambia la firma di `llm.ts`.
+- **Importazione dell'ontologia**: `POST /api/courses/:id/ontology` con concetti e relazioni che citano le prove come titolo della fonte più numero di slide; il server le risolve nei suoi identificatori. Le fonti si caricano prima con `extract = false`. Rifare l'importazione lascia lo stesso grafo e restituisce l'elenco dei riferimenti respinti.
+- **Ricerca a testo pieno**: la possiede la fase 03, nella migrazione `0002`, con chiave intera, riempimento dei passaggi esistenti e trigger. I termini si mettono fra virgolette e si uniscono con OR.
+- **Coordinamento**: un Durable Object coordina ogni esecuzione; lo stato è in D1 prima della risposta 202; passi idempotenti; un timeout e un solo nuovo tentativo per chiamata; un timeout terminale per esecuzione; una sola esecuzione attiva per domanda.
+- **Voti**: una riga per (`attack_id`, `reading_index`). Il Cavillatore produce esattamente due letture oppure nessuna. Il Revisore parte quando i tre attaccanti sono terminati e ogni risposta ha un voto o un errore.
+- **Decisione**: `{reviewId, expectedVersionId, action, text?}`, 409 se la versione è superata, scrittura in un solo batch. Il Revisore propone solo il testo: la griglia resta quella del docente, così prima e dopo si confrontano.
+- **Griglia**: `{id, criterion, points, expected?}`. Il Correttore riceve anche la domanda; il backend controlla i voti per criterio e ricalcola il totale.
+- **Idempotenza del Cartografo**: hash del contenuto della fonte, scrittura per finestra con upsert, ripresa dall'ultima finestra completata.
+
+**Cosa si può affermare, e con quali parole**
+
+- Il contesto di un agente si chiama «accesso limitato ai passaggi del corso», non «sa solo questo»: il modello conosce comunque la materia. Vale anche per la classe simulata.
+- Le citazioni del Letterale sono estratti verificati dal backend come sottostringhe dei passaggi ricevuti.
+- Verdetti, calcolati dal backend: «Questo modello supera la soglia senza i materiali» (con modello, voto e soglia), «Prove insufficienti nei passaggi recuperati» (non «non è nel corso»), «Ambiguità candidata» (la giudica il docente), «Nessun controesempio trovato» (solo se i tre attacchi sono completi), «Analisi incompleta».
+- Fuori da demo e pitch: «a prova di AI», «equo», «non si copia». Il sottotitolo della proposta visiva («domande che non si copiano») è superato da questa regola.
+- Il recupero salva termini, concetti e passaggi usati: l'interfaccia li mostra come percorso. È questo che rende il grafo parte del ragionamento e non una decorazione.
+
+**Sicurezza**
+
+- Con `DEMO_CODE` impostato lo richiedono tutte le rotte `/api` tranne `/api/health`, letture comprese, e le connessioni agli agenti: il grafo espone estratti delle slide. Controllo dell'origine sui WebSocket. I client non modificano lo stato degli agenti.
+- Il costo massimo di una chiamata si prenota prima di farla e si riconcilia dopo. Sottobudget per ambiente: 0,60 $ al giorno per ogni worktree in sviluppo.
+
+**Materiale e demo**
+
+- Le slide con solo titolo o figure danno passaggi quasi vuoti: si segnano come «testo non estratto» e non valgono come prova di assenza.
+- Il caricamento dal vivo usa una fonte che non è nell'ontologia iniziale, altrimenti non aggiunge niente a schermo.
+- Le tre domande della demo: A (aggiornamento Q-learning, risolvibile senza il corso), B (episodio che «si conclude»: stato terminale o interruzione esterna, due letture), C (la dimostrazione assegnata nella L08, che dipende dal corso). Il comportamento degli agenti su queste domande è quello vero.
+- Per la consegna servono tre esempi reali di interazione con percorso e fonti, uno con contesto insufficiente dichiarato, e uno in cui una richiesta di applicare da sola la riscrittura viene respinta.
+
+**Non raccolto, per tempo**: ticket a scadenza per i WebSocket (basta codice e origine), protocollo di eventi con numeri di sequenza (bastano snapshot e rilettura), seconda passata di fusione dei sinonimi, provenienza delle correzioni del docente.
+
+**Ordine dei tagli se si sfora**: piano di studio e coerenza fra appelli, poi audio, poi classe, poi vista dello studente, poi animazioni del grafo.
+
+## Decisioni di Luca delle 13:15
+
+- **Trascrizione**: `google/gemini-3.8-flash` via OpenRouter (accetta audio; 0,825 $ per milione di token in ingresso e 4,125 in uscita, catalogo del 14/11/2026). È l'unica eccezione a Luna, solo per trascrivere la lezione registrata. Si prova con un minuto di audio in italiano e si misura il costo.
+- **Blocchi in sequenza, ognuno nella sua worktree.** Blocco 1 (fasi 02 e 03), poi blocco 2 (classe, lezione registrata, argomenti, lato studente), poi blocco 3 (piano di studio). Ogni worktree finita si prova con Playwright. Prima di integrare un blocco si prova la fusione con il precedente: il branch del blocco 2 riceve il blocco 1 e si riprova, e così il 3 con il 2. I branch dei blocchi restano separati finché la fusione non è provata.
+- **Luca valida il blocco 1 su `localhost`** dopo la corsa di Playwright; intanto il blocco 2 parte in background.
+- **Video dell'idea** già in lavorazione in una worktree di `ad-studio`: punti dolenti di docente e studenti, tutte le funzionalità, nome dell'app. Le funzionalità non ancora costruite compaiono come «in arrivo». Storyboard e MP4 arrivano in `pitch/`.
+
 ## Il pezzo più rischioso e il ripiego
 
 L'estrazione con un modello economico può dare concetti doppi, relazioni vaghe o JSON non valido.
@@ -242,5 +288,4 @@ L'estrazione con un modello economico può dare concetti doppi, relazioni vaghe 
 
 ## Punti aperti
 
-- **Trascrizione della lezione.** Nel catalogo OpenRouter di oggi non risultano modelli che accettano audio. Luca ha chiarito che il modello indicato era Luna, per gli agenti: per la trascrizione resta da scegliere fra Whisper su Workers AI e un'alternativa, prima della fase 05.
 - **Ora e formato della consegna finale.**
