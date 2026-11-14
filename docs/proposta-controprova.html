@@ -1,0 +1,178 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Controprova, la proposta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: un foglio di appunti a quadretti, una colonna, schizzi delle schermate in fila che vanno a capo */
+:root{
+  --paper:#fbfaf3; --grid:#e3e6ea; --ink:#22303f; --soft:#5d6b7a;
+  --pen:#1f5fbf; --red:#c8402f; --green:#2f7d4f; --hl:#ffe66b; --card:#ffffff;
+  --hand:"Patrick Hand","Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+  --title:"Caveat","Bradley Hand","Segoe Print",cursive;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#1c2330; --grid:#283142; --ink:#e8ecf2; --soft:#a3afbf;
+  --pen:#7fb2ff; --red:#ff8a78; --green:#7fd39c; --hl:#6b5a12; --card:#232c3b; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#1c2330; --grid:#283142; --ink:#e8ecf2; --soft:#a3afbf;
+  --pen:#7fb2ff; --red:#ff8a78; --green:#7fd39c; --hl:#6b5a12; --card:#232c3b; color-scheme:dark }
+body{background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:var(--hand);font-size:19px;line-height:1.4}
+.page{max-width:1080px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:34px}
+h1{font-family:var(--title);font-size:64px;line-height:1;margin:0;text-wrap:balance}
+h2{font-family:var(--title);font-size:38px;line-height:1.05;margin:0 0 10px;color:var(--pen);text-wrap:balance}
+h3{font-family:var(--title);font-size:27px;margin:0 0 4px;line-height:1.1}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.hl{background:linear-gradient(transparent 55%,var(--hl) 55%);padding:0 2px}
+.red{color:var(--red)} .green{color:var(--green)} .soft{color:var(--soft)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--soft);font-size:17px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.row>*{min-width:0}
+.screen{background:var(--card);border:2px solid var(--ink);border-radius:10px 14px 9px 13px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.screen:nth-child(odd){transform:rotate(-.5deg)} .screen:nth-child(even){transform:rotate(.4deg)}
+.num{font-family:var(--title);font-size:22px;color:var(--red)}
+.wire{border:1.5px dashed var(--soft);border-radius:6px;padding:6px 8px;font-size:16px;line-height:1.25;color:var(--soft)}
+.wire b{color:var(--ink);font-weight:400}
+.btn{align-self:flex-start;border:2px solid var(--pen);color:var(--pen);border-radius:20px;padding:1px 12px;font-size:17px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cols .wire{min-width:0;font-size:14px;padding:5px}
+.note{font-size:17px;color:var(--soft)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;align-items:stretch}
+.box{border:2px solid var(--ink);border-radius:12px 8px 12px 9px;padding:10px 12px;background:var(--card);min-width:0}
+.box.pen{border-color:var(--pen)} .box.red{border-color:var(--red);color:var(--ink)} .box.green{border-color:var(--green);color:var(--ink)}
+.box small{display:block;color:var(--soft);font-size:15.5px;line-height:1.25}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;font-size:17px;min-width:560px;width:100%}
+th,td{border-bottom:1.5px dashed var(--soft);padding:5px 10px 5px 0;text-align:left;vertical-align:top}
+th{font-family:var(--title);font-size:22px;color:var(--pen);font-weight:700}
+.bar{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;align-items:center;font-size:16.5px;font-variant-numeric:tabular-nums}
+.bar i{display:block;height:16px;background:var(--pen);border-radius:3px 6px 4px 5px;min-width:3px}
+.bar i.g{background:var(--green)} .bar i.r{background:var(--red)}
+.time{display:grid;grid-template-columns:repeat(46,1fr);gap:2px;font-size:14px}
+.time span{border:1.5px solid var(--ink);border-radius:5px;padding:2px 4px;background:var(--card);min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ask{border:2.5px solid var(--red);border-radius:14px 9px 15px 10px;padding:14px 16px;background:var(--card)}
+@media (max-width:640px){h1{font-size:46px} .time{grid-template-columns:1fr} .time span{grid-column:auto!important;white-space:normal}}
+</style>
+
+<div class="page">
+
+<header>
+  <h1>Controprova</h1>
+  <p style="font-size:24px">L'università insegna a <span class="hl">verificare l'AI</span>: l'AI prepara un elaborato scritto bene ma sbagliato, lo studente deve dimostrarlo con i dati.</p>
+  <div class="meta">
+    <span>Idea di Astra, nata da zero</span><span>Compra: il dipartimento</span><span>Usano: docente e studenti</span><span>Tema: learning</span>
+    <span>Cloudflare: account personale di Luca (b3eb…fc20), risorse <b>aoc-</b></span>
+    <span>Modello: openai/gpt-6-luna via OpenRouter</span>
+  </div>
+</header>
+
+<section>
+  <h2>Il percorso della demo, schermata per schermata</h2>
+  <div class="row">
+    <div class="screen"><span class="num">1 · Il docente prepara</span>
+      <div class="wire"><b>Pagina del corso</b><br>probabilità condizionata, paragrafi numerati</div>
+      <div class="wire"><b>Cosa voglio insegnare</b><br>distinguere P(allarme | difetto) da P(difetto | allarme)</div>
+      <span class="btn">Prepara il laboratorio</span>
+      <span class="note">Se manca l'obiettivo l'agente non inventa: lo chiede.</span></div>
+    <div class="screen"><span class="num">2 · Gli agenti propongono</span>
+      <div class="cols" style="grid-template-columns:1fr 1fr">
+        <div class="wire"><b>Caso con la falla</b><br>l'elaborato che confonde le due probabilità</div>
+        <div class="wire"><b>Verifica</b><br>tabella di frequenze, quali dati servono</div></div>
+      <div class="wire">il backend ricalcola i numeri e scarta i casi incoerenti</div>
+      <span class="btn">Approva e pubblica</span>
+      <span class="note">Due proposte indipendenti sullo stesso brief. Il docente le confronta e decide.</span></div>
+    <div class="screen"><span class="num">3 · Lo studente legge</span>
+      <div class="wire"><b>Elaborato dell'AI</b><br>«Il sensore riconosce il 90% dei pezzi difettosi, <span class="red">quindi se suona il pezzo è difettoso al 90%</span>.»</div>
+      <div class="wire">10.000 pezzi · 100 difettosi · 90 difettosi segnalati · 495 sani segnalati</div>
+      <div class="wire soft">«Mostrami la soluzione» → bloccato dal server: prima un tentativo</div>
+      <span class="note">Qui si vede il confine: la scheda risolutiva non arriva nemmeno al browser.</span></div>
+    <div class="screen"><span class="num">4 · Lo studente verifica</span>
+      <div class="wire">seleziona la frase da verificare</div>
+      <div class="wire"><b>numeratore</b> 90 &nbsp; <b>denominatore</b> 585 &nbsp; → <span class="green">15,4%</span></div>
+      <div class="wire"><b>Perché</b><br>«devo contare tutti i pezzi segnalati, non solo i difettosi»</div>
+      <span class="btn">Esegui e consegna</span>
+      <span class="note">Il calcolo lo fa il backend. L'AI legge solo la giustificazione scritta.</span></div>
+    <div class="screen"><span class="num">5 · Il docente osserva</span>
+      <div class="wire"><b>Tentativo salvato</b><br>frase scelta, calcolo, giustificazione</div>
+      <div class="wire">affermazione ↔ prova ↔ paragrafo §2.3 del corso</div>
+      <div class="wire soft">evidenze presenti e mancanti nella spiegazione</div>
+      <span class="note">Il docente vede il ragionamento, non solo «giusto» o «sbagliato». Nessun voto ufficiale.</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Agenti, dati e chiamate</h2>
+  <div class="flow">
+    <div class="box pen"><h3>Brief</h3><small>Legge la pagina del corso, chiede quale distinzione insegnare, scrive obiettivo, livello e vincoli. Il docente conferma.</small></div>
+    <div class="box red"><h3>Falla</h3><small>Dal brief propone un elaborato plausibile con un errore concettuale preciso, e spiega perché è utile.</small></div>
+    <div class="box red"><h3>Prova</h3><small>Dallo stesso brief propone la verifica: tabella, dati necessari, strumento di calcolo.</small></div>
+    <div class="box green"><h3>Backend</h3><small>Non è un agente: ricalcola i numeri, scarta i casi incoerenti, esegue il rapporto dello studente, tiene chiusa la soluzione.</small></div>
+    <div class="box green"><h3>Feedback</h3><small>Dopo il tentativo legge la giustificazione libera e segna cosa c'è e cosa manca. Non dà voti.</small></div>
+  </div>
+  <p class="note" style="margin-top:12px">Tre agenti su Durable Objects con eventi via WebSocket, più una chiamata di feedback. D1: <b>sources</b>, <b>briefs</b>, <b>cases</b>, <b>attempts</b>, <b>events</b>. Niente grafo di conoscenza: del Level 3 prende solo il multi-agente.</p>
+</section>
+
+<section class="row">
+  <div>
+    <h2>Quanto costa una corsa</h2>
+    <div class="bar">
+      <span>Preparare un caso</span><span><i style="width:70%"></i></span>
+      <span>Un tentativo</span><span><i class="g" style="width:15%"></i></span>
+      <span>Demo intera</span><span><i class="r" style="width:85%"></i></span>
+    </div>
+    <p class="note" style="margin-top:8px">Stime: tre agenti per il caso circa 0,3 centesimi, il feedback su un tentativo meno di 0,1. Demo intera sotto mezzo centesimo. Costa meno di Controesame.</p>
+  </div>
+  <div>
+    <h2>Il confine che l'agente tiene</h2>
+    <ul>
+      <li>Niente soluzione prima di un tentativo completo: lo vieta il server, non il prompt.</li>
+      <li>Non pubblica un caso senza l'approvazione del docente.</li>
+      <li>Senza obiettivo didattico fa una domanda, non tira a indovinare.</li>
+      <li>Non dà voti e non certifica competenze.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Cosa è simulato</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Cosa</th><th>Perché</th></tr>
+    <tr><td>Login di docente e studente</td><td>Nessun accesso a un login d'ateneo. Un selettore di ruolo dichiarato: «prepara», «prova», «osserva».</td></tr>
+    <tr><td>La classe</td><td>In demo c'è un solo studente, chi presenta. Nessun dato di studenti veri.</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:8px">I numeri del caso (10.000 pezzi) sono dati sintetici in D1. L'elaborato lo genera davvero il modello; se la generazione non regge lo si dice, non si mostra un testo già scritto.</p>
+</section>
+
+<section>
+  <h2>I moduli</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Modulo</th><th>Cosa consegna</th><th>Si prova così</th></tr>
+    <tr><td>0 · Filo verticale</td><td>Guscio, API, D1, agente Brief: pagina del corso → brief salvato</td><td>incollo la pagina, vedo il brief</td></tr>
+    <tr><td>1 · Il caso</td><td>Agenti Falla e Prova, controllo numerico, approvazione del docente</td><td>due proposte, approvo, il caso è pubblicato</td></tr>
+    <tr><td>2 · Il laboratorio</td><td>Tabella interattiva, scelta di numeratore e denominatore, tentativo salvato, soluzione bloccata</td><td>chiedo la soluzione: no; consegno: si sblocca</td></tr>
+    <tr><td>3 · Il docente osserva</td><td>Feedback sulla giustificazione, vista dei tentativi</td><td>il tentativo compare con calcolo e spiegazione</td></tr>
+    <tr><td>4 · Consegna</td><td>README, architettura, tre esempi di interazione, pitch</td><td>ultima ora</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:8px">Pezzo più rischioso: un caso generato che sia sbagliato nel modo giusto. Ripiego: un solo tipo di errore (inversione della condizionata) con i numeri fissati dal backend e solo il testo generato.</p>
+</section>
+
+<section>
+  <h2>Le due idee a confronto</h2>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>Controesame</th><th>Controprova</th></tr>
+    <tr><td>Chi è in scena</td><td>il docente</td><td>lo studente, poi il docente</td></tr>
+    <tr><td>Creatività (40%)</td><td class="green">nessun esempio di Reply le somiglia</td><td>esercizi con l'errore dentro esistono già; nuovo è generarli dal corso con verifica eseguibile</td></tr>
+    <tr><td>«Aiuta a pensare?»</td><td>il docente decide sulla prova</td><td class="green">la più forte: tutto il lavoro è dello studente</td></tr>
+    <tr><td>Level 3</td><td class="green">multi-agente e grafo</td><td>solo multi-agente, e un agente basterebbe</td></tr>
+    <tr><td>Rischio in demo</td><td class="red">più alto: tre agenti devono trovare difetti veri dal vivo</td><td class="green">basso: il cuore è un calcolo</td></tr>
+    <tr><td>Pitch da 60 secondi</td><td>una frase forte</td><td class="green">«90%? No, 15%»: si capisce in dieci secondi</td></tr>
+    <tr><td>Ampiezza</td><td>qualunque corso con domande scritte</td><td class="red">prima versione solo dove la verifica è numerica</td></tr>
+    <tr><td>Punto debole</td><td>il Cavillatore può inventare un conflitto finto</td><td>rischia di insegnare solo a trovare l'errore annunciato</td></tr>
+  </table></div>
+</section>
+
+<section class="ask">
+  <h2 style="color:var(--red)">Da decidere</h2>
+  <p>Una delle due, adesso. Le due pagine hanno lo stesso scheletro, lo stesso stack e gli stessi tempi: cambia cosa si vede e chi è in scena. Il mio voto resta a Controesame per il 40% di creatività e per il grafo; Controprova è la scelta se vuoi la demo che non può andare storta.</p>
+</section>
+
+</div>
