@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "interfaces@interfaces": true
+  },
+  "extraKnownMarketplaces": {
+    "interfaces": {
+      "source": {
+        "source": "github",
+        "repo": "jakubkrehel/skills"
+      }
+    }
+  }
+}
