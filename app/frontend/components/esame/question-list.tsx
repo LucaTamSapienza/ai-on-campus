@@ -109,6 +109,8 @@ export function QuestionForm({ examId, onCreated, onCancel }: { examId: () => Pr
         </Button>
       </fieldset>
 
+      {/* Il motivo per cui «Salva» è spento sta subito sopra il pulsante, visibile anche su telefono. */}
+      {!rubric.length && text.trim().length >= 10 && <p className="text-sm text-muted-foreground">Serve la griglia di correzione: senza griglia non si corregge e non si attacca.</p>}
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button type="submit" disabled={!ready || busy}>
           {busy && <Loader2 className="animate-spin" aria-hidden />}
@@ -118,7 +120,6 @@ export function QuestionForm({ examId, onCreated, onCancel }: { examId: () => Pr
           Annulla
         </Button>
       </div>
-      {!rubric.length && text.trim().length >= 10 && <p className="text-sm text-muted-foreground">Serve la griglia di correzione: senza griglia non si corregge e non si attacca.</p>}
     </form>
   );
 }

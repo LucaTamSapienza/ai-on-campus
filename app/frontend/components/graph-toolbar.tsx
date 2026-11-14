@@ -87,7 +87,7 @@ export function GraphToolbar(props: Props) {
 function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics, nowrap }: Props & { nowrap?: boolean }) {
   if (topics.length === 0) return null;
   return (
-    <div className={cn("pointer-events-auto flex gap-2", nowrap ? "w-max" : "flex-wrap")} role="group" aria-label="Filtra per argomento">
+    <div className={cn("pointer-events-auto flex gap-2", nowrap ? "w-max whitespace-nowrap" : "flex-wrap")} role="group" aria-label="Filtra per argomento">
       {topics.map((t) => {
         const on = activeTopics.has(t.id);
         return (
@@ -98,7 +98,7 @@ function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics
             onClick={() => onToggleTopic(t.id)}
             title={t.summary}
             className={cn(
-              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border bg-card px-4 text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "inline-flex min-h-11 max-w-full shrink-0 items-center gap-2 rounded-full border bg-card px-4 py-2 text-left text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               on ? "border-primary text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >

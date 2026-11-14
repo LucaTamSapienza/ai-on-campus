@@ -64,10 +64,10 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
     >
       <Tabs value={mode} onValueChange={setMode}>
         <TabsList className="w-full lg:w-fit">
-          <TabsTrigger value="file" className="min-h-11 flex-1 lg:flex-none">
+          <TabsTrigger value="file" className="min-h-11 flex-1 lg:flex-none lg:px-4">
             File
           </TabsTrigger>
-          <TabsTrigger value="testo" className="min-h-11 flex-1 lg:flex-none">
+          <TabsTrigger value="testo" className="min-h-11 flex-1 lg:flex-none lg:px-4">
             Testo incollato
           </TabsTrigger>
         </TabsList>

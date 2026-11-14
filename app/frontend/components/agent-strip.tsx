@@ -45,11 +45,11 @@ export function AgentStrip({ state, className }: { state: CartografoState | null
             <Check className="size-5 shrink-0 text-success" aria-hidden />
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">
+            <p className="text-sm font-semibold break-words">
               Cartografo
               {state.sourceTitle && <span className="font-normal text-muted-foreground"> · {state.sourceTitle}</span>}
             </p>
-            <p className={cn("truncate text-sm text-muted-foreground", error && "text-destructive")}>
+            <p className={cn("text-sm break-words text-muted-foreground", error && "text-destructive")}>
               {working && state.step === "estrae" && state.windows > 0
                 ? `${state.message} · parte ${state.window} di ${state.windows}`
                 : state.message}
@@ -58,7 +58,7 @@ export function AgentStrip({ state, className }: { state: CartografoState | null
           {(working || doneKey) && (
             <p className="shrink-0 text-right text-sm tabular-nums">
               <span className="font-semibold">+{state.conceptsAdded}</span>
-              <span className="text-muted-foreground"> concetti</span>
+              <span className="text-muted-foreground"> {state.conceptsAdded === 1 ? "concetto" : "concetti"}</span>
             </p>
           )}
         </div>

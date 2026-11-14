@@ -62,7 +62,7 @@ export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, cla
               )}
             >
               <TopicDot slot={slotOf(c.topicId)} />
-              <span className="min-w-0 flex-1 truncate">{c.name}</span>
+              <span className="min-w-0 flex-1 break-words">{c.name}</span>
               <span className="shrink-0 text-sm text-muted-foreground tabular-nums" aria-label={`${c.degree} relazioni`}>
                 {c.degree}
               </span>

@@ -104,7 +104,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <header className="flex shrink-0 items-center justify-between gap-3 border-b bg-card px-4 pt-(--safe-top) lg:hidden">
             <div className="flex h-14 min-w-0 flex-col justify-center">
               <p className="text-xs font-semibold tracking-wide text-muted-foreground">{BRAND.name}</p>
-              <CourseName course={course} loading={courseLoading} className="truncate text-base font-semibold" />
+              <CourseName course={course} loading={courseLoading} className="truncate text-sm font-semibold" />
             </div>
             <RoleSwitch role={role} onChange={setRole} compact />
           </header>
