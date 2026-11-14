@@ -6,7 +6,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, ApiError, type ConceptDetail, type RelationType } from "@/lib/api";
-import { RELATION_LABELS } from "@/lib/graph-style";
+import { KIND_LABELS, PASSAGE_ROLE_LABELS, RELATION_LABELS } from "@/lib/graph-style";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import type { Role } from "@/components/app-shell";
 import { SourceRef } from "@/components/source-ref";
@@ -40,7 +40,7 @@ export function DetailPanel(props: Props) {
     return (
       <aside
         className="relative flex w-(--panel-width) shrink-0 flex-col border-l bg-card animate-in duration-250 ease-out slide-in-from-right-8 fade-in-0"
-        aria-label="Dettaglio del concetto"
+        aria-label="Concept detail"
       >
         <DetailBody {...props} />
       </aside>
@@ -92,7 +92,7 @@ function DetailBody({
     api
       .concept(conceptId)
       .then((d) => alive && setDetail(d))
-      .catch((e) => alive && setError(e instanceof Error ? e.message : "Errore"));
+      .catch((e) => alive && setError(e instanceof Error ? e.message : "Error"));
     return () => {
       alive = false;
     };
@@ -109,12 +109,12 @@ function DetailBody({
             <Title className="text-2xl font-bold break-words">{current.concept.name}</Title>
           ) : (
             <>
-              <Title className="sr-only">Concetto</Title>
+              <Title className="sr-only">Concept</Title>
               <Skeleton className="h-8 w-2/3" />
             </>
           )}
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Chiudi il dettaglio">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close the detail">
           <X className="size-5" />
         </Button>
       </div>
@@ -138,16 +138,16 @@ function DetailBody({
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 font-medium">
                 <TopicDot slot={slotOf(current.concept.topicId)} />
-                {current.concept.topicName ?? "Senza argomento"}
+                {current.concept.topicName ?? "No topic"}
               </span>
-              <span className="rounded-full border px-3 py-1 text-muted-foreground">{current.concept.kind}</span>
+              <span className="rounded-full border px-3 py-1 text-muted-foreground">{KIND_LABELS[current.concept.kind] ?? current.concept.kind}</span>
             </div>
 
-            <p className="text-base">{current.concept.definition || "Nessuna definizione."}</p>
+            <p className="text-base">{current.concept.definition || "No definition."}</p>
 
             {groups.length > 0 && (
               <section className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold text-muted-foreground">Relazioni</h3>
+                <h3 className="text-sm font-semibold text-muted-foreground">Relations</h3>
                 {groups.map((g) => (
                   <div key={g.label} className="flex flex-col gap-1.5">
                     <p className="text-sm">{g.label}</p>
@@ -170,19 +170,19 @@ function DetailBody({
             )}
 
             <section className="flex flex-col gap-3">
-              <h3 className="text-sm font-semibold text-muted-foreground">Da dove viene ({current.passages.length})</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground">Where it comes from ({current.passages.length})</h3>
               {current.passages.map((p) => (
-                <SourceRef key={p.id} sourceTitle={p.sourceTitle} locator={p.locator} text={p.text} role={p.role} />
+                <SourceRef key={p.id} sourceTitle={p.sourceTitle} locator={p.locator} text={p.text} role={PASSAGE_ROLE_LABELS[p.role] ?? p.role} />
               ))}
             </section>
 
             {role === "docente" && (
               <div className="flex flex-wrap gap-2 border-t pt-4">
                 <Button variant="outline" onClick={() => setEditing(true)}>
-                  <Pencil /> Correggi
+                  <Pencil /> Edit
                 </Button>
                 <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-                  <Trash2 /> Elimina il concetto
+                  <Trash2 /> Delete concept
                 </Button>
               </div>
             )}
@@ -193,12 +193,12 @@ function DetailBody({
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminare «{current?.concept.name}»?</DialogTitle>
-            <DialogDescription>Il concetto sparisce dal grafo insieme alle sue relazioni. Le fonti restano.</DialogDescription>
+            <DialogTitle>Delete “{current?.concept.name}”?</DialogTitle>
+            <DialogDescription>The concept leaves the graph together with its relations. The sources stay.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-              Annulla
+              Cancel
             </Button>
             <Button
               variant="destructive"
@@ -207,15 +207,15 @@ function DetailBody({
                 try {
                   await api.deleteConcept(current.concept.id);
                   setConfirmDelete(false);
-                  toast.success("Concetto eliminato.");
+                  toast.success("Concept deleted.");
                   onClose();
                   onChanged();
                 } catch (e) {
-                  toast.error(e instanceof ApiError ? e.message : "Non è stato possibile eliminare il concetto.");
+                  toast.error(e instanceof ApiError ? e.message : "Could not delete the concept.");
                 }
               }}
             >
-              Elimina il concetto
+              Delete concept
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -237,28 +237,28 @@ function EditForm({ detail, onCancel, onSaved }: { detail: ConceptDetail; onCanc
         try {
           const r = await api.updateConcept(detail.concept.id, { name: name.trim(), definition: definition.trim() });
           onSaved({ ...detail, concept: { ...detail.concept, name: r.name, definition: r.definition } });
-          toast.success("Concetto corretto.");
+          toast.success("Concept updated.");
         } catch (err) {
-          toast.error(err instanceof ApiError ? err.message : "Non è stato possibile salvare.");
+          toast.error(err instanceof ApiError ? err.message : "Could not save.");
         } finally {
           setSaving(false);
         }
       }}
     >
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Nome
+        Name
         <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required />
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Definizione
+        Definition
         <Textarea value={definition} onChange={(e) => setDefinition(e.target.value)} maxLength={800} rows={6} className="text-base" />
       </label>
       <div className="flex gap-2">
         <Button type="submit" disabled={saving || !name.trim()}>
-          Salva
+          Save
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Annulla
+          Cancel
         </Button>
       </div>
     </form>

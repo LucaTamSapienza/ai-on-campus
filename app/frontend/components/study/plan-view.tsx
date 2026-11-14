@@ -24,29 +24,29 @@ export function PlanView({ planId, onNew }: { planId: string; onNew: () => void 
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <p className="text-base text-muted-foreground">
-          {stats.toStudy} concetti in {plan.sessions.length} {plan.sessions.length === 1 ? "sessione" : "sessioni"} su {plan.days}{" "}
-          {plan.days === 1 ? "giorno" : "giorni"} · {stats.known} già noti ·{" "}
-          {plan.scope === "svolte" ? "solo le lezioni svolte" : "tutto il corso"}
+          {stats.toStudy} concepts in {plan.sessions.length} {plan.sessions.length === 1 ? "session" : "sessions"} over {plan.days}{" "}
+          {plan.days === 1 ? "day" : "days"} · {stats.known} already known ·{" "}
+          {plan.scope === "svolte" ? "lessons taught only" : "the whole course"}
         </p>
         <Button variant="outline" onClick={onNew} disabled={running}>
-          Nuovo piano
+          New plan
         </Button>
       </div>
 
-      <ol className="grid grid-cols-1 gap-2 lg:grid-cols-2" aria-label="Chi lavora al piano">
+      <ol className="grid grid-cols-1 gap-2 lg:grid-cols-2" aria-label="Who works on the plan">
         <Step
           state="done"
-          label="Ordine dal grafo"
-          detail={`${stats.edges} collegamenti rispettati${stats.cyclesBroken ? `, ${stats.cyclesBroken} ${stats.cyclesBroken === 1 ? "ciclo spezzato" : "cicli spezzati"}` : ""}`}
+          label="Order from the graph"
+          detail={`${stats.edges} links respected${stats.cyclesBroken ? `, ${stats.cyclesBroken} ${stats.cyclesBroken === 1 ? "cycle broken" : "cycles broken"}` : ""}`}
         />
         <Step
           state={running ? "running" : plan.status === "error" ? "error" : "done"}
-          label="Pianificatore"
-          detail={running ? `Scrive: ${written} di ${plan.sessions.length} sessioni` : plan.status === "error" ? (plan.error ?? "Interrotto") : "Sessioni spiegate"}
+          label="Planner"
+          detail={running ? `Writing: ${written} of ${plan.sessions.length} sessions` : plan.status === "error" ? (plan.error ?? "Stopped") : "Sessions explained"}
         />
       </ol>
 
-      <ol className="flex flex-col gap-4" aria-label="Sessioni di studio">
+      <ol className="flex flex-col gap-4" aria-label="Study sessions">
         {plan.sessions.map((s) => (
           <SessionCard key={s.id} session={s} live={live} />
         ))}
@@ -88,12 +88,12 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
     <li className={cn("flex flex-col gap-4 rounded-lg border bg-card p-4 transition-colors duration-150 lg:p-6", writing && "border-accent")}>
       <header className="flex items-baseline justify-between gap-3">
         <h2 className="text-lg font-semibold">
-          Giorno {session.day} · sessione {session.ordinal}
+          Day {session.day} · session {session.ordinal}
         </h2>
-        <span className="shrink-0 text-sm text-muted-foreground">{session.concepts.length} concetti</span>
+        <span className="shrink-0 text-sm text-muted-foreground">{session.concepts.length} concepts</span>
       </header>
 
-      <ol className="flex flex-wrap gap-2" aria-label="Concetti in ordine di studio">
+      <ol className="flex flex-wrap gap-2" aria-label="Concepts in study order">
         {session.concepts.map((c, i) => (
           <li
             key={c.id}
@@ -104,27 +104,27 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
           >
             <span className="text-xs tabular-nums text-muted-foreground">{i + 1}</span>
             <span className="min-w-0 truncate">{c.name}</span>
-            {c.evidence === 0 && <span className="shrink-0 text-xs text-muted-foreground">senza prove</span>}
+            {c.evidence === 0 && <span className="shrink-0 text-xs text-muted-foreground">no evidence</span>}
           </li>
         ))}
       </ol>
       {withoutEvidence.length > 0 && (
         <p className="text-sm text-muted-foreground">
-          Senza prove nel corso: {withoutEvidence.map((c) => c.name).join(", ")}. Nel materiale non ci sono slide su cui basarli.
+          No evidence in the course: {withoutEvidence.map((c) => c.name).join(", ")}. The materials have no slides to base them on.
         </p>
       )}
 
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-muted-foreground">Perché quest&apos;ordine</p>
+        <p className="text-sm font-medium text-muted-foreground">Why this order</p>
         {session.status === "error" ? (
-          <p className="text-base text-destructive">Il Pianificatore non ha scritto questa sessione. {session.error}</p>
+          <p className="text-base text-destructive">The Planner did not write this session. {session.error}</p>
         ) : why ? (
           <p className="text-base whitespace-pre-line" aria-live={writing ? "polite" : undefined}>
             {why}
             {writing && <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-accent align-middle" aria-hidden />}
           </p>
         ) : (
-          <div className="flex flex-col gap-2" aria-label={writing ? "Il Pianificatore scrive" : "In attesa del Pianificatore"}>
+          <div className="flex flex-col gap-2" aria-label={writing ? "The Planner is writing" : "Waiting for the Planner"}>
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-4/5" />
           </div>
@@ -138,7 +138,7 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
           aria-expanded={showOrder}
           className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          L&apos;ordine nel grafo
+          Order in the graph
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-150", showOrder && "rotate-180")} aria-hidden />
         </button>
         {showOrder && (
@@ -149,7 +149,7 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
                   {c.name}
                   {c.lesson && <span className="ml-2 font-mono text-xs text-muted-foreground">{c.lesson}</span>}
                 </span>
-                <span className="text-muted-foreground">{c.after.length ? `dopo ${c.after.join(", ")}` : "nessun prerequisito da studiare prima"}</span>
+                <span className="text-muted-foreground">{c.after.length ? `after ${c.after.join(", ")}` : "no prerequisite to study first"}</span>
               </li>
             ))}
           </ul>
@@ -158,7 +158,7 @@ function SessionCard({ session, live }: { session: StudySession; live: Pianifica
 
       {session.look.length > 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-muted-foreground">Cosa guardare</p>
+          <p className="text-sm font-medium text-muted-foreground">What to review</p>
           {session.look.map((l) => (
             <div key={l.passage.id} className="flex flex-col gap-1">
               {l.note && <p className="text-sm">{l.note}</p>}

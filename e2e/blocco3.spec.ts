@@ -33,45 +33,45 @@ test.describe("blocco 3", () => {
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     page.on("pageerror", (e) => errors.push(e.message));
 
-    // Il docente non ha la voce Studio; lo studente sì, accanto a Grafo e Materiali.
+    // Il docente non ha la voce Study; lo studente sì, accanto a Graph e Materials.
     await page.goto("/");
-    await expect(visible(page, "link", "Grafo")).toBeVisible();
-    await expect(visible(page, "link", "Studio")).toHaveCount(0);
-    await visible(page, "button", /^studente$/i).click();
-    for (const name of ["Esame", "Classe", "Lezioni"]) await expect(visible(page, "link", name)).toHaveCount(0);
-    await visible(page, "link", "Studio").click();
-    await expect(page).toHaveURL(new URL("/studio", DEMO_URL).href);
-    await expect(page.getByRole("heading", { name: "Piano di studio" })).toBeVisible();
+    await expect(visible(page, "link", "Graph")).toBeVisible();
+    await expect(visible(page, "link", /^Study$/)).toHaveCount(0);
+    await visible(page, "button", /^student$/i).click();
+    for (const name of ["Exam", "Class", "Lessons"]) await expect(visible(page, "link", new RegExp(`^${name}$`))).toHaveCount(0);
+    await visible(page, "link", /^Study$/).click();
+    await expect(page).toHaveURL(new URL("/study", DEMO_URL).href);
+    await expect(page.getByRole("heading", { name: "Study plan" })).toBeVisible();
     // Il confine è dichiarato a schermo.
-    await expect(page.getByText("non scrive risposte d'esame")).toBeVisible();
+    await expect(page.getByText("does not write exam answers")).toBeVisible();
     await shot("1-scelte");
 
     // Cosa conosce già: una lezione e un concetto. Giorni: da 7 a 4.
     await page.getByRole("button", { name: /^L00,/ }).click();
     await expect(page.getByRole("button", { name: /^L00,/ })).toHaveAttribute("aria-pressed", "true");
-    await page.getByRole("searchbox", { name: "Cerca un concetto" }).fill("Policy");
-    await page.getByRole("list", { name: "Concetti trovati" }).getByRole("button").first().click();
-    await expect(page.getByLabel("Concetti segnati").getByRole("button")).toHaveCount(1);
-    for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "Un giorno in meno" }).click();
-    await expect(page.getByLabel("Giorni all'appello")).toHaveValue("4");
+    await page.getByRole("searchbox", { name: "Search a concept" }).fill("Policy");
+    await page.getByRole("list", { name: "Concepts found" }).getByRole("button").first().click();
+    await expect(page.getByLabel("Concepts marked").getByRole("button")).toHaveCount(1);
+    for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "One day less" }).click();
+    await expect(page.getByRole("spinbutton", { name: "Days until the exam" })).toHaveValue("4");
     await noHorizontalScroll(page);
 
-    await page.getByRole("button", { name: "Prepara il piano" }).click();
-    await expect(page).toHaveURL(/\/studio\?p=/);
-    await expect(page.getByText("Ordine dal grafo")).toBeVisible();
-    const sessions = page.getByRole("list", { name: "Sessioni di studio" }).locator(":scope > li");
+    await page.getByRole("button", { name: "Build the plan" }).click();
+    await expect(page).toHaveURL(/\/study\?p=/);
+    await expect(page.getByText("Order from the graph")).toBeVisible();
+    const sessions = page.getByRole("list", { name: "Study sessions" }).locator(":scope > li");
     await expect(sessions).toHaveCount(4);
     await shot("2-pianificatore");
 
     // Il Pianificatore finisce: ogni sessione ha la spiegazione e almeno una slide da guardare.
-    await expect(page.getByText("Sessioni spiegate")).toBeVisible({ timeout: 150_000 });
-    await expect(page.getByText("Il Pianificatore non ha scritto questa sessione")).toHaveCount(0);
-    await expect(page.getByText("Cosa guardare")).toHaveCount(4);
+    await expect(page.getByText("Sessions explained")).toBeVisible({ timeout: 150_000 });
+    await expect(page.getByText("The Planner did not write this session")).toHaveCount(0);
+    await expect(page.getByText("What to review")).toHaveCount(4);
     const ref = page.getByRole("button", { name: /^L\d+ · slide \d+/ }).first();
     await ref.click();
     await expect(ref).toHaveAttribute("aria-expanded", "true");
-    await page.getByRole("button", { name: "L'ordine nel grafo" }).first().click();
-    await expect(page.getByText(/^dopo |nessun prerequisito/).first()).toBeVisible();
+    await page.getByRole("button", { name: "Order in the graph" }).first().click();
+    await expect(page.getByText(/^after |no prerequisite/).first()).toBeVisible();
     await noHorizontalScroll(page);
     await shot("3-piano");
     expect(errors, "errori in console").toEqual([]);

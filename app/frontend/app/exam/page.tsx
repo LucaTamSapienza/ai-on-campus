@@ -11,8 +11,8 @@ import { EmptyState } from "@/components/empty-state";
 import { PageColumn } from "@/components/page-column";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { QuestionForm, QuestionList } from "@/components/esame/question-list";
-import { QuestionView } from "@/components/esame/question-view";
+import { QuestionForm, QuestionList } from "@/components/exam/question-list";
+import { QuestionView } from "@/components/exam/question-view";
 
 export default function EsamePage() {
   return (
@@ -26,7 +26,7 @@ function Esame() {
   const params = useSearchParams();
   const router = useRouter();
   const questionId = params.get("q");
-  const creating = params.get("nuova") === "1";
+  const creating = params.get("new") === "1";
   const { course, courseLoading } = useShell();
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<ExamQuestion[] | null>(null);
@@ -41,7 +41,7 @@ function Esame() {
       setQuestions(first ? (await esameApi.exam(first.id)).questions : []);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Errore");
+      setError(e instanceof Error ? e.message : "Error");
     }
   }, [course]);
 
@@ -51,7 +51,7 @@ function Esame() {
 
   const ensureExam = useCallback(async () => {
     if (exam) return exam.id;
-    const created = await esameApi.createExam(course!.id, "Esame");
+    const created = await esameApi.createExam(course!.id, "Exam");
     return created.id;
   }, [exam, course]);
 
@@ -67,20 +67,20 @@ function Esame() {
   }
 
   if (courseLoading) return <Skeleton className="m-6 h-40" />;
-  if (!course) return <EmptyState icon={ClipboardList} title="Nessun corso" description="Prima carica il materiale del corso." />;
+  if (!course) return <EmptyState icon={ClipboardList} title="No course yet" description="Upload the course materials first." />;
 
   if (creating) {
     return (
-      <PageColumn title="Nuova domanda" description="Il testo e la griglia di correzione: senza griglia non si corregge e non si attacca.">
-        <QuestionForm examId={ensureExam} onCreated={(id) => router.push(`/esame?q=${id}`)} onCancel={() => router.push("/esame")} />
+      <PageColumn title="New question" description="The text and the grading rubric. Without a rubric there is nothing to grade or attack.">
+        <QuestionForm examId={ensureExam} onCreated={(id) => router.push(`/exam?q=${id}`)} onCancel={() => router.push("/exam")} />
       </PageColumn>
     );
   }
 
   return (
     <PageColumn
-      title={exam?.title ?? "Esame"}
-      description="Ogni domanda passa da tre attacchi: un modello senza il corso, uno con i passaggi del corso, uno che cerca due letture."
+      title={exam?.title ?? "Exam"}
+      description="Each question faces three attacks: a model without the course, one with the course passages, one that looks for two readings."
     >
       {error ? (
         <p className="text-base text-destructive">{error}</p>
@@ -92,12 +92,12 @@ function Esame() {
       ) : questions.length === 0 ? (
         <EmptyState
           icon={ClipboardList}
-          title="Nessuna domanda"
-          description="Scrivi una domanda con la sua griglia: poi la metti alla prova."
-          action={<Button onClick={() => router.push("/esame?nuova=1")}>Nuova domanda</Button>}
+          title="No questions yet"
+          description="Write a question with its rubric, then put it to the test."
+          action={<Button onClick={() => router.push("/exam?new=1")}>New question</Button>}
         />
       ) : (
-        <QuestionList questions={questions} onNew={() => router.push("/esame?nuova=1")} />
+        <QuestionList questions={questions} onNew={() => router.push("/exam?new=1")} />
       )}
     </PageColumn>
   );

@@ -23,33 +23,33 @@ export function RunProgress({ run, live }: { run: RunDetail; live: AttaccoState 
   const steps: Step[] = [
     {
       key: "recupero",
-      label: "Recupero",
-      detail: run.retrieval ? `${run.retrieval.passages.length} passaggi` : (live?.agents.recupero.note ?? "Cerca nel corso"),
+      label: "Retrieval",
+      detail: run.retrieval ? `${run.retrieval.passages.length} passages` : (live?.agents.recupero.note ?? "Searching the course"),
       state: run.retrieval ? "done" : "running",
     },
     {
       key: "attacco",
-      label: "Tre attacchi",
-      detail: `${attacksDone} di 3 finiti`,
+      label: "Three attacks",
+      detail: `${attacksDone} of 3 done`,
       state: attacksDone === 3 ? "done" : run.retrieval ? "running" : "pending",
     },
     {
       key: "correttore",
-      label: "Correttore",
-      detail: toGrade ? `${graded} di ${toGrade} risposte` : "Aspetta le risposte",
+      label: "Grader",
+      detail: toGrade ? `${graded} of ${toGrade} answers` : "Waiting for answers",
       state: attacksDone === 3 && graded >= toGrade ? "done" : graded > 0 || (attacksDone > 0 && toGrade > 0) ? "running" : "pending",
     },
     {
       key: "revisore",
-      label: "Revisore",
-      detail: run.review ? "Scheda pronta" : live?.agents.revisore.status === "running" ? "Compone la scheda" : "Aspetta i voti",
+      label: "Reviewer",
+      detail: run.review ? "Report ready" : live?.agents.revisore.status === "running" ? "Writing the report" : "Waiting for scores",
       state: run.review ? "done" : live?.agents.revisore.status === "running" ? "running" : "pending",
     },
   ];
   if (closed) for (const s of steps) if (s.state !== "done") s.state = "error";
 
   return (
-    <ol className="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Avanzamento dell'attacco">
+    <ol className="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Attack progress">
       {steps.map((s) => (
         <li
           key={s.key}
@@ -78,17 +78,17 @@ export function RunProgress({ run, live }: { run: RunDetail; live: AttaccoState 
 }
 
 const RELATION: Record<string, string> = {
-  prerequisito: "prerequisito",
-  parte_di: "parte di",
-  generalizza: "generalizza",
-  usa: "usa",
-  contrasta: "contrasta",
+  prerequisito: "prerequisite",
+  parte_di: "part of",
+  generalizza: "generalizes",
+  usa: "uses",
+  contrasta: "contrasts",
 };
 
 function reasonText(r: RetrievalReason) {
-  if (r.via === "termine") return `termine: ${r.terms.join(", ")}`;
-  if (r.via === "concetto") return `concetto: ${r.concept}`;
-  return `vicino di ${r.from} (${RELATION[r.relation] ?? r.relation}): ${r.concept}`;
+  if (r.via === "termine") return `term: ${r.terms.join(", ")}`;
+  if (r.via === "concetto") return `concept: ${r.concept}`;
+  return `neighbour of ${r.from} (${RELATION[r.relation] ?? r.relation}): ${r.concept}`;
 }
 
 export function RetrievalPath({ run }: { run: RunDetail }) {
@@ -104,9 +104,9 @@ export function RetrievalPath({ run }: { run: RunDetail }) {
         className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <span className="flex flex-col">
-          <span className="text-base font-semibold">Percorso del recupero</span>
+          <span className="text-base font-semibold">Retrieval path</span>
           <span className="text-sm text-muted-foreground">
-            {r.terms.length} termini, {r.concepts.length} concetti del grafo, {r.passages.length} passaggi
+            {r.terms.length} terms, {r.concepts.length} graph concepts, {r.passages.length} passages
           </span>
         </span>
         <ChevronDown className={cn("size-5 shrink-0 text-muted-foreground transition-transform duration-150", open && "rotate-180")} aria-hidden />
@@ -114,7 +114,7 @@ export function RetrievalPath({ run }: { run: RunDetail }) {
       {open && (
         <div className="flex flex-col gap-4 border-t px-4 py-4">
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Termini cercati</p>
+            <p className="text-sm font-medium">Terms searched</p>
             <div className="flex flex-wrap gap-2">
               {r.terms.map((t) => (
                 <span key={t} className="rounded-full bg-muted px-3 py-1 font-mono text-xs">
@@ -125,13 +125,13 @@ export function RetrievalPath({ run }: { run: RunDetail }) {
           </div>
           {r.concepts.length > 0 && (
             <div className="flex flex-col gap-2">
-              <p className="text-sm font-medium">Concetti toccati</p>
+              <p className="text-sm font-medium">Concepts touched</p>
               <div className="flex flex-wrap gap-2">
                 {r.concepts.map((c) => (
                   <span
                     key={c.id}
                     className={cn("rounded-full px-3 py-1 text-sm", c.via === "diretto" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}
-                    title={c.via === "vicino" ? `vicino di ${c.from}` : "nominato nella domanda"}
+                    title={c.via === "vicino" ? `neighbour of ${c.from}` : "named in the question"}
                   >
                     {c.name}
                   </span>
@@ -140,7 +140,7 @@ export function RetrievalPath({ run }: { run: RunDetail }) {
             </div>
           )}
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Passaggi, in ordine</p>
+            <p className="text-sm font-medium">Passages, in order</p>
             {r.passages.map((p) => (
               <div key={p.id} className="flex flex-col gap-1">
                 <p className="text-xs text-muted-foreground">{p.reasons.map(reasonText).join(" · ")}</p>

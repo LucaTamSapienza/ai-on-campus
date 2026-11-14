@@ -118,11 +118,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     res = await fetch(`${API_BASE}/api${path}`, { ...init, headers });
   } catch {
-    throw new ApiError(0, "network", "Il server non risponde. Controlla la connessione e riprova.");
+    throw new ApiError(0, "network", "The server is not responding. Check your connection and try again.");
   }
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    const err = body?.error ?? { code: "http", message: `Errore ${res.status}` };
+    const err = body?.error ?? { code: "http", message: `Error ${res.status}` };
     if (err.code === "demo_code" && typeof window !== "undefined") window.dispatchEvent(new Event(DEMO_CODE_EVENT));
     throw new ApiError(res.status, err.code, err.message);
   }

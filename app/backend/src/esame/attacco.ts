@@ -71,14 +71,14 @@ export class Attacco extends Agent<Env, AttaccoState> {
       try {
         await this.pipeline(payload.runId);
       } catch (err) {
-        await this.close(payload.runId, err instanceof Expired ? "Tempo scaduto" : errMessage(err));
+        await this.close(payload.runId, err instanceof Expired ? "Timed out" : errMessage(err));
       }
     });
   }
 
   async expire(payload: { runId: string }) {
     const row = await this.env.DB.prepare("SELECT status FROM attack_runs WHERE id = ?").bind(payload.runId).first<{ status: string }>();
-    if (row?.status === "running") await this.close(payload.runId, "Tempo scaduto");
+    if (row?.status === "running") await this.close(payload.runId, "Timed out");
   }
 
   private live(agent: keyof AttaccoState["agents"], patch: Partial<LiveAgent>) {
@@ -117,7 +117,7 @@ export class Attacco extends Agent<Env, AttaccoState> {
     // 1. Recupero (una volta sola: se c'è già in D1 si riusa).
     if (!run.retrieval) {
       this.bump({ step: "recupero" });
-      this.live("recupero", { status: "running", note: "Estrae i termini tecnici" });
+      this.live("recupero", { status: "running", note: "Extracting technical terms" });
       const courseId = (await db.prepare("SELECT course_id FROM questions WHERE id = ?").bind(run.questionId).first<{ course_id: string }>())!.course_id;
       let terms: string[];
       try {
@@ -125,7 +125,7 @@ export class Attacco extends Agent<Env, AttaccoState> {
       } catch {
         // Senza i termini del modello si cerca con i token tecnici della domanda: lo si dice.
         terms = technicalTokens(run.version.text);
-        this.live("recupero", { note: "Termini dal testo della domanda (estrazione non riuscita)" });
+        this.live("recupero", { note: "Terms from the question text (extraction failed)" });
       }
       this.checkDeadline();
       const found = await retrievePassages(db, courseId, run.version.text, terms);
@@ -142,11 +142,11 @@ export class Attacco extends Agent<Env, AttaccoState> {
       run = (await loadRun(db, runId))!;
       this.live("recupero", {
         status: "done",
-        note: `${run.retrieval!.passages.length} passaggi, ${found.concepts.length} concetti, ${terms.length} termini`,
+        note: `${run.retrieval!.passages.length} passages, ${found.concepts.length} concepts, ${terms.length} terms`,
       });
       this.bump();
     } else {
-      this.live("recupero", { status: "done", note: `${run.retrieval.passages.length} passaggi` });
+      this.live("recupero", { status: "done", note: `${run.retrieval.passages.length} passages` });
     }
 
     // 2. I tre attaccanti in parallelo; ognuno, appena finisce, passa le sue risposte al Correttore.
@@ -226,7 +226,7 @@ export class Attacco extends Agent<Env, AttaccoState> {
     const answers = answersToGrade(agent, attack.finding, attack.answer);
     for (const [i, answer] of answers.entries()) {
       if (attack.grades.some((g) => g.readingIndex === i)) continue;
-      this.live("correttore", { status: "running", note: `Corregge ${label(agent, i, answers.length)}` });
+      this.live("correttore", { status: "running", note: `Grading ${label(agent, i, answers.length)}` });
       try {
         const g = await runCorrettore(this.env, { question, rubric: run.version.rubric, answer }, ref);
         await db
@@ -241,27 +241,27 @@ export class Attacco extends Agent<Env, AttaccoState> {
       }
       this.bump();
     }
-    this.live("correttore", { note: `Ha corretto ${label(agent, 0, 1)}` });
+    this.live("correttore", { note: `Graded ${label(agent, 0, 1)}` });
   }
 
   private async review(run: RunDetail, passages: ContextPassage[]) {
     const db = this.env.DB;
     this.live("correttore", { status: "done", note: null });
-    this.live("revisore", { status: "running", text: "", note: "Compone la scheda" });
+    this.live("revisore", { status: "running", text: "", note: "Writing the report" });
     const verdicts = computeVerdicts(run);
     const letterale = run.attacks.find((a) => a.agent === "letterale")?.finding as LetteraleFinding | null | undefined;
     const verifiedIds = new Set(letterale?.citations?.map((c) => c.passageId) ?? []);
     const verified = passages.filter((p) => verifiedIds.has(p.id));
 
     const findings = [
-      `Verdetti calcolati: ${verdicts.map((v) => `${v.title} (${v.detail})`).join(" | ")}`,
+      `Computed verdicts: ${verdicts.map((v) => `${v.title} (${v.detail})`).join(" | ")}`,
       ...run.attacks.map((a) => {
-        const marks = a.grades.map((g) => (g.total !== null ? `${g.total}/${g.max}` : "voto non riuscito")).join(", ");
-        const body = a.status === "done" ? (a.answer || "(nessuna lettura alternativa trovata)").slice(0, 1200) : `non completato: ${a.error ?? ""}`;
+        const marks = a.grades.map((g) => (g.total !== null ? `${g.total}/${g.max}` : "grading failed")).join(", ");
+        const body = a.status === "done" ? (a.answer || "(no alternative reading found)").slice(0, 1200) : `not finished: ${a.error ?? ""}`;
         const extra = a.agent === "cavillatore" && (a.finding as CavillatoreFinding | null)?.found
-          ? `\nFrase ambigua: ${(a.finding as CavillatoreFinding).phrase}\nAssunzione: ${(a.finding as CavillatoreFinding).assumption}`
+          ? `\nAmbiguous sentence: ${(a.finding as CavillatoreFinding).phrase}\nAssumption: ${(a.finding as CavillatoreFinding).assumption}`
           : "";
-        return `## ${a.agent} (voti: ${marks || "nessuno"})${extra}\n${body}`;
+        return `## ${AGENT_NAME[a.agent]} (scores: ${marks || "none"})${extra}\n${body}`;
       }),
     ].join("\n\n");
 
@@ -311,11 +311,14 @@ export class Attacco extends Agent<Env, AttaccoState> {
   }
 }
 
+// Nomi a schermo degli attaccanti, per il contesto del Revisore.
+const AGENT_NAME: Record<AttackAgent, string> = { esterno: "Outsider", letterale: "Literalist", cavillatore: "Quibbler" };
+
 function label(agent: AttackAgent, i: number, n: number) {
-  const name = { esterno: "l'Esterno", letterale: "il Letterale", cavillatore: "il Cavillatore" }[agent];
-  return n > 1 ? `${name}, lettura ${i + 1}` : name;
+  const name = { esterno: "the Outsider", letterale: "the Literalist", cavillatore: "the Quibbler" }[agent];
+  return n > 1 ? `${name}, reading ${i + 1}` : name;
 }
 
 function errMessage(err: unknown) {
-  return (err instanceof Error ? err.message : "Errore sconosciuto").slice(0, 300);
+  return (err instanceof Error ? err.message : "Unknown error").slice(0, 300);
 }

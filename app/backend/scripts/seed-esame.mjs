@@ -21,36 +21,36 @@ async function call(path, init = {}) {
   return body;
 }
 
-const EXAM_TITLE = "Appello di prova";
+const EXAM_TITLE = "Mock exam";
 
 // Tre domande da 10 punti: una che un modello generico risolve senza il corso (A), una con
 // un'assunzione nascosta (B), una che dipende da ciò che è specifico del corso (C).
 const QUESTIONS = [
   {
-    text: "In Q-learning tabulare, Q(s,a)=2, alpha=0,5, gamma=0,9. Una transizione non terminale dà ricompensa 1 e max_b Q(s',b)=4. Calcola il nuovo Q(s,a), mostra target ed errore TD e spiega perché il metodo è off-policy.",
+    text: "In tabular Q-learning, Q(s,a)=2, alpha=0.5, gamma=0.9. A non-terminal transition gives reward 1 and max_b Q(s',b)=4. Compute the new Q(s,a), show the target and the TD error, and explain why the method is off-policy.",
     rubric: [
-      { criterion: "Target TD", points: 2, expected: "target = r + gamma * max_b Q(s',b) = 1 + 0,9 * 4 = 4,6" },
-      { criterion: "Errore TD", points: 2, expected: "delta = target - Q(s,a) = 4,6 - 2 = 2,6" },
-      { criterion: "Nuovo valore", points: 3, expected: "Q(s,a) = 2 + 0,5 * 2,6 = 3,3" },
-      { criterion: "Off-policy", points: 3, expected: "il target usa la politica greedy (max), distinta dalla politica che raccoglie i dati (per esempio epsilon-greedy)" },
+      { criterion: "TD target", points: 2, expected: "target = r + gamma * max_b Q(s',b) = 1 + 0.9 * 4 = 4.6" },
+      { criterion: "TD error", points: 2, expected: "delta = target - Q(s,a) = 4.6 - 2 = 2.6" },
+      { criterion: "New value", points: 3, expected: "Q(s,a) = 2 + 0.5 * 2.6 = 3.3" },
+      { criterion: "Off-policy", points: 3, expected: "the target uses the greedy policy (max), distinct from the policy that collects the data (for example epsilon-greedy)" },
     ],
   },
   {
-    text: "Una transizione conclude l'episodio del simulatore. Q(s,a)=2, alpha=0,5, gamma=0,9, ricompensa 1; prima del reset la tabella riporta max_b Q(s',b)=4. Esegui l'aggiornamento Q-learning e giustifica il target.",
+    text: "A transition ends the simulator's episode. Q(s,a)=2, alpha=0.5, gamma=0.9, reward 1; before the reset the table shows max_b Q(s',b)=4. Perform the Q-learning update and justify the target.",
     rubric: [
-      { criterion: "Assunzione esplicita", points: 2, expected: "dice se la fine dell'episodio è uno stato terminale vero o un'interruzione esterna (timeout, troncamento)" },
-      { criterion: "Formula coerente con l'assunzione", points: 3, expected: "terminale: target = r; troncamento: target = r + gamma * max_b Q(s',b)" },
-      { criterion: "Risultato coerente", points: 3, expected: "1,5 se terminale (target 1), oppure 3,3 se troncamento (target 4,6)" },
-      { criterion: "Bootstrap", points: 2, expected: "spiega perché il bootstrap si azzera in uno stato terminale o si mantiene se l'episodio è solo interrotto" },
+      { criterion: "Explicit assumption", points: 2, expected: "states whether the end of the episode is a true terminal state or an external interruption (timeout, truncation)" },
+      { criterion: "Formula consistent with the assumption", points: 3, expected: "terminal: target = r; truncation: target = r + gamma * max_b Q(s',b)" },
+      { criterion: "Consistent result", points: 3, expected: "1.5 if terminal (target 1), or 3.3 if truncation (target 4.6)" },
+      { criterion: "Bootstrap", points: 2, expected: "explains why bootstrapping drops to zero in a terminal state or is kept if the episode is only interrupted" },
     ],
   },
   {
-    text: "Nella lezione L08 di questo corso viene assegnata una dimostrazione da fare a casa. Individua l'enunciato assegnato, riporta le ipotesi sulle due politiche e la conclusione, quindi spiega il collegamento con le due proprietà GLIE presentate subito dopo. Indica le slide che giustificano la tua ricostruzione.",
+    text: "In lesson L08 of this course a proof is assigned as homework. Identify the assigned statement, give the hypotheses on the two policies and the conclusion, then explain how it relates to the two GLIE properties presented right after. Point to the slides that support your reconstruction.",
     rubric: [
-      { criterion: "Consegna individuata e localizzata", points: 3, expected: "individua la consegna «Prove it at home» sul miglioramento della politica epsilon-greedy, con la slide che la riporta" },
-      { criterion: "Enunciato", points: 3, expected: "per ogni politica epsilon-greedy pi, la politica epsilon-greedy pi' rispetto a Q^pi è un miglioramento" },
-      { criterion: "Conclusione", points: 2, expected: "V^pi' >= V^pi" },
-      { criterion: "Distinzione dalle proprietà GLIE", points: 2, expected: "le due proprietà GLIE (ogni coppia stato-azione esplorata infinite volte; la politica converge alla greedy) sono condizioni di convergenza, non l'enunciato da dimostrare" },
+      { criterion: "Task identified and located", points: 3, expected: "identifies the “Prove it at home” task on the improvement of the epsilon-greedy policy, with the slide that states it" },
+      { criterion: "Statement", points: 3, expected: "for any epsilon-greedy policy pi, the epsilon-greedy policy pi' with respect to Q^pi is an improvement" },
+      { criterion: "Conclusion", points: 2, expected: "V^pi' >= V^pi" },
+      { criterion: "Distinction from the GLIE properties", points: 2, expected: "the two GLIE properties (every state-action pair explored infinitely often; the policy converges to the greedy one) are convergence conditions, not the statement to prove" },
     ],
   },
 ];

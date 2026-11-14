@@ -20,7 +20,7 @@ const ALLOWED_TABLES = new Set([
 
 export function studioQuery(db: D1Database, sql: string, ...params: unknown[]) {
   for (const m of sql.matchAll(/\b(?:FROM|JOIN|INTO|UPDATE)\s+([a-z_]+)/gi)) {
-    if (!ALLOWED_TABLES.has(m[1].toLowerCase())) throw new Error(`Piano di studio: la tabella ${m[1]} è fuori dal suo confine.`);
+    if (!ALLOWED_TABLES.has(m[1].toLowerCase())) throw new Error(`Study plan: table ${m[1]} is outside its boundary.`);
   }
   return db.prepare(sql).bind(...params);
 }

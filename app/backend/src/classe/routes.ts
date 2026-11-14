@@ -38,16 +38,16 @@ classe.post("/courses/:id/students", async (c) => {
   const parsed = studentBody.safeParse(await c.req.json().catch(() => undefined));
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return fail(c, 400, "invalid_body", `Richiesta non valida: ${issue.path.join(".") || "corpo"} ${issue.message}`);
+    return fail(c, 400, "invalid_body", `Invalid request: ${issue.path.join(".") || "body"} ${issue.message}`);
   }
   const body = parsed.data;
   const db = c.env.DB;
   const courseId = c.req.param("id");
-  if (!(await db.prepare("SELECT 1 FROM courses WHERE id = ?").bind(courseId).first())) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await db.prepare("SELECT 1 FROM courses WHERE id = ?").bind(courseId).first())) return fail(c, 404, "not_found", "Course not found.");
   const existing = await db.prepare("SELECT id FROM students WHERE course_id = ? AND name = ?").bind(courseId, body.name).first<{ id: string }>();
   if (!existing) {
     const n = await db.prepare("SELECT COUNT(*) AS n FROM students WHERE course_id = ?").bind(courseId).first<{ n: number }>();
-    if ((n?.n ?? 0) >= MAX_STUDENTS) return fail(c, 409, "too_many_students", `La classe ha già ${MAX_STUDENTS} studenti, il massimo.`);
+    if ((n?.n ?? 0) >= MAX_STUDENTS) return fail(c, 409, "too_many_students", `The class already has ${MAX_STUDENTS} students, the maximum.`);
   }
   const sources = (
     await db.prepare("SELECT id, title FROM sources WHERE course_id = ? AND kind = 'document'").bind(courseId).all<{ id: string; title: string }>()
@@ -72,11 +72,11 @@ classe.post("/questions/:id/class", async (c) => {
     .prepare("SELECT id, course_id AS courseId, current_version_id AS versionId FROM questions WHERE id = ?")
     .bind(c.req.param("id"))
     .first<{ id: string; courseId: string; versionId: string | null }>();
-  if (!q) return fail(c, 404, "not_found", "Domanda non trovata.");
+  if (!q) return fail(c, 404, "not_found", "Question not found.");
   const version = q.versionId ? await loadVersion(db, q.versionId) : null;
-  if (!version || version.rubric.length === 0) return fail(c, 422, "rubric_required", "Serve la griglia di correzione.");
+  if (!version || version.rubric.length === 0) return fail(c, 422, "rubric_required", "A grading rubric is required.");
   const students = await loadStudents(db, q.courseId);
-  if (!students.length) return fail(c, 409, "no_students", "La classe simulata è vuota: semina gli studenti sintetici.");
+  if (!students.length) return fail(c, 409, "no_students", "The simulated class is empty. Seed the synthetic students.");
 
   const runId = crypto.randomUUID();
   try {
@@ -87,7 +87,7 @@ classe.post("/questions/:id/class", async (c) => {
   } catch (err) {
     if (err instanceof Error && /UNIQUE constraint failed/i.test(err.message)) {
       const active = await db.prepare("SELECT id FROM class_runs WHERE question_id = ? AND status = 'running'").bind(q.id).first<{ id: string }>();
-      return c.json({ error: { code: "run_active", message: "La classe sta già rispondendo a questa domanda.", runId: active?.id ?? null } }, 409);
+      return c.json({ error: { code: "run_active", message: "The class is already answering this question.", runId: active?.id ?? null } }, 409);
     }
     throw err;
   }
@@ -97,7 +97,7 @@ classe.post("/questions/:id/class", async (c) => {
   } catch (err) {
     console.error(err);
     await db.prepare("UPDATE class_runs SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?").bind("Il coordinatore non è partito", runId).run();
-    return fail(c, 503, "agent_unavailable", "Il coordinatore della classe non è partito. Riprova.");
+    return fail(c, 503, "agent_unavailable", "The class coordinator did not start. Try again.");
   }
   return c.json({ runId }, 202);
 });
@@ -114,6 +114,6 @@ classe.get("/questions/:id/class", async (c) => {
 
 classe.get("/class-runs/:id", async (c) => {
   const run = await loadClassRun(c.env.DB, c.req.param("id"));
-  if (!run) return fail(c, 404, "not_found", "Esecuzione non trovata.");
+  if (!run) return fail(c, 404, "not_found", "Run not found.");
   return c.json({ run });
 });

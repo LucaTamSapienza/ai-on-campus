@@ -139,8 +139,8 @@ function setup(page: Page, info: TestInfo) {
 }
 
 async function conceptCount(page: Page) {
-  await page.getByRole("button", { name: "Elenco dei concetti" }).click();
-  const filter = page.getByRole("searchbox", { name: "Filtra i concetti" });
+  await page.getByRole("button", { name: "Concept list" }).click();
+  const filter = page.getByRole("searchbox", { name: "Filter concepts" });
   await expect(filter).toBeVisible();
   const placeholder = (await filter.getAttribute("placeholder")) ?? "";
   return { filter, count: Number(placeholder.match(/\d+/)?.[0] ?? 0) };
@@ -159,11 +159,11 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
       const { count } = await conceptCount(page);
       expect(count).toBeGreaterThanOrEqual(TOPIC_COUNT_BEFORE);
       await screen("elenco-dei-concetti");
-      await page.getByRole("button", { name: "Chiudi l'elenco" }).click();
+      await page.getByRole("button", { name: "Close the list" }).click();
     });
 
     await test.step("ricerca e dettaglio di Q-learning con le slide di prova", async () => {
-      const search = page.getByRole("searchbox", { name: "Cerca un concetto" });
+      const search = page.getByRole("searchbox", { name: "Search a concept" });
       await search.fill("Q-learning");
       await expect(page.getByRole("option").first()).toBeVisible();
       await screen("ricerca");
@@ -171,72 +171,72 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
       await expect(page.getByRole("heading", { name: "Q-learning", exact: true })).toBeVisible();
       await expect(page.getByText(/^L\d+ · slide \d+$/).first()).toBeVisible();
       await screen("dettaglio-q-learning");
-      await page.getByRole("button", { name: "Chiudi il dettaglio" }).click();
+      await page.getByRole("button", { name: "Close the detail" }).click();
       await expect(page.getByRole("heading", { name: "Q-learning", exact: true })).toBeHidden();
     });
 
     await test.step("filtro per argomento", async () => {
       if (!desktop) {
-        await page.getByRole("button", { name: "Filtra per argomento" }).click();
-        await expect(page.getByText("Argomenti", { exact: true })).toBeVisible();
+        await page.getByRole("button", { name: "Filter by topic" }).click();
+        await expect(page.getByText("Topics", { exact: true })).toBeVisible();
       }
-      const chips = page.getByRole("group", { name: "Filtra per argomento" }).getByRole("button");
+      const chips = page.getByRole("group", { name: "Filter by topic" }).getByRole("button");
       const chip = chips.first();
       await chip.click();
       await expect(chip).toHaveAttribute("aria-pressed", "true");
       await screen("filtro-argomento");
-      await page.getByRole("button", { name: "Tutti" }).click();
+      await page.getByRole("button", { name: "All", exact: true }).click();
       await expect(chip).toHaveAttribute("aria-pressed", "false");
       if (!desktop) await page.keyboard.press("Escape");
     });
 
-    await test.step("caricamento dal vivo da Materiali, il Cartografo porta concetti nuovi", async () => {
-      await page.getByRole("link", { name: "Materiali" }).click();
-      await expect(page.getByRole("heading", { name: "Materiali" })).toBeVisible();
+    await test.step("caricamento dal vivo da Materials, il Cartografo porta concetti nuovi", async () => {
+      await page.getByRole("link", { name: "Materials" }).click();
+      await expect(page.getByRole("heading", { name: "Materials" })).toBeVisible();
       await screen("materiali");
       await page.setInputFiles('input[type="file"]', LIVE_FILE);
-      await expect(page.getByRole("textbox", { name: "Titolo" })).toHaveValue(/Lab06/);
-      await page.getByRole("button", { name: "Carica e fai leggere al Cartografo" }).click();
+      await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue(/Lab06/);
+      await page.getByRole("button", { name: "Upload and send to the Cartographer" }).click();
       const row = page.getByRole("listitem").filter({ hasText: "Lab06" });
       await expect(row).toBeVisible();
       // Concetti che arrivano mentre il Cartografo legge (striscia dal vivo).
-      await expect(page.getByText(/\+[1-9]\d* concett[oi]/).first()).toBeVisible({ timeout: 180_000 });
+      await expect(page.getByText(/\+[1-9]\d* concepts?/).first()).toBeVisible({ timeout: 180_000 });
       await screen("cartografo-al-lavoro");
-      await expect(row.getByText("Letta")).toBeVisible({ timeout: 300_000 });
-      await expect(row.getByText(/[1-9]\d* concetti/)).toBeVisible();
+      await expect(row.getByText("Read", { exact: true })).toBeVisible({ timeout: 300_000 });
+      await expect(row.getByText(/[1-9]\d* concepts/)).toBeVisible();
       await screen("materiali-lab06-letta");
     });
 
     await test.step("il grafo ha i concetti nuovi", async () => {
-      await page.getByRole("link", { name: "Grafo" }).click();
+      await page.getByRole("link", { name: "Graph" }).click();
       await expect(page.locator("canvas").first()).toBeVisible();
       await page.waitForTimeout(3000);
       const { count } = await conceptCount(page);
       expect(count).toBeGreaterThan(TOPIC_COUNT_BEFORE);
-      await page.getByRole("button", { name: "Chiudi l'elenco" }).click();
+      await page.getByRole("button", { name: "Close the list" }).click();
       await screen("grafo-dopo-il-caricamento");
     });
 
     await test.step("esame: elenco e domanda B", async () => {
-      await page.getByRole("link", { name: "Esame" }).click();
-      await expect(page.getByRole("link", { name: /Domanda 1/ })).toBeVisible();
-      await expect(page.getByRole("link", { name: /Domanda 3/ })).toBeVisible();
+      await page.getByRole("link", { name: "Exam" }).click();
+      await expect(page.getByRole("link", { name: /Question 1/ })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Question 3/ })).toBeVisible();
       await screen("esame-elenco");
-      await page.getByRole("link", { name: /Domanda 2/ }).click();
-      await expect(page.getByText(/Domanda 2 · versione 1/)).toBeVisible();
+      await page.getByRole("link", { name: /Question 2/ }).click();
+      await expect(page.getByText(/Question 2 · version 1/)).toBeVisible();
       await screen("domanda-b");
     });
 
     await test.step("triplo attacco: i tre agenti finiscono, scheda con verdetti", async () => {
-      await page.getByRole("button", { name: "Attacca la domanda" }).click();
-      const progress = page.getByRole("list", { name: "Avanzamento dell'attacco" });
+      await page.getByRole("button", { name: "Attack the question" }).click();
+      const progress = page.getByRole("list", { name: "Attack progress" });
       await expect(progress).toBeVisible();
       await page.waitForTimeout(3000);
       await screen("attacco-in-corso");
-      await expect(progress.getByText("3 di 3 finiti")).toBeVisible({ timeout: 240_000 });
-      const scheda = page.getByRole("region", { name: "Scheda del Revisore" });
+      await expect(progress.getByText("3 of 3 done")).toBeVisible({ timeout: 240_000 });
+      const scheda = page.getByRole("region", { name: "Reviewer's report" });
       await expect(scheda).toBeVisible({ timeout: 240_000 });
-      await expect(page.getByText(/Sta rispondendo|In attesa/)).toHaveCount(0);
+      await expect(page.getByText(/^(Answering|Waiting)$/)).toHaveCount(0);
       await progress.scrollIntoViewIfNeeded();
       await screen("tre-agenti-finiti");
       await expect(scheda.getByRole("listitem").first()).toBeVisible();
@@ -245,74 +245,74 @@ test("percorso della demo, blocco 1", async ({ page }, info) => {
     });
 
     await test.step("approva e riattacca, prima e dopo", async () => {
-      const scheda = page.getByRole("region", { name: "Scheda del Revisore" });
-      const approve = scheda.getByRole("button", { name: "Approva e riattacca" });
+      const scheda = page.getByRole("region", { name: "Reviewer's report" });
+      const approve = scheda.getByRole("button", { name: "Approve and attack again" });
       if (await approve.isVisible()) {
         await approve.click();
       } else {
         // Il Revisore non ha proposto: si modifica a mano, stesso percorso di riattacco.
-        info.annotations.push({ type: "nota", description: "nessuna proposta del Revisore: usato Modifica e riattacca" });
-        await scheda.getByRole("textbox").fill("Una transizione conclude l'episodio perché s' è terminale. Q(s,a)=2, alpha=0,5, gamma=0,9, ricompensa 1. Esegui l'aggiornamento Q-learning e giustifica il target.");
-        await scheda.getByRole("button", { name: "Modifica e riattacca" }).click();
+        info.annotations.push({ type: "nota", description: "nessuna proposta del Revisore: usato Edit and attack again" });
+        await scheda.getByRole("textbox").fill("A transition ends the episode because s' is terminal. Q(s,a)=2, alpha=0.5, gamma=0.9, reward 1. Perform the Q-learning update and justify the target.");
+        await scheda.getByRole("button", { name: "Edit and attack again" }).click();
       }
-      await expect(page.getByText(/Domanda 2 · versione 2/)).toBeVisible();
-      const progress = page.getByRole("list", { name: "Avanzamento dell'attacco" });
-      await expect(progress.getByText("3 di 3 finiti")).toBeVisible({ timeout: 240_000 });
-      await expect(page.getByRole("region", { name: "Scheda del Revisore" })).toBeVisible({ timeout: 240_000 });
-      const before = page.getByRole("region", { name: "Prima e dopo" });
-      await expect(before.getByText("Versione 1", { exact: true })).toBeVisible({ timeout: 30_000 });
-      await expect(before.getByText("Versione 2", { exact: true })).toBeVisible();
-      await expect(before.getByText("Non ancora attaccata.")).toHaveCount(0, { timeout: 30_000 });
+      await expect(page.getByText(/Question 2 · version 2/)).toBeVisible();
+      const progress = page.getByRole("list", { name: "Attack progress" });
+      await expect(progress.getByText("3 of 3 done")).toBeVisible({ timeout: 240_000 });
+      await expect(page.getByRole("region", { name: "Reviewer's report" })).toBeVisible({ timeout: 240_000 });
+      const before = page.getByRole("region", { name: "Before and after" });
+      await expect(before.getByText("Version 1", { exact: true })).toBeVisible({ timeout: 30_000 });
+      await expect(before.getByText("Version 2", { exact: true })).toBeVisible();
+      await expect(before.getByText("Not attacked yet.")).toHaveCount(0, { timeout: 30_000 });
       await before.scrollIntoViewIfNeeded();
       await screen("prima-e-dopo");
     });
 
     await test.step("domanda senza griglia rifiutata, domanda nuova creata", async () => {
-      await page.getByRole("link", { name: "Tutte le domande" }).click();
-      await page.getByRole("button", { name: "Nuova domanda" }).click();
-      await expect(page.getByRole("heading", { name: "Nuova domanda" })).toBeVisible();
-      await page.getByLabel("Testo della domanda").fill("Spiega la differenza fra SARSA e Q-learning nel caso di una politica ϵ-greedy con ϵ fisso.");
-      const save = page.getByRole("button", { name: "Salva la domanda" });
+      await page.getByRole("link", { name: "All questions" }).click();
+      await page.getByRole("button", { name: "New question" }).click();
+      await expect(page.getByRole("heading", { name: "New question" })).toBeVisible();
+      await page.getByLabel("Question text").fill("Explain the difference between SARSA and Q-learning for an ϵ-greedy policy with fixed ϵ.");
+      const save = page.getByRole("button", { name: "Save question" });
       await expect(save).toBeDisabled();
       // Il motivo si legge accanto al pulsante spento, anche su telefono.
       await save.scrollIntoViewIfNeeded();
-      await expect(page.getByText(/Serve la griglia di correzione/)).toBeInViewport();
+      await expect(page.getByText(/Add a grading rubric/)).toBeInViewport();
       await screen("domanda-senza-griglia");
 
       // Anche il server la rifiuta, con il messaggio.
       const course = (await (await page.request.get(`${API}/api/courses`)).json()).courses[0];
       const exam = (await (await page.request.get(`${API}/api/courses/${course.id}/exams`)).json()).exams[0];
-      const res = await page.request.post(`${API}/api/exams/${exam.id}/questions`, { data: { text: "Domanda di prova senza griglia.", rubric: [] } });
+      const res = await page.request.post(`${API}/api/exams/${exam.id}/questions`, { data: { text: "Test question without a rubric.", rubric: [] } });
       expect(res.status()).toBe(422);
-      expect((await res.json()).error.message).toBe("Serve la griglia di correzione.");
+      expect((await res.json()).error.message).toBe("A grading rubric is required.");
 
-      await page.getByLabel("Criterio 1", { exact: true }).fill("Distingue on-policy e off-policy");
-      await page.getByLabel("Punti del criterio 1").fill("6");
-      await page.getByLabel("Criterio 2", { exact: true }).fill("Conseguenza sull'esplorazione");
-      await page.getByLabel("Punti del criterio 2").fill("4");
-      await expect(page.getByText(/10 punti/)).toBeVisible();
+      await page.getByLabel("Criterion 1", { exact: true }).fill("Tells on-policy and off-policy apart");
+      await page.getByLabel("Points for criterion 1").fill("6");
+      await page.getByLabel("Criterion 2", { exact: true }).fill("Consequence for exploration");
+      await page.getByLabel("Points for criterion 2").fill("4");
+      await expect(page.getByText(/10 points/)).toBeVisible();
       await screen("domanda-nuova-con-griglia");
-      await page.getByRole("button", { name: "Salva la domanda" }).click();
-      await expect(page.getByText(/Domanda 4 · versione 1/)).toBeVisible();
-      await expect(page.getByRole("button", { name: "Attacca la domanda" })).toBeVisible();
+      await page.getByRole("button", { name: "Save question" }).click();
+      await expect(page.getByText(/Question 4 · version 1/)).toBeVisible();
+      await expect(page.getByRole("button", { name: "Attack the question" })).toBeVisible();
       await screen("domanda-nuova-salvata");
     });
 
     await test.step("selettore studente", async () => {
-      await page.getByRole("link", { name: "Grafo" }).click();
+      await page.getByRole("link", { name: "Graph" }).click();
       await expect(page.locator("canvas").first()).toBeVisible();
-      await page.getByRole("button", { name: "Studente" }).click();
-      await expect(page.getByRole("button", { name: "Studente" })).toHaveAttribute("aria-pressed", "true");
+      await page.getByRole("button", { name: "Student", exact: true }).click();
+      await expect(page.getByRole("button", { name: "Student", exact: true })).toHaveAttribute("aria-pressed", "true");
       // Dal blocco 2 lo studente legge anche i materiali (senza caricamento); esame, classe e lezioni no.
-      await expect(page.getByRole("link", { name: "Materiali" })).toBeVisible();
-      for (const name of ["Esame", "Classe", "Lezioni"]) await expect(page.getByRole("link", { name })).toHaveCount(0);
+      await expect(page.getByRole("link", { name: "Materials" })).toBeVisible();
+      for (const name of ["Exam", "Class", "Lessons"]) await expect(page.getByRole("link", { name, exact: true })).toHaveCount(0);
       // Dal blocco 3 lo studente ha anche il suo piano di studio.
-      await expect(page.getByRole("link", { name: "Studio" })).toBeVisible();
-      const search = page.getByRole("searchbox", { name: "Cerca un concetto" });
+      await expect(page.getByRole("link", { name: "Study", exact: true })).toBeVisible();
+      const search = page.getByRole("searchbox", { name: "Search a concept" });
       await search.fill("Q-learning");
       await search.press("Enter");
       await expect(page.getByRole("heading", { name: "Q-learning", exact: true })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Correggi" })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Edit", exact: true })).toHaveCount(0);
       await screen("studente");
     });
   } finally {

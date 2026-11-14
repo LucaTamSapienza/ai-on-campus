@@ -10,8 +10,8 @@ import { useShell } from "@/components/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { PageColumn } from "@/components/page-column";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlanForm } from "@/components/studio/plan-form";
-import { PlanView } from "@/components/studio/plan-view";
+import { PlanForm } from "@/components/study/plan-form";
+import { PlanView } from "@/components/study/plan-view";
 
 export default function StudioPage() {
   return (
@@ -28,24 +28,25 @@ function Studio() {
   const planId = params.get("p");
 
   if (courseLoading) return <Skeleton className="m-6 h-40" />;
-  if (!course) return <EmptyState icon={Route} title="Nessun corso" description="Il piano di studio si costruisce sul grafo del corso." />;
+  if (!course) return <EmptyState icon={Route} title="No course yet" description="The study plan is built on the course graph." />;
 
   return (
     <PageColumn
-      title="Piano di studio"
-      description="Dimmi quanti giorni mancano all'appello e cosa conosci già: l'ordine dei concetti viene dal grafo del corso, rispettando i prerequisiti."
+      title="Study plan"
+      description="Tell us how many days are left before the exam and what you already know. The order of the concepts comes from the course graph and respects prerequisites."
     >
       <p className="flex items-start gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
         <span>
-          Il Pianificatore spiega l&apos;ordine e indica le slide da guardare, solo fra quelle già nel grafo. Non vede domande, griglie, attacchi
-          né risultati della classe, e non scrive risposte d&apos;esame. Un concetto senza prove nel corso resta segnato come tale.
+          The Planner explains the order and points to the slides to review, only among those already in the graph. It does not see
+          questions, rubrics, attacks or class results, and it does not write exam answers. A concept without evidence in the course stays
+          marked as such.
         </span>
       </p>
       {planId ? (
-        <PlanView key={planId} planId={planId} onNew={() => router.replace("/studio")} />
+        <PlanView key={planId} planId={planId} onNew={() => router.replace("/study")} />
       ) : (
-        <PlanForm courseId={course.id} onCreated={(id) => router.replace(`/studio?p=${id}`)} />
+        <PlanForm courseId={course.id} onCreated={(id) => router.replace(`/study?p=${id}`)} />
       )}
     </PageColumn>
   );

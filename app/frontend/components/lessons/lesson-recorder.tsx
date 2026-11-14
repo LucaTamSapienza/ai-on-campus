@@ -40,7 +40,7 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
-      toast.error("Il microfono non è disponibile o il permesso è stato negato.");
+      toast.error("The microphone is unavailable or permission was denied.");
       return;
     }
     const chunks: Blob[] = [];
@@ -53,10 +53,10 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
       try {
         const { base64 } = await toWavBase64(new Blob(chunks, { type: rec.mimeType }));
         const r = await lezioniApi.transcribe(courseId, base64);
-        setTitle(`Lezione registrata del ${new Date().toLocaleDateString("it-IT")}`);
+        setTitle(`Lesson recorded on ${new Date().toLocaleDateString("en-GB")}`);
         setPhase({ kind: "review", text: r.text, seconds: r.seconds, cost: r.costUsd });
       } catch (e) {
-        toast.error(e instanceof ApiError ? e.message : "La trascrizione non è riuscita.");
+        toast.error(e instanceof ApiError ? e.message : "Transcription failed.");
         setPhase({ kind: "idle" });
       }
     };
@@ -71,13 +71,13 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
     if (phase.kind !== "review") return;
     setSending(true);
     try {
-      const r = await api.createSource(courseId, { title: title.trim() || "Lezione registrata", kind: "transcript", text: phase.text });
+      const r = await api.createSource(courseId, { title: title.trim() || "Recorded lesson", kind: "transcript", text: phase.text });
       await lezioniApi.setDone(r.sourceId, true);
-      toast.success("Trascrizione mandata al Cartografo.");
+      toast.success("Transcript sent to the Cartographer.");
       setPhase({ kind: "idle" });
       onAdded();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Non è stato possibile aggiungere la trascrizione.");
+      toast.error(e instanceof ApiError ? e.message : "Could not add the transcript.");
     } finally {
       setSending(false);
     }
@@ -86,17 +86,18 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
   const elapsed = phase.kind === "recording" ? Math.min(MAX_SECONDS, (now - phase.since) / 1000) : 0;
 
   return (
-    <section aria-label="Registra una lezione" className="flex flex-col gap-4 rounded-lg border bg-card p-4 lg:p-6">
+    <section aria-label="Record a lesson" className="flex flex-col gap-4 rounded-lg border bg-card p-4 lg:p-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-semibold">Registra una lezione</h2>
+        <h2 className="text-lg font-semibold">Record a lesson</h2>
         <p className="text-sm text-muted-foreground">
-          Fino a 3 minuti dal microfono. L&apos;audio non si conserva: resta la trascrizione, che rileggi prima di mandarla al Cartografo.
+          Up to 3 minutes from the microphone. The audio is not kept. Only the transcript stays, and you review it before sending it to the
+          Cartographer.
         </p>
       </div>
 
       {phase.kind === "idle" && (
         <Button onClick={start} className="lg:self-start">
-          <Mic aria-hidden /> Registra
+          <Mic aria-hidden /> Record
         </Button>
       )}
 
@@ -109,14 +110,14 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
             </span>
           </p>
           <Button variant="outline" onClick={() => recorder.current?.stop()} className="lg:ml-auto">
-            <Square aria-hidden /> Ferma e trascrivi
+            <Square aria-hidden /> Stop and transcribe
           </Button>
         </div>
       )}
 
       {phase.kind === "transcribing" && (
         <div className="flex flex-col gap-2" aria-live="polite">
-          <p className="text-sm text-muted-foreground">Trascrive la registrazione…</p>
+          <p className="text-sm text-muted-foreground">Transcribing the recording…</p>
           <Skeleton className="h-24 w-full" />
         </div>
       )}
@@ -124,19 +125,19 @@ export function LessonRecorder({ courseId, onAdded }: { courseId: string; onAdde
       {phase.kind === "review" && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">
-            {phase.seconds} secondi trascritti{phase.cost !== null ? ` · ${phase.cost.toFixed(4).replace(".", ",")} $` : ""}
+            {phase.seconds} seconds transcribed{phase.cost !== null ? ` · $${phase.cost.toFixed(4)}` : ""}
           </p>
           <p className="max-h-64 overflow-y-auto rounded-lg border bg-background p-3 text-base whitespace-pre-line">{phase.text}</p>
           <label className="flex flex-col gap-1.5 text-sm font-medium">
-            Titolo della fonte
+            Source title
             <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
           </label>
           <div className="flex flex-col gap-2 lg:flex-row">
             <Button onClick={send} disabled={sending}>
-              Manda al Cartografo
+              Send to the Cartographer
             </Button>
             <Button variant="outline" onClick={() => setPhase({ kind: "idle" })} disabled={sending}>
-              Scarta
+              Discard
             </Button>
           </div>
         </div>

@@ -20,17 +20,17 @@ const GraphCanvas = dynamic(() => import("@/components/graph-canvas"), { ssr: fa
 
 export default function GraphPage() {
   const { course, courseLoading, courseError } = useShell();
-  if (courseLoading) return <CenteredLoader label="Carico il corso" />;
-  if (courseError) return <EmptyState icon={Network} title="Il server non risponde" description={courseError} />;
+  if (courseLoading) return <CenteredLoader label="Loading the course" />;
+  if (courseError) return <EmptyState icon={Network} title="The server is not responding" description={courseError} />;
   if (!course)
     return (
       <EmptyState
         icon={Network}
-        title="Nessun corso"
-        description="Crea il corso e carica la prima lezione: il Cartografo ne estrae i concetti."
+        title="No course yet"
+        description="Create the course and upload the first lesson. The Cartographer extracts its concepts."
         action={
           <Button asChild>
-            <Link href="/materiali">Vai ai materiali</Link>
+            <Link href="/materials">Go to materials</Link>
           </Button>
         }
       />
@@ -56,7 +56,7 @@ function CourseGraph({ courseId }: { courseId: string }) {
         setGraph(g);
         setError(null);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Errore"));
+      .catch((e) => setError(e instanceof Error ? e.message : "Error"));
   }, [courseId]);
 
   // Si rilegge il grafo all'avvio e a ogni scrittura del Cartografo.
@@ -76,20 +76,20 @@ function CourseGraph({ courseId }: { courseId: string }) {
     setCenterOn({ id, nonce: Date.now() });
   };
 
-  if (error && !graph) return <EmptyState icon={Network} title="Il grafo non si carica" description={error} />;
-  if (!graph) return <CenteredLoader label="Carico il grafo" />;
+  if (error && !graph) return <EmptyState icon={Network} title="The graph did not load" description={error} />;
+  if (!graph) return <CenteredLoader label="Loading the graph" />;
 
   const working = cartografo?.status === "working";
   if (graph.concepts.length === 0 && !working)
     return (
       <EmptyState
         icon={Network}
-        title="Il grafo è vuoto"
-        description="Carica una lezione: il Cartografo ne estrae i concetti e li collega."
+        title="The graph is empty"
+        description="Upload a lesson. The Cartographer extracts its concepts and links them."
         action={
           role === "docente" ? (
             <Button asChild>
-              <Link href="/materiali">Carica una lezione</Link>
+              <Link href="/materials">Upload a lesson</Link>
             </Button>
           ) : undefined
         }
@@ -149,7 +149,7 @@ function CourseGraph({ courseId }: { courseId: string }) {
             className="absolute inset-0 z-20 animate-in duration-250 ease-out fade-in-0"
           />
         )}
-        {graph.concepts.length === 0 && <CenteredLoader label="Il Cartografo sta leggendo" />}
+        {graph.concepts.length === 0 && <CenteredLoader label="The Cartographer is reading" />}
         <AgentStrip state={cartografo} className="absolute inset-x-4 bottom-4 z-10 lg:right-4 lg:left-auto lg:w-(--strip-width)" />
       </div>
       <DetailPanel

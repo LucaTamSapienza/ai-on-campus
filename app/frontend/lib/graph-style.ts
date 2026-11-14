@@ -1,6 +1,6 @@
 // Colori e testi del grafo, dai token di docs/design-system.md. Il canvas non legge le classi
 // Tailwind, quindi i valori stanno qui e non nelle pagine.
-import type { RelationType } from "@/lib/api";
+import type { ConceptKind, RelationType } from "@/lib/api";
 
 export const TOPIC_COUNT = 12;
 
@@ -46,12 +46,21 @@ export function withAlpha(hex: string, alpha: number) {
 
 // Etichette delle relazioni dal punto di vista del concetto aperto.
 export const RELATION_LABELS: Record<RelationType, { out: string; in: string }> = {
-  prerequisito: { out: "È prerequisito di", in: "Richiede" },
-  parte_di: { out: "È parte di", in: "Comprende" },
-  generalizza: { out: "Generalizza", in: "È un caso di" },
-  usa: { out: "Usa", in: "È usato da" },
-  contrasta: { out: "Contrasta con", in: "Contrasta con" },
+  prerequisito: { out: "Is a prerequisite of", in: "Requires" },
+  parte_di: { out: "Is part of", in: "Includes" },
+  generalizza: { out: "Generalizes", in: "Is a case of" },
+  usa: { out: "Uses", in: "Is used by" },
+  contrasta: { out: "Contrasts with", in: "Contrasts with" },
 };
+
+// Tipi di concetto e ruoli dei passaggi: i valori restano quelli salvati in D1, a schermo in inglese.
+export const KIND_LABELS: Record<ConceptKind, string> = {
+  concetto: "concept",
+  metodo: "method",
+  risultato: "result",
+  esempio: "example",
+};
+export const PASSAGE_ROLE_LABELS: Record<string, string> = { definizione: "definition", uso: "use", esempio: "example" };
 
 // «L08_q_learning_sarsa» diventa «L08»; altri titoli restano interi.
 export function shortSource(title: string) {

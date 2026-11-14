@@ -17,13 +17,13 @@ import { PageColumn } from "@/components/page-column";
 import { SourceRef } from "@/components/source-ref";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LessonRecorder } from "@/components/lezioni/lesson-recorder";
+import { LessonRecorder } from "@/components/lessons/lesson-recorder";
 
 export default function LezioniPage() {
   const { course, courseLoading } = useShell();
   return (
-    <PageColumn title="Lezioni" description="Segna le lezioni svolte: l'app propone su quali concetti fare domande, con le slide che li spiegano.">
-      {courseLoading ? <Skeleton className="h-64 w-full" /> : course ? <Lessons courseId={course.id} /> : <p className="text-base">Nessun corso.</p>}
+    <PageColumn title="Lessons" description="Mark the lessons you have taught. The app suggests which concepts to ask about, with the slides that explain them.">
+      {courseLoading ? <Skeleton className="h-64 w-full" /> : course ? <Lessons courseId={course.id} /> : <p className="text-base">No course yet.</p>}
     </PageColumn>
   );
 }
@@ -39,7 +39,7 @@ function Lessons({ courseId }: { courseId: string }) {
       setLessons(l);
       setProposals(p);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Non è stato possibile leggere le lezioni.");
+      toast.error(e instanceof ApiError ? e.message : "Could not load the lessons.");
     }
   }, [courseId]);
 
@@ -56,7 +56,7 @@ function Lessons({ courseId }: { courseId: string }) {
       await lezioniApi.setDone(l.id, done);
       setProposals(await lezioniApi.proposals(courseId));
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Non è stato possibile salvare.");
+      toast.error(e instanceof ApiError ? e.message : "Could not save.");
       load();
     }
   };
@@ -66,12 +66,12 @@ function Lessons({ courseId }: { courseId: string }) {
       <LessonRecorder courseId={courseId} onAdded={load} />
       <AgentStrip state={cartografo} />
 
-      <section aria-label="Lezioni svolte" className="flex flex-col gap-3">
+      <section aria-label="Lessons taught" className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-semibold">Lezioni svolte</h2>
+          <h2 className="text-lg font-semibold">Lessons taught</h2>
           {lessons && (
             <span className="text-sm text-muted-foreground">
-              {lessons.filter((l) => l.doneAt).length} di {lessons.length}
+              {lessons.filter((l) => l.doneAt).length} of {lessons.length}
             </span>
           )}
         </div>
@@ -103,7 +103,7 @@ function Lessons({ courseId }: { courseId: string }) {
                   <span className="min-w-0 truncate">
                     {l.kind === "transcript" ? <span>{l.title}</span> : <span className="font-mono font-medium">{shortSource(l.title)}</span>}
                     <span className="block text-xs text-muted-foreground">
-                      {l.kind === "transcript" ? "registrata" : "slide"} · {l.conceptCount} concetti
+                      {l.kind === "transcript" ? "recorded" : "slides"} · {l.conceptCount} concepts
                     </span>
                   </span>
                 </button>
@@ -113,12 +113,12 @@ function Lessons({ courseId }: { courseId: string }) {
         )}
       </section>
 
-      <section aria-label="Argomenti proposti" className="flex flex-col gap-3">
+      <section aria-label="Suggested topics" className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Su cosa fare domande</h2>
+          <h2 className="text-lg font-semibold">What to ask about</h2>
           <p className="text-sm text-muted-foreground">
             {proposals
-              ? `Concetti spiegati nelle lezioni svolte (${proposals.totals.covered} su ${proposals.totals.concepts}): prima quelli che nessuna domanda tocca ancora, poi i più collegati nel grafo. È una proposta: la domanda la scrivi tu.`
+              ? `Concepts explained in the lessons taught (${proposals.totals.covered} of ${proposals.totals.concepts}): first those no question touches yet, then the most connected in the graph. It is a suggestion. You write the question.`
               : " "}
           </p>
         </div>
@@ -126,7 +126,7 @@ function Lessons({ courseId }: { courseId: string }) {
           <Skeleton className="h-40 w-full" />
         ) : proposals.proposals.length === 0 ? (
           <div className="rounded-lg border bg-card py-8">
-            <EmptyState icon={Lightbulb} title="Nessuna lezione svolta" description="Segna le lezioni fatte in aula: qui compaiono i concetti su cui fare domande." />
+            <EmptyState icon={Lightbulb} title="No lessons taught yet" description="Mark the lessons you have taught. The concepts to ask about appear here." />
           </div>
         ) : (
           <>
@@ -136,10 +136,10 @@ function Lessons({ courseId }: { courseId: string }) {
                   <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                       <h3 className="text-base font-semibold">{p.name}</h3>
-                      <span className="text-sm text-muted-foreground">{p.asked ? "già in una domanda" : "nessuna domanda lo tocca ancora"}</span>
+                      <span className="text-sm text-muted-foreground">{p.asked ? "already in a question" : "no question touches it yet"}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {p.topicName ?? "Senza argomento"} · {p.degree} collegamenti nel grafo · {p.evidence} slide nelle lezioni svolte
+                      {p.topicName ?? "No topic"} · {p.degree} links in the graph · {p.evidence} slides in the lessons taught
                     </p>
                     {p.definition && <p className="text-sm">{p.definition}</p>}
                   </div>
@@ -152,7 +152,7 @@ function Lessons({ courseId }: { courseId: string }) {
               ))}
             </ul>
             <Button asChild variant="outline" className="lg:self-start">
-              <Link href="/esame?nuova=1">Scrivi una domanda</Link>
+              <Link href="/exam?new=1">Write a question</Link>
             </Button>
           </>
         )}

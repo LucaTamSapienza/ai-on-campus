@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="it" className={`${jakarta.variable} antialiased`}>
+    <html lang="en" className={`${jakarta.variable} antialiased`}>
       <body>
         <AppShell>{children}</AppShell>
         <Toaster position="top-center" />

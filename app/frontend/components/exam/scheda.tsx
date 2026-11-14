@@ -37,15 +37,15 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
         ...(action === "modificata" ? { text: text.trim() } : {}),
       });
       if (action === "tenuta") {
-        toast.success("Domanda tenuta com'è. Decisione registrata.");
+        toast.success("Question kept as it is. Decision recorded.");
         onChanged();
         return;
       }
       const { runId } = await esameApi.attack(run.questionId);
-      toast.success(`Versione ${run.version.version + 1} salvata. Riattacco in corso.`);
+      toast.success(`Version ${run.version.version + 1} saved. Attacking again.`);
       onNewRun(runId);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Operazione non riuscita. Riprova.");
+      toast.error(e instanceof ApiError ? e.message : "Something went wrong. Try again.");
       if (e instanceof ApiError && e.status === 409) onChanged();
     } finally {
       setBusy(null);
@@ -53,10 +53,10 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
   }
 
   return (
-    <section aria-label="Scheda del Revisore" className="flex flex-col gap-6 rounded-lg border bg-card p-4 lg:p-6">
+    <section aria-label="Reviewer's report" className="flex flex-col gap-6 rounded-lg border bg-card p-4 lg:p-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold">Scheda</h2>
-        <p className="text-sm text-muted-foreground">Verdetti calcolati sui voti, con la prova accanto. La riscrittura la propone il Revisore, la decide il docente.</p>
+        <h2 className="text-xl font-semibold">Report</h2>
+        <p className="text-sm text-muted-foreground">Verdicts computed from the scores, with the evidence alongside. The Reviewer proposes the rewrite, the teacher decides.</p>
       </div>
 
       <ul className="flex flex-col gap-4">
@@ -71,10 +71,10 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
 
       <div className="flex flex-col gap-3 border-t pt-6">
         <label htmlFor="proposta" className="text-base font-semibold">
-          {proposal ? "Riscrittura proposta" : "Il Revisore non propone modifiche"}
+          {proposal ? "Proposed rewrite" : "The Reviewer proposes no changes"}
         </label>
         {review.rationale && <p className="text-sm text-muted-foreground">{review.rationale}</p>}
-        {review.error && <p className="text-sm text-destructive">Revisore: {review.error}</p>}
+        {review.error && <p className="text-sm text-destructive">Reviewer: {review.error}</p>}
         <Textarea
           id="proposta"
           value={text}
@@ -84,32 +84,32 @@ export function Scheda({ run, currentVersionId, decided, onNewRun, onChanged }: 
           className="min-h-36 text-base"
           maxLength={4000}
         />
-        <p className="text-sm text-muted-foreground">La griglia resta la tua: prima e dopo si confrontano sugli stessi criteri.</p>
+        <p className="text-sm text-muted-foreground">The rubric stays yours. Before and after are compared on the same criteria.</p>
         {locked ? (
           <p className="text-sm text-muted-foreground">
             {decided === "tenuta"
-              ? "Hai tenuto la domanda com'è."
+              ? "You kept the question as it is."
               : decided
-                ? "Decisione presa: la nuova versione è quella corrente."
+                ? "Decision made. The new version is the current one."
                 : stale
-                  ? "Questa scheda riguarda una versione precedente."
-                  : "Attacco in corso."}
+                  ? "This report covers an earlier version."
+                  : "Attack in progress."}
           </p>
         ) : (
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {proposal && (
               <Button onClick={() => decide("approvata")} disabled={!!busy || edited} variant={edited ? "outline" : "default"}>
                 {busy === "approvata" && <Loader2 className="animate-spin" aria-hidden />}
-                Approva e riattacca
+                Approve and attack again
               </Button>
             )}
             <Button onClick={() => decide("modificata")} disabled={!!busy || !edited || text.trim().length < 10} variant={edited || !proposal ? "default" : "outline"}>
               {busy === "modificata" && <Loader2 className="animate-spin" aria-hidden />}
-              Modifica e riattacca
+              Edit and attack again
             </Button>
             <Button onClick={() => decide("tenuta")} disabled={!!busy} variant="ghost">
               {busy === "tenuta" && <Loader2 className="animate-spin" aria-hidden />}
-              Tieni com&apos;è
+              Keep as is
             </Button>
           </div>
         )}
@@ -125,7 +125,7 @@ function Evidence({ verdict, run }: { verdict: Verdict; run: RunDetail }) {
     return a?.answer ? (
       <blockquote className="rounded-lg border-l-4 border-destructive bg-muted px-3 py-2 text-sm whitespace-pre-wrap">
         <span className="mb-1 block text-xs text-muted-foreground">
-          Risposta dell&apos;Esterno ({verdict.model}): {fmt(verdict.total!)}/{fmt(verdict.max!)}, soglia {fmt(verdict.threshold!)}
+          Outsider&apos;s answer ({verdict.model}): {fmt(verdict.total!)}/{fmt(verdict.max!)}, pass mark {fmt(verdict.threshold!)}
         </span>
         {a.answer}
       </blockquote>
@@ -142,7 +142,7 @@ function Evidence({ verdict, run }: { verdict: Verdict; run: RunDetail }) {
           return (
             <div key={i} className="rounded-lg bg-muted px-3 py-2">
               <p className="text-xs text-muted-foreground">
-                Lettura {i + 1}
+                Reading {i + 1}
                 {g && g.total !== null ? `: ${fmt(g.total)}/${fmt(g.max)}` : ""}
               </p>
               <p className="text-sm">{r.interpretation}</p>
@@ -154,7 +154,7 @@ function Evidence({ verdict, run }: { verdict: Verdict; run: RunDetail }) {
   }
   if (verdict.kind === "prove_insufficienti") {
     const n = run.retrieval?.passages.length ?? 0;
-    return <p className="text-sm text-muted-foreground">Passaggi recuperati: {n}. Il percorso del recupero è sopra.</p>;
+    return <p className="text-sm text-muted-foreground">Passages retrieved: {n}. The retrieval path is above.</p>;
   }
   if (verdict.kind === "nessun_controesempio") {
     const f = get("letterale")?.finding as LetteraleFinding | null;

@@ -49,7 +49,7 @@ async function readBody<T extends z.ZodType>(c: Context<App>, schema: T): Promis
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return fail(c, 400, "invalid_body", `Richiesta non valida: ${issue.path.join(".") || "corpo"} ${issue.message}`);
+    return fail(c, 400, "invalid_body", `Invalid request: ${issue.path.join(".") || "body"} ${issue.message}`);
   }
   return parsed.data;
 }
@@ -71,7 +71,7 @@ app.use(
 app.use(async (c, next) => {
   if (c.req.method === "OPTIONS" || c.req.path === "/api/health" || !c.env.DEMO_CODE) return next();
   if (!timingSafeEqual(c.req.header("x-demo-code") ?? "", c.env.DEMO_CODE)) {
-    return fail(c, 401, "demo_code", "Serve il codice della demo.");
+    return fail(c, 401, "demo_code", "The demo code is required.");
   }
   return next();
 });
@@ -105,7 +105,7 @@ async function courseExists(db: D1Database, id: string) {
 
 app.get("/courses/:id/sources", async (c) => {
   const id = c.req.param("id");
-  if (!(await courseExists(c.env.DB, id))) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await courseExists(c.env.DB, id))) return fail(c, 404, "not_found", "Course not found.");
   const rows = await c.env.DB.prepare(
     `SELECT s.id, s.kind, s.title, s.lesson_date AS lessonDate, s.status, s.error, s.created_at AS createdAt,
        (SELECT COUNT(*) FROM passages p WHERE p.source_id = s.id) AS passageCount,
@@ -132,10 +132,10 @@ app.post("/courses/:id/sources", bodyLimit({ maxSize: 2 * 1024 * 1024 }), async 
   const body = await readBody(c, sourceBody);
   if (body instanceof Response) return body;
   const db = c.env.DB;
-  if (!(await courseExists(db, courseId))) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await courseExists(db, courseId))) return fail(c, 404, "not_found", "Course not found.");
   const count = await db.prepare("SELECT COUNT(*) AS n FROM sources WHERE course_id = ?").bind(courseId).first<{ n: number }>();
   if ((count?.n ?? 0) >= MAX_SOURCES_PER_COURSE) {
-    return fail(c, 409, "too_many_sources", `Il corso ha già ${MAX_SOURCES_PER_COURSE} fonti, il massimo.`);
+    return fail(c, 409, "too_many_sources", `The course already has ${MAX_SOURCES_PER_COURSE} sources, the maximum.`);
   }
 
   // Lo stesso contenuto nello stesso corso non crea doppioni.
@@ -145,7 +145,7 @@ app.post("/courses/:id/sources", bodyLimit({ maxSize: 2 * 1024 * 1024 }), async 
 
   const redact = (c.env.REDACT_TERMS ?? "").split(",").map((t) => t.trim()).filter(Boolean);
   const passages = segment(body.text, redact);
-  if (passages.length === 0) return fail(c, 400, "empty_source", "Il testo non contiene passaggi da leggere.");
+  if (passages.length === 0) return fail(c, 400, "empty_source", "The text contains no passages to read.");
 
   const sourceId = crypto.randomUUID();
   const stmts = [
@@ -201,7 +201,7 @@ app.post("/courses/:id/ontology", bodyLimit({ maxSize: 4 * 1024 * 1024 }), async
   const body = await readBody(c, ontologyBody);
   if (body instanceof Response) return body;
   const db = c.env.DB;
-  if (!(await courseExists(db, courseId))) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await courseExists(db, courseId))) return fail(c, 404, "not_found", "Course not found.");
 
   const rows = (
     await db
@@ -216,7 +216,7 @@ app.post("/courses/:id/ontology", bodyLimit({ maxSize: 4 * 1024 * 1024 }), async
   const evidenceRejects: Rejected[] = [];
   const resolve = (owner: string, source: string, slide: number) => {
     const p = byKey.get(passageKey(source, slide));
-    const reason = !p ? "fonte o slide inesistente" : p.thin ? "slide senza testo estratto" : null;
+    const reason = !p ? "source or slide does not exist" : p.thin ? "slide without extracted text" : null;
     if (reason && evidenceRejects.length < 300) evidenceRejects.push({ kind: "prova", name: `${owner}: ${source} slide ${slide}`, reason });
     return reason ? null : p!.id;
   };
@@ -254,7 +254,7 @@ app.post("/courses/:id/ontology", bodyLimit({ maxSize: 4 * 1024 * 1024 }), async
 app.get("/courses/:id/graph", async (c) => {
   const id = c.req.param("id");
   const db = c.env.DB;
-  if (!(await courseExists(db, id))) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await courseExists(db, id))) return fail(c, 404, "not_found", "Course not found.");
   const [topics, concepts, relations] = await db.batch([
     db.prepare("SELECT id, name, summary, ordinal FROM topics WHERE course_id = ? ORDER BY ordinal").bind(id),
     db
@@ -280,7 +280,7 @@ app.get("/concepts/:id", async (c) => {
     )
     .bind(id)
     .first();
-  if (!concept) return fail(c, 404, "not_found", "Concetto non trovato.");
+  if (!concept) return fail(c, 404, "not_found", "Concept not found.");
   const [relations, passages] = await db.batch([
     db
       .prepare(
@@ -316,12 +316,12 @@ app.patch("/concepts/:id", async (c) => {
     name: string;
     definition: string;
   }>();
-  if (!current) return fail(c, 404, "not_found", "Concetto non trovato.");
+  if (!current) return fail(c, 404, "not_found", "Concept not found.");
   const name = body.name ?? current.name;
   const slug = slugify(name);
-  if (!slug) return fail(c, 400, "invalid_body", "Il nome non è valido.");
+  if (!slug) return fail(c, 400, "invalid_body", "The name is not valid.");
   const clash = await db.prepare("SELECT 1 FROM concepts WHERE course_id = ? AND slug = ? AND id != ?").bind(current.course_id, slug, id).first();
-  if (clash) return fail(c, 409, "duplicate", "Esiste già un concetto con questo nome.");
+  if (clash) return fail(c, 409, "duplicate", "A concept with this name already exists.");
   await db
     .prepare("UPDATE concepts SET name = ?, slug = ?, definition = ? WHERE id = ?")
     .bind(name, slug, body.definition ?? current.definition, id)
@@ -334,7 +334,7 @@ app.delete("/concepts/:id", async (c) => {
   const id = c.req.param("id");
   const db = c.env.DB;
   const row = await db.prepare("SELECT course_id FROM concepts WHERE id = ?").bind(id).first<{ course_id: string }>();
-  if (!row) return fail(c, 404, "not_found", "Concetto non trovato.");
+  if (!row) return fail(c, 404, "not_found", "Concept not found.");
   await db.batch([
     db.prepare("DELETE FROM relations WHERE from_concept_id = ?1 OR to_concept_id = ?1").bind(id),
     db.prepare("DELETE FROM concept_passages WHERE concept_id = ?").bind(id),
@@ -370,10 +370,10 @@ app.route("/", lezioni);
 app.route("/", studio);
 // fine blocco 3
 
-app.notFound((c) => fail(c, 404, "not_found", "Rotta inesistente."));
+app.notFound((c) => fail(c, 404, "not_found", "Route not found."));
 app.onError((err, c) => {
   console.error(err);
-  return fail(c, 500, "internal", "Errore interno del server.");
+  return fail(c, 500, "internal", "Internal server error.");
 });
 
 async function bumpRevision(env: Env, courseId: string) {
@@ -404,41 +404,41 @@ export default {
       // Origine: la stessa del Worker; in locale anche localhost (frontend su :3000).
       const origin = request.headers.get("origin");
       if (origin && origin !== url.origin && !(isLocal(url) && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin))) {
-        return deny(403, "origin", "Origine non ammessa.");
+        return deny(403, "origin", "Origin not allowed.");
       }
       // Il browser non manda intestazioni sul WebSocket: il codice demo arriva come parametro.
       if (env.DEMO_CODE && !timingSafeEqual(url.searchParams.get("code") ?? "", env.DEMO_CODE)) {
-        return deny(401, "demo_code", "Serve il codice della demo.");
+        return deny(401, "demo_code", "The demo code is required.");
       }
       // blocco 2: lo studente vede solo il Cartografo; la classe solo per un'esecuzione che esiste.
-      if (studentAgentForbidden(url)) return deny(403, "forbidden_role", "Con il ruolo studente questa parte non è visibile.");
+      if (studentAgentForbidden(url)) return deny(403, "forbidden_role", "This part is not visible with the student role.");
       const classRun = url.pathname.match(/^\/agents\/classe\/([^/]+)$/);
       if (classRun) {
         const exists = await env.DB.prepare("SELECT 1 FROM class_runs WHERE id = ?").bind(decodeURIComponent(classRun[1])).first();
-        if (!exists) return deny(404, "not_found", "Esecuzione non trovata.");
-        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+        if (!exists) return deny(404, "not_found", "Run not found.");
+        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agent not found.");
       }
       // fine blocco 2
       // blocco 3: il Pianificatore, solo per un piano che esiste.
       const plan = url.pathname.match(/^\/agents\/pianificatore\/([^/]+)$/);
       if (plan) {
         const exists = await env.DB.prepare("SELECT 1 FROM study_plans WHERE id = ?").bind(decodeURIComponent(plan[1])).first();
-        if (!exists) return deny(404, "not_found", "Piano non trovato.");
-        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+        if (!exists) return deny(404, "not_found", "Plan not found.");
+        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agent not found.");
       }
       // fine blocco 3
       // fase 03: il coordinatore del triplo attacco, solo per un'esecuzione che esiste.
       const run = url.pathname.match(/^\/agents\/attacco\/([^/]+)$/);
       if (run) {
         const exists = await env.DB.prepare("SELECT 1 FROM attack_runs WHERE id = ?").bind(decodeURIComponent(run[1])).first();
-        if (!exists) return deny(404, "not_found", "Esecuzione non trovata.");
-        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+        if (!exists) return deny(404, "not_found", "Run not found.");
+        return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agent not found.");
       }
       // fine fase 03
       // Solo il Cartografo, solo per un corso che esiste.
       const m = url.pathname.match(/^\/agents\/cartografo\/([^/]+)$/);
-      if (!m || !(await courseExists(env.DB, decodeURIComponent(m[1])))) return deny(404, "not_found", "Agente non trovato.");
-      return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agente non trovato.");
+      if (!m || !(await courseExists(env.DB, decodeURIComponent(m[1])))) return deny(404, "not_found", "Agent not found.");
+      return (await routeAgentRequest(request, env)) ?? deny(404, "not_found", "Agent not found.");
     }
     if (url.pathname.startsWith("/api/")) return app.fetch(request, env, ctx);
     return env.ASSETS.fetch(request);

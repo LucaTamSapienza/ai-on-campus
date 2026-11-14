@@ -28,14 +28,14 @@ const except = (...skip) => all.filter((l) => !skip.includes(l));
 // Profili scelti per coprire i casi che il docente vuole vedere: chi ha seguito tutto, chi ha
 // saltato la lezione su Q-learning e SARSA (L08), chi è arrivato a metà corso, chi ha saltato gli MDP.
 const STUDENTS = [
-  { name: "Aurora Venti", priorGrade: 29, style: "Segue ogni lezione, rifà le dimostrazioni e controlla i calcoli.", lessons: all },
-  { name: "Bruno Castelfidardo", priorGrade: 25, style: "Studia dalle slide la settimana prima, preciso sulle formule ma sbrigativo sulle spiegazioni.", lessons: except("L06", "L10") },
-  { name: "Clelia Marangoni", priorGrade: 27, style: "Ragiona per intuizione, spiega bene i concetti ma a volte salta i passaggi di calcolo.", lessons: except("L08") },
-  { name: "Dario Pellicano", priorGrade: 22, style: "Ha seguito la prima metà del corso, poi ha smesso di frequentare.", lessons: ["L00", "L01", "L02", "L03", "L04", "L05", "L06"] },
-  { name: "Elsa Brunacci", priorGrade: 26, style: "Si è iscritta tardi: ha seguito la seconda metà, recupera il resto dalle definizioni.", lessons: ["L07", "L08", "L09", "L10", "L11", "L12"] },
-  { name: "Fabio Lanterna", priorGrade: 20, style: "Studia all'ultimo, ricorda le parole chiave ma confonde i dettagli. Risposte brevi.", lessons: ["L00", "L03", "L08"] },
-  { name: "Giada Orsenigo", priorGrade: 28, style: "Molto ordinata, scrive risposte strutturate; ha saltato le lezioni sugli MDP per malattia.", lessons: except("L03", "L04") },
-  { name: "Ivo Settembrini", priorGrade: 24, style: "Segue con attenzione le lezioni sui metodi tabulari, meno quelle sull'approssimazione.", lessons: ["L00", "L01", "L03", "L04", "L05", "L08", "L09"] },
+  { name: "Aurora Venti", priorGrade: 29, style: "Attends every lesson, redoes the proofs and checks the calculations.", lessons: all },
+  { name: "Bruno Castelfidardo", priorGrade: 25, style: "Studies from the slides the week before, precise on formulas but hasty on explanations.", lessons: except("L06", "L10") },
+  { name: "Clelia Marangoni", priorGrade: 27, style: "Reasons by intuition, explains concepts well but sometimes skips calculation steps.", lessons: except("L08") },
+  { name: "Dario Pellicano", priorGrade: 22, style: "Attended the first half of the course, then stopped coming.", lessons: ["L00", "L01", "L02", "L03", "L04", "L05", "L06"] },
+  { name: "Elsa Brunacci", priorGrade: 26, style: "Enrolled late: attended the second half and catches up on the rest from the definitions.", lessons: ["L07", "L08", "L09", "L10", "L11", "L12"] },
+  { name: "Fabio Lanterna", priorGrade: 20, style: "Studies at the last minute, remembers the keywords but mixes up the details. Short answers.", lessons: ["L00", "L03", "L08"] },
+  { name: "Giada Orsenigo", priorGrade: 28, style: "Very organised, writes structured answers; missed the MDP lessons through illness.", lessons: except("L03", "L04") },
+  { name: "Ivo Settembrini", priorGrade: 24, style: "Follows the lessons on tabular methods closely, less so those on approximation.", lessons: ["L00", "L01", "L03", "L04", "L05", "L08", "L09"] },
 ];
 
 const { courses } = await call("/courses");

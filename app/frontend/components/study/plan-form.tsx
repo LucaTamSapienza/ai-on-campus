@@ -24,7 +24,7 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
     studioApi
       .options(courseId)
       .then(setOptions)
-      .catch((e) => setError(e instanceof Error ? e.message : "Errore"));
+      .catch((e) => setError(e instanceof Error ? e.message : "Error"));
   }, [courseId]);
 
   const byId = useMemo(() => new Map(options?.concepts.map((c) => [c.id, c]) ?? []), [options]);
@@ -42,7 +42,7 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
   if (error) return <p className="text-base text-destructive">{error}</p>;
   if (!options) return <Skeleton className="h-96 w-full" />;
   if (!options.concepts.length)
-    return <p className="text-base text-muted-foreground">Nel grafo del corso non ci sono ancora concetti da mettere in ordine.</p>;
+    return <p className="text-base text-muted-foreground">The course graph has no concepts to order yet.</p>;
 
   const toggle = (set: Set<string>, id: string, update: (s: Set<string>) => void) => {
     const next = new Set(set);
@@ -60,7 +60,7 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
       const { planId } = await studioApi.create(courseId, { days, knownLessons: [...lessons], knownConcepts: [...concepts] });
       onCreated(planId);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Il piano non è partito. Riprova.");
+      toast.error(e instanceof ApiError ? e.message : "The plan did not start. Try again.");
       setSending(false);
     }
   };
@@ -75,10 +75,10 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
     >
       <section className="flex flex-col gap-3" aria-labelledby="studio-days">
         <h2 id="studio-days" className="text-lg font-semibold">
-          Quanti giorni mancano all&apos;appello?
+          How many days until the exam?
         </h2>
         <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" size="icon" aria-label="Un giorno in meno" disabled={days <= 1} onClick={() => setDays((d) => d - 1)}>
+          <Button type="button" variant="outline" size="icon" aria-label="One day less" disabled={days <= 1} onClick={() => setDays((d) => d - 1)}>
             <Minus aria-hidden />
           </Button>
           <Input
@@ -88,33 +88,33 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
             max={options.maxDays}
             value={days}
             onChange={(e) => setDays(Math.min(options.maxDays, Math.max(1, Math.round(Number(e.target.value) || 1))))}
-            aria-label="Giorni all'appello"
+            aria-label="Days until the exam"
             className="h-11 w-20 text-center text-lg font-semibold tabular-nums"
           />
           <Button
             type="button"
             variant="outline"
             size="icon"
-            aria-label="Un giorno in più"
+            aria-label="One day more"
             disabled={days >= options.maxDays}
             onClick={() => setDays((d) => d + 1)}
           >
             <Plus aria-hidden />
           </Button>
-          <span className="text-base text-muted-foreground">{days === 1 ? "giorno" : "giorni"}</span>
+          <span className="text-base text-muted-foreground">{days === 1 ? "day" : "days"}</span>
         </div>
       </section>
 
       <section className="flex flex-col gap-3" aria-labelledby="studio-lessons">
         <div className="flex flex-col gap-1">
           <h2 id="studio-lessons" className="text-lg font-semibold">
-            Lezioni che conosci già
+            Lessons you already know
           </h2>
           <p className="text-sm text-muted-foreground">
             {options.scope === "svolte"
-              ? "Solo le lezioni che il docente ha segnato come svolte."
-              : "Il docente non ha ancora segnato lezioni svolte: c'è tutto il corso."}{" "}
-            Una lezione conta i concetti che vi compaiono per la prima volta.
+              ? "Only the lessons the teacher has marked as taught."
+              : "The teacher has not marked any lesson as taught yet, so the whole course is here."}{" "}
+            A lesson counts the concepts that first appear in it.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -125,7 +125,7 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
                 key={l.id}
                 type="button"
                 aria-pressed={on}
-                aria-label={`${l.short}, ${l.concepts} concetti`}
+                aria-label={`${l.short}, ${l.concepts} concepts`}
                 title={l.title}
                 onClick={() => toggle(lessons, l.id, setLessons)}
                 className={cn(
@@ -145,9 +145,9 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
       <section className="flex flex-col gap-3" aria-labelledby="studio-concepts">
         <div className="flex flex-col gap-1">
           <h2 id="studio-concepts" className="text-lg font-semibold">
-            Concetti che conosci già
+            Concepts you already know
           </h2>
-          <p className="text-sm text-muted-foreground">Cerca per nome, i concetti restano nella lingua del corso.</p>
+          <p className="text-sm text-muted-foreground">Search by name.</p>
         </div>
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -155,13 +155,13 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Per esempio Q-learning"
-            aria-label="Cerca un concetto"
+            placeholder="For example Q-learning"
+            aria-label="Search a concept"
             className="h-11 pl-9 text-base"
           />
         </div>
         {results.length > 0 && (
-          <ul className="flex flex-col divide-y rounded-lg border bg-card" aria-label="Concetti trovati">
+          <ul className="flex flex-col divide-y rounded-lg border bg-card" aria-label="Concepts found">
             {results.map((c) => (
               <li key={c.id}>
                 <button
@@ -180,13 +180,13 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
           </ul>
         )}
         {concepts.size > 0 && (
-          <div className="flex flex-wrap gap-2" aria-label="Concetti segnati">
+          <div className="flex flex-wrap gap-2" aria-label="Concepts marked">
             {[...concepts].map((id) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => toggle(concepts, id, setConcepts)}
-                aria-label={`Togli ${byId.get(id)?.name ?? "concetto"}`}
+                aria-label={`Remove ${byId.get(id)?.name ?? "concept"}`}
                 className="flex h-11 max-w-full items-center gap-2 rounded-full bg-muted px-4 text-sm font-medium outline-none hover:bg-border focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <span className="truncate">{byId.get(id)?.name}</span>
@@ -199,10 +199,10 @@ export function PlanForm({ courseId, onCreated }: { courseId: string; onCreated:
 
       <div className="flex flex-col gap-3 border-t pt-6 lg:flex-row lg:items-center lg:justify-between">
         <p className="text-base text-muted-foreground" aria-live="polite">
-          {toStudy} concetti da studiare su {options.concepts.length}
+          {toStudy} of {options.concepts.length} concepts to study
         </p>
         <Button type="submit" disabled={sending || toStudy === 0} className="w-full lg:w-auto">
-          {sending ? "Il piano parte" : "Prepara il piano"}
+          {sending ? "Starting the plan" : "Build the plan"}
         </Button>
       </div>
     </form>

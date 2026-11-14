@@ -73,7 +73,7 @@ export async function complete(env: Env, opts: CompleteOptions): Promise<string>
 const TIMEOUT_MS = 90_000;
 
 async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
-  if (!env.OPENROUTER_API_KEY) throw new LlmError("config", "Chiave dei modelli non configurata sul server.");
+  if (!env.OPENROUTER_API_KEY) throw new LlmError("config", "Model key not configured on the server.");
   const model = MODELS[opts.agent] ?? MODELS.default;
   const [pin, pout] = PRICES[model] ?? [0.1, 0.5];
   const promptChars = opts.messages.reduce((n, m) => n + contentChars(m.content), 0); // blocco 2: contentChars
@@ -91,7 +91,7 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
     .bind(opts.agent, model, maxCost, opts.ref ?? null, budget)
     .first<{ id: number }>();
   if (!reserved) {
-    throw new LlmError("budget", `Tetto di spesa di oggi raggiunto (${budget.toFixed(2)} $). Riprova domani o alza DAILY_BUDGET_USD.`);
+    throw new LlmError("budget", `Today's spending cap reached ($${budget.toFixed(2)}). Try again tomorrow or raise DAILY_BUDGET_USD.`);
   }
   const settle = (promptTokens: number, completionTokens: number, cost: number) =>
     env.DB.prepare("UPDATE model_calls SET prompt_tokens = ?, completion_tokens = ?, cost_usd = ? WHERE id = ?")
@@ -127,12 +127,12 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
     });
   } catch {
     await settle(0, 0, 0);
-    throw new LlmError("upstream", "Il modello non ha risposto in tempo.", true);
+    throw new LlmError("upstream", "The model did not respond in time.", true);
   }
   if (!res.ok) {
     await settle(0, 0, 0);
     const detail = (await res.text()).slice(0, 300);
-    throw new LlmError("upstream", `Il modello non ha risposto (${res.status}): ${detail}`, res.status === 429 || res.status >= 500);
+    throw new LlmError("upstream", `The model did not respond (${res.status}): ${detail}`, res.status === 429 || res.status >= 500);
   }
   let data: CompletionData;
   if (opts.onText) {
@@ -141,7 +141,7 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
       data = await readStream(res, opts.onText);
     } catch (err) {
       await settle(0, 0, 0);
-      throw err instanceof LlmError ? err : new LlmError("upstream", "La risposta in streaming si è interrotta.", true);
+      throw err instanceof LlmError ? err : new LlmError("upstream", "The streaming response was interrupted.", true);
     }
   } else data = (await res.json()) as CompletionData;
 
@@ -151,12 +151,12 @@ async function attempt(env: Env, opts: CompleteOptions): Promise<string> {
   await settle(promptTokens, completionTokens, cost);
 
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new LlmError("upstream", "Il modello ha restituito una risposta vuota.", true);
+  if (!content) throw new LlmError("upstream", "The model returned an empty response.", true);
   if (opts.jsonSchema) {
     try {
       JSON.parse(content);
     } catch {
-      throw new LlmError("invalid_json", "Il modello ha restituito un JSON non valido.", true);
+      throw new LlmError("invalid_json", "The model returned invalid JSON.", true);
     }
   }
   return content;
@@ -169,7 +169,7 @@ type CompletionData = {
 };
 
 async function readStream(res: Response, onText: (textSoFar: string) => void): Promise<CompletionData> {
-  if (!res.body) throw new LlmError("upstream", "Il modello non ha restituito uno stream.");
+  if (!res.body) throw new LlmError("upstream", "The model did not return a stream.");
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
   let text = "";
@@ -190,7 +190,7 @@ async function readStream(res: Response, onText: (textSoFar: string) => void): P
           usage?: CompletionData["usage"];
           error?: { message?: string };
         };
-        if (chunk.error) throw new LlmError("upstream", `Il modello si è interrotto: ${chunk.error.message ?? "errore"}`);
+        if (chunk.error) throw new LlmError("upstream", `The model stopped: ${chunk.error.message ?? "error"}`);
         const delta = chunk.choices?.[0]?.delta?.content;
         if (delta) {
           text += delta;

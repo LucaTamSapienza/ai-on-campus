@@ -36,7 +36,7 @@ export function GraphToolbar(props: Props) {
           className="pointer-events-auto bg-card shadow-float aria-pressed:border-primary aria-pressed:text-primary"
           onClick={props.onToggleList}
           aria-pressed={props.listOpen}
-          aria-label="Elenco dei concetti"
+          aria-label="Concept list"
         >
           <List className="size-5" />
         </Button>
@@ -47,7 +47,7 @@ export function GraphToolbar(props: Props) {
             size="icon"
             className="pointer-events-auto relative bg-card shadow-float"
             onClick={() => setFiltersOpen(true)}
-            aria-label="Filtra per argomento"
+            aria-label="Filter by topic"
           >
             <SlidersHorizontal className="size-5" />
             {props.activeTopics.size > 0 && (
@@ -72,7 +72,7 @@ export function GraphToolbar(props: Props) {
               className="fixed inset-x-0 bottom-0 z-50 flex max-h-(--sheet-max-height) flex-col gap-4 rounded-t-2xl border-t bg-card px-4 pt-2 pb-(--sheet-padding-bottom) outline-none"
             >
               <div className="mx-auto h-1.5 w-12 rounded-full bg-muted" aria-hidden />
-              <DrawerPrimitive.Title className="text-lg font-semibold">Argomenti</DrawerPrimitive.Title>
+              <DrawerPrimitive.Title className="text-lg font-semibold">Topics</DrawerPrimitive.Title>
               <div className="overflow-y-auto">
                 <TopicChips {...props} />
               </div>
@@ -87,7 +87,7 @@ export function GraphToolbar(props: Props) {
 function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics, nowrap }: Props & { nowrap?: boolean }) {
   if (topics.length === 0) return null;
   return (
-    <div className={cn("pointer-events-auto flex gap-2", nowrap ? "w-max whitespace-nowrap" : "flex-wrap")} role="group" aria-label="Filtra per argomento">
+    <div className={cn("pointer-events-auto flex gap-2", nowrap ? "w-max whitespace-nowrap" : "flex-wrap")} role="group" aria-label="Filter by topic">
       {topics.map((t) => {
         const on = activeTopics.has(t.id);
         return (
@@ -113,7 +113,7 @@ function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics
           onClick={onClearTopics}
           className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          <X className="size-4" aria-hidden /> Tutti
+          <X className="size-4" aria-hidden /> All
         </button>
       )}
     </div>
@@ -144,8 +144,8 @@ function ConceptSearch({ concepts, onPick }: { concepts: GraphConcept[]; onPick:
       <Input
         type="search"
         value={q}
-        placeholder="Cerca un concetto"
-        aria-label="Cerca un concetto"
+        placeholder="Search a concept"
+        aria-label="Search a concept"
         className="pl-10 shadow-float"
         onChange={(e) => {
           setQ(e.target.value);

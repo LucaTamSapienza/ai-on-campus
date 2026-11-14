@@ -165,10 +165,10 @@ export function summarize(answers: ClassAnswer[], version: VersionRow, passages:
   const max = version.maxPoints;
   const pct = (a: ClassAnswer) => (a.total! / (a.max || max)) * 100;
   const bands = [
-    { label: "meno del 40%", lo: 0, hi: 40 },
+    { label: "below 40%", lo: 0, hi: 40 },
     { label: "40-60%", lo: 40, hi: 60 },
     { label: "60-80%", lo: 60, hi: 80 },
-    { label: "80% e oltre", lo: 80, hi: 101 },
+    { label: "80% and above", lo: 80, hi: 101 },
   ].map((b) => ({ label: b.label, count: graded.filter((a) => pct(a) >= b.lo && pct(a) < b.hi).length }));
   const avg = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
   const criteria = version.rubric.map((r) => ({

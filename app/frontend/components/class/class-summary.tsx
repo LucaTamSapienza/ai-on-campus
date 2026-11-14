@@ -4,7 +4,7 @@
 // voti, criteri dove si perdono punti, lezioni e concetti mancanti che spiegano gli errori.
 import type { ClassSummary as Summary, Gap } from "@/lib/api";
 import { shortSource } from "@/lib/graph-style";
-import { fmt } from "@/components/esame/shared";
+import { fmt } from "@/components/exam/shared";
 
 const pct = (n: number | null) => (n === null ? "–" : `${Math.round(n)}%`);
 
@@ -14,16 +14,16 @@ export function ClassSummary({ summary, total }: { summary: Summary; total: numb
   const lessons = summary.lessons.filter(separates).slice(0, 4);
   const gaps = summary.gaps.filter(separates).slice(0, 6);
   return (
-    <section aria-label="Riepilogo della classe" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <section aria-label="Class summary" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="flex flex-col gap-4 rounded-lg border bg-card p-4">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-semibold">Distribuzione dei voti</h2>
+          <h2 className="text-lg font-semibold">Score distribution</h2>
           <span className="text-sm text-muted-foreground">
-            {summary.graded} di {total} corretti
+            {summary.graded} of {total} graded
           </span>
         </div>
         <p className="text-base">
-          Media <span className="font-semibold tabular-nums">{summary.mean === null ? "–" : fmt(Math.round(summary.mean * 10) / 10)}</span> su{" "}
+          Average <span className="font-semibold tabular-nums">{summary.mean === null ? "–" : fmt(Math.round(summary.mean * 10) / 10)}</span> out of{" "}
           {fmt(summary.max)}
         </p>
         <ul className="flex flex-col gap-2">
@@ -38,7 +38,7 @@ export function ClassSummary({ summary, total }: { summary: Summary; total: numb
           ))}
         </ul>
         <div className="flex flex-col gap-2 border-t pt-4">
-          <h3 className="text-sm font-semibold">Punti medi per criterio</h3>
+          <h3 className="text-sm font-semibold">Average points per criterion</h3>
           <ul className="flex flex-col gap-1.5">
             {summary.criteria.map((c) => (
               <li key={c.id} className="flex items-baseline justify-between gap-3 text-sm">
@@ -53,21 +53,21 @@ export function ClassSummary({ summary, total }: { summary: Summary; total: numb
       </div>
 
       <div className="flex flex-col gap-4 rounded-lg border bg-card p-4">
-        <h2 className="text-lg font-semibold">Cosa spiega i punti persi</h2>
+        <h2 className="text-lg font-semibold">What explains the lost points</h2>
         {lessons.length === 0 && gaps.length === 0 ? (
           <p className="text-base text-muted-foreground">
-            Nessuna lezione o concetto mancante separa i voti: chi non li ha seguiti prende quanto gli altri.
+            No missing lesson or concept separates the scores. Students who missed them score like the others.
           </p>
         ) : (
           <>
             {lessons.length > 0 && (
               <GapList
-                title="Lezioni da cui vengono i passaggi della domanda"
+                title="Lessons the question's passages come from"
                 items={lessons.map((l) => ({ key: l.id, label: shortSource(l.title), mono: true, gap: l }))}
               />
             )}
             {gaps.length > 0 && (
-              <GapList title="Concetti del grafo che mancavano negli appunti" items={gaps.map((g) => ({ key: g.id, label: g.name, gap: g }))} />
+              <GapList title="Graph concepts missing from the notes" items={gaps.map((g) => ({ key: g.id, label: g.name, gap: g }))} />
             )}
           </>
         )}
@@ -89,8 +89,8 @@ function GapList({ title, items }: { title: string; items: { key: string; label:
           <li key={key} className="flex flex-col gap-0.5 px-3 py-2">
             <span className={mono ? "font-mono text-sm font-medium" : "text-sm font-medium"}>{label}</span>
             <span className="text-sm text-muted-foreground">
-              {gap.missingCount === 1 ? "1 studente non l'aveva" : `${gap.missingCount} studenti non l'avevano`}: {pct(gap.avgMissing)} dei punti, contro{" "}
-              {pct(gap.avgFollowed)} di chi l&apos;aveva
+              {gap.missingCount === 1 ? "1 student lacked it" : `${gap.missingCount} students lacked it`}: {pct(gap.avgMissing)} of the points, against{" "}
+              {pct(gap.avgFollowed)} for those who had it
             </span>
           </li>
         ))}

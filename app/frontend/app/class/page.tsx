@@ -13,10 +13,10 @@ import { useShell } from "@/components/app-shell";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ClassBoard } from "@/components/classe/class-board";
-import { ClassSummary } from "@/components/classe/class-summary";
-import { StudentDetail } from "@/components/classe/student-detail";
-import { useClassRun } from "@/components/classe/use-class-run";
+import { ClassBoard } from "@/components/class/class-board";
+import { ClassSummary } from "@/components/class/class-summary";
+import { StudentDetail } from "@/components/class/student-detail";
+import { useClassRun } from "@/components/class/use-class-run";
 
 export default function ClassePage() {
   return (
@@ -43,7 +43,7 @@ function Classe() {
         setQuestions(qs);
         setStudents((await classeApi.students(course.id)).length);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Errore");
+        setError(e instanceof Error ? e.message : "Error");
       }
     })();
   }, [course]);
@@ -51,23 +51,23 @@ function Classe() {
   const questionId = params.get("q") ?? questions?.[0]?.id ?? null;
 
   if (courseLoading) return <Skeleton className="m-6 h-40" />;
-  if (!course) return <EmptyState icon={Users} title="Nessun corso" description="Prima carica il materiale del corso." />;
+  if (!course) return <EmptyState icon={Users} title="No course yet" description="Upload the course materials first." />;
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:px-8 lg:py-12">
         <header className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold lg:text-title">Classe simulata</h1>
+          <h1 className="text-2xl font-bold lg:text-title">Simulated class</h1>
           <p className="text-base text-muted-foreground">
-            Prima dell&apos;appello, la domanda la sostengono {students ?? 8} studenti sintetici, ognuno con gli appunti delle lezioni che ha
-            seguito. Il Correttore applica la tua griglia.
+            Before the exam, {students ?? 8} synthetic students sit the question, each with notes from the lessons they attended. The Grader
+            applies your rubric.
           </p>
         </header>
         <p className="flex items-start gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
           <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
           <span>
-            È una simulazione su profili sintetici, inventati: non è una previsione dei voti veri. Ogni studente ha un accesso limitato ai
-            passaggi del corso, ma il modello conosce comunque la materia.
+            A simulation on synthetic profiles, not a prediction of real grades. Each student has limited access to the course passages,
+            but the model still knows the subject.
           </span>
         </p>
 
@@ -78,13 +78,13 @@ function Classe() {
         ) : questions.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="Nessuna domanda"
-            description="La classe risponde alle domande dell'esame: scrivine una con la sua griglia."
-            action={<Button onClick={() => router.push("/esame?nuova=1")}>Nuova domanda</Button>}
+            title="No questions yet"
+            description="The class answers the exam questions. Write one with its rubric."
+            action={<Button onClick={() => router.push("/exam?new=1")}>New question</Button>}
           />
         ) : (
           <>
-            <QuestionPicker questions={questions} selected={questionId} onSelect={(id) => router.replace(`/classe?q=${id}`)} />
+            <QuestionPicker questions={questions} selected={questionId} onSelect={(id) => router.replace(`/class?q=${id}`)} />
             {questionId && <QuestionRun key={questionId} questionId={questionId} disabled={students === 0} />}
           </>
         )}
@@ -95,7 +95,7 @@ function Classe() {
 
 function QuestionPicker({ questions, selected, onSelect }: { questions: ExamQuestion[]; selected: string | null; onSelect: (id: string) => void }) {
   return (
-    <section aria-label="Domanda" className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+    <section aria-label="Question" className="grid grid-cols-1 gap-3 lg:grid-cols-3">
       {questions.map((q, i) => (
         <button
           key={q.id}
@@ -108,7 +108,7 @@ function QuestionPicker({ questions, selected, onSelect }: { questions: ExamQues
           )}
         >
           <span className="text-sm font-semibold">
-            Domanda {i + 1} · versione {q.version.version}
+            Question {i + 1} · version {q.version.version}
           </span>
           <span className="line-clamp-1 text-sm text-muted-foreground lg:line-clamp-2">{q.version.text}</span>
         </button>
@@ -135,7 +135,7 @@ function QuestionRun({ questionId, disabled }: { questionId: string; disabled: b
       const { runId } = await classeApi.start(questionId);
       setRunId(runId);
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "La classe non è partita. Riprova.");
+      toast.error(e instanceof ApiError ? e.message : "The class did not start. Try again.");
     } finally {
       setStarting(false);
     }
@@ -148,9 +148,9 @@ function QuestionRun({ questionId, disabled }: { questionId: string; disabled: b
         <RunView key={runId} runId={runId} onRestart={start} starting={starting} disabled={disabled} />
       ) : (
         <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-base text-muted-foreground">La classe non ha ancora risposto a questa domanda.</p>
+          <p className="text-base text-muted-foreground">The class has not answered this question yet.</p>
           <Button onClick={start} disabled={starting || disabled}>
-            Fai rispondere la classe
+            Run the class
           </Button>
         </div>
       )}
@@ -170,7 +170,7 @@ function RunView({ runId, onRestart, starting, disabled }: { runId: string; onRe
   if (!run) return <Skeleton className="h-64 w-full" />;
   const running = run.status === "running";
   const done = run.answers.filter((a) => a.status === "done" || a.status === "error").length;
-  const step = running ? (live?.step === "recupero" || !run.retrieval ? "Recupera i passaggi del corso" : `Rispondono: ${done} di ${run.answers.length} corretti`) : null;
+  const step = running ? (live?.step === "recupero" || !run.retrieval ? "Retrieving course passages" : `Answering: ${done} of ${run.answers.length} graded`) : null;
   const student = run.students.find((s) => s.id === selected) ?? null;
   const answer = run.answers.find((a) => a.studentId === selected) ?? null;
 
@@ -181,11 +181,11 @@ function RunView({ runId, onRestart, starting, disabled }: { runId: string; onRe
           {running
             ? step
             : run.status === "error"
-              ? `Esecuzione interrotta: ${run.error ?? "errore"}`
-              : `Versione ${run.version.version} della domanda · ${run.passages.length} passaggi recuperati dal corso`}
+              ? `Run stopped: ${run.error ?? "error"}`
+              : `Question version ${run.version.version} · ${run.passages.length} passages retrieved from the course`}
         </p>
         <Button onClick={onRestart} disabled={running || starting || disabled} variant={running ? "outline" : "default"}>
-          {running ? "La classe sta rispondendo" : "Fai rispondere di nuovo"}
+          {running ? "The class is answering" : "Run the class again"}
         </Button>
       </div>
       <ClassBoard run={run} live={live} selected={selected} onSelect={(id) => setSelected((s) => (s === id ? null : id))} />

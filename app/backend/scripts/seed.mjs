@@ -16,7 +16,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 
-const COURSE = { name: "Reinforcement Learning", description: "Corso magistrale: bandit, MDP, programmazione dinamica, TD, Q-learning, approssimazione di funzione, RL basato su modello." };
+const COURSE = { name: "Reinforcement Learning", description: "Master's course: bandits, MDPs, dynamic programming, TD, Q-learning, function approximation, model-based RL." };
 
 const args = process.argv.slice(2);
 const opt = (name) => {

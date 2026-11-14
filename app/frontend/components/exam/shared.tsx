@@ -8,24 +8,33 @@ import type { AttackAgent, Grade, RunPassage, VerdictKind } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { SourceRef } from "@/components/source-ref";
 
-export const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1)).replace(".", ",");
+export const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 export const AGENT_META: Record<AttackAgent, { name: string; role: string; holds: (passages: number) => string }> = {
   esterno: {
-    name: "Esterno",
-    role: "Risponde senza il corso",
-    holds: () => "Solo il testo della domanda. Niente materiali del corso, niente griglia.",
+    name: "Outsider",
+    role: "Answers without the course",
+    holds: () => "Only the question text. No course materials, no rubric.",
   },
   letterale: {
-    name: "Letterale",
-    role: "Risponde citando il corso",
-    holds: (n) => `La domanda e un accesso limitato ai passaggi del corso (${n} recuperati). Niente griglia. Il modello conosce comunque la materia.`,
+    name: "Literalist",
+    role: "Answers citing the course",
+    holds: (n) => `The question and limited access to the course passages (${n} retrieved). No rubric. The model still knows the subject.`,
   },
   cavillatore: {
-    name: "Cavillatore",
-    role: "Cerca due letture",
-    holds: (n) => `La domanda e gli stessi ${n} passaggi. Niente griglia. Cerca una frase che si legge in due modi.`,
+    name: "Quibbler",
+    role: "Looks for two readings",
+    holds: (n) => `The question and the same ${n} passages. No rubric. Looks for a sentence that reads two ways.`,
   },
+};
+
+// Titoli dei verdetti in inglese: il tipo salvato in D1 resta, il titolo si legge da qui.
+export const VERDICT_TITLE: Record<VerdictKind, string> = {
+  supera_soglia: "This model clears the pass mark without the course materials",
+  prove_insufficienti: "Insufficient evidence in the retrieved passages",
+  ambiguita: "Candidate ambiguity",
+  nessun_controesempio: "No counterexample found",
+  incompleta: "Incomplete analysis",
 };
 
 // Etichetta di un verdetto: testo scuro su bordo, il colore sta nell'icona (contrasto pieno, e il
@@ -38,8 +47,9 @@ const VERDICT_ICON: Record<VerdictKind, { icon: typeof AlertTriangle; className:
   nessun_controesempio: { icon: CheckCircle2, className: "text-success" },
 };
 
-export function VerdictBadge({ kind, title, className }: { kind: VerdictKind; title: string; className?: string }) {
+export function VerdictBadge({ kind, title, className }: { kind: VerdictKind; title?: string; className?: string }) {
   const { icon: Icon, className: tone } = VERDICT_ICON[kind];
+  title = VERDICT_TITLE[kind] ?? title;
   return (
     <span className={cn("inline-flex min-h-7 items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-sm font-medium text-foreground", className)}>
       <Icon className={cn("size-4 shrink-0", tone)} aria-hidden />
@@ -52,7 +62,7 @@ export function VerdictBadge({ kind, title, className }: { kind: VerdictKind; ti
 export function GradeView({ grade, label }: { grade: Grade; label?: string }) {
   const [open, setOpen] = useState(false);
   if (grade.error || grade.total === null) {
-    return <p className="text-sm text-destructive">{label ? `${label}: ` : ""}correzione non riuscita. {grade.error}</p>;
+    return <p className="text-sm text-destructive">{label ? `${label}: ` : ""}grading failed. {grade.error}</p>;
   }
   return (
     <div className="rounded-lg border bg-card">
@@ -62,7 +72,7 @@ export function GradeView({ grade, label }: { grade: Grade; label?: string }) {
         aria-expanded={open}
         className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <span className="text-sm text-muted-foreground">{label ?? "Voto del Correttore"}</span>
+        <span className="text-sm text-muted-foreground">{label ?? "Grader's score"}</span>
         <span className="flex items-center gap-2">
           <span className="text-lg font-semibold tabular-nums">
             {fmt(grade.total)}
@@ -94,7 +104,7 @@ export function GradeView({ grade, label }: { grade: Grade; label?: string }) {
 export function PassageRef({ passage, quote }: { passage: Pick<RunPassage, "locator" | "sourceTitle" | "text">; quote?: string }) {
   return (
     <div className="flex flex-col gap-1">
-      {quote && <p className="text-sm">«{quote}»</p>}
+      {quote && <p className="text-sm">“{quote}”</p>}
       <SourceRef sourceTitle={passage.sourceTitle} locator={passage.locator} text={passage.text} />
     </div>
   );

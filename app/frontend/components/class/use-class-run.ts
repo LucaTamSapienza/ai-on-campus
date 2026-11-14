@@ -22,7 +22,7 @@ export function useClassRun(runId: string) {
       setRun(next);
       setError(null);
     } catch (e) {
-      if (mine === seq.current) setError(e instanceof Error ? e.message : "Errore");
+      if (mine === seq.current) setError(e instanceof Error ? e.message : "Error");
     }
   }, [runId]);
 

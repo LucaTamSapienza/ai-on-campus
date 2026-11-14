@@ -5,13 +5,13 @@
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import type { ClassAnswer, ClasseState, ClassRunDetail, Student } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { fmt } from "@/components/esame/shared";
+import { fmt } from "@/components/exam/shared";
 
 type Props = { run: ClassRunDetail; live: ClasseState | null; selected: string | null; onSelect: (studentId: string) => void };
 
 export function ClassBoard({ run, live, selected, onSelect }: Props) {
   return (
-    <section aria-label="Gli studenti sintetici" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section aria-label="The synthetic students" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {run.students.map((s) => {
         const answer = run.answers.find((a) => a.studentId === s.id);
         if (!answer) return null;
@@ -41,11 +41,11 @@ export function phaseOf(answer: ClassAnswer, live: ClasseState["students"][strin
 }
 
 const PHASE_TEXT: Record<Phase, string> = {
-  pending: "In attesa",
-  running: "Sta scrivendo",
-  grading: "In correzione",
-  done: "Corretto",
-  error: "Non ha completato",
+  pending: "Waiting",
+  running: "Writing",
+  grading: "Being graded",
+  done: "Graded",
+  error: "Did not finish",
 };
 
 function StudentCard({
@@ -79,18 +79,18 @@ function StudentCard({
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-base font-semibold">{student.name}</span>
           <span className="text-sm text-muted-foreground">
-            media {fmt(student.priorGrade)} · {student.lessons.length} lezioni su 13
+            average {fmt(student.priorGrade)} · {student.lessons.length} of 13 lessons
           </span>
         </div>
         <Grade answer={answer} phase={phase} />
       </div>
       <p className={cn("line-clamp-4 min-h-[calc(4lh)] text-sm whitespace-pre-line", text ? "text-foreground" : "text-muted-foreground")}>
-        {text || (phase === "pending" ? "Aspetta la domanda." : phase === "error" ? (answer.error ?? "") : "…")}
+        {text || (phase === "pending" ? "Waiting for the question." : phase === "error" ? (answer.error ?? "") : "…")}
       </p>
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <PhaseIcon phase={phase} />
         <span>{PHASE_TEXT[phase]}</span>
-        <span className="ml-auto">{answer.passageIds.length} passaggi</span>
+        <span className="ml-auto">{answer.passageIds.length} passages</span>
       </div>
     </button>
   );

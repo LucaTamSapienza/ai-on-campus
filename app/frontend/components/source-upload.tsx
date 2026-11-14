@@ -23,12 +23,12 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
 
   const readFile = async (file: File) => {
     if (!/\.(md|markdown|txt)$/i.test(file.name)) {
-      toast.error("Solo file di testo o Markdown (.md, .txt).");
+      toast.error("Only text or Markdown files (.md, .txt).");
       return;
     }
     const content = await file.text();
     if (content.length > MAX_CHARS) {
-      toast.error("Il file supera i 300.000 caratteri. Dividilo in più fonti.");
+      toast.error("The file exceeds 300,000 characters. Split it into several sources.");
       return;
     }
     setText(content);
@@ -51,12 +51,12 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
         setBusy(true);
         try {
           const r = await api.createSource(courseId, { title: title.trim(), text });
-          if (r.duplicate) toast.info("Questa fonte è già nel corso: niente doppioni.");
-          else toast.success("Fonte caricata: il Cartografo la sta leggendo.");
+          if (r.duplicate) toast.info("This source is already in the course. No duplicates.");
+          else toast.success("Source uploaded. The Cartographer is reading it.");
           reset();
           onUploaded();
         } catch (err) {
-          toast.error(err instanceof ApiError ? err.message : "Caricamento non riuscito.");
+          toast.error(err instanceof ApiError ? err.message : "Upload failed.");
         } finally {
           setBusy(false);
         }
@@ -68,15 +68,15 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
             File
           </TabsTrigger>
           <TabsTrigger value="testo" className="min-h-11 flex-1 lg:flex-none lg:px-4">
-            Testo incollato
+            Pasted text
           </TabsTrigger>
         </TabsList>
         <TabsContent value="file" className="pt-2">
           <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-6 text-center transition-colors duration-150 ease-out hover:bg-muted focus-within:ring-3 focus-within:ring-ring/50">
             <FileUp className="size-6 text-muted-foreground" aria-hidden />
-            <span className="text-base font-medium">{fileName ?? "Scegli un file .md o .txt"}</span>
+            <span className="text-base font-medium">{fileName ?? "Choose a .md or .txt file"}</span>
             <span className="text-sm text-muted-foreground">
-              {fileName ? `${text.length.toLocaleString("it-IT")} caratteri` : "Slide esportate in testo o trascrizioni, fino a 300.000 caratteri"}
+              {fileName ? `${text.length.toLocaleString("en-US")} characters` : "Slides exported as text, or transcripts, up to 300,000 characters"}
             </span>
             <input
               ref={fileRef}
@@ -95,18 +95,18 @@ export function SourceUpload({ courseId, onUploaded }: { courseId: string; onUpl
               setFileName(null);
             }}
             rows={8}
-            placeholder="Incolla qui il testo della lezione"
-            aria-label="Testo della lezione"
+            placeholder="Paste the lesson text here"
+            aria-label="Lesson text"
             className="text-base"
           />
         </TabsContent>
       </Tabs>
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Titolo
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="Per esempio L08 Q-learning e SARSA" />
+        Title
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} placeholder="For example L08 Q-learning" />
       </label>
       <Button type="submit" disabled={busy || !title.trim() || !text.trim()} className="lg:self-start">
-        {busy ? "Carico…" : "Carica e fai leggere al Cartografo"}
+        {busy ? "Uploading…" : "Upload and send to the Cartographer"}
       </Button>
     </form>
   );

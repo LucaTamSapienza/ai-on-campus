@@ -18,8 +18,8 @@ export default function MaterialsPage() {
   const { course, courseLoading, courseError } = useShell();
   return (
     <PageColumn
-      title="Materiali"
-      description="Slide e trascrizioni del corso. Il Cartografo legge ogni fonte e ne porta i concetti nel grafo."
+      title="Materials"
+      description="Course slides and transcripts. The Cartographer reads each source and adds its concepts to the graph."
     >
       {courseLoading && <Skeleton className="h-64 w-full" />}
       {courseError && <p className="text-base text-destructive">{courseError}</p>}
@@ -48,7 +48,7 @@ function CourseMaterials({ courseId }: { courseId: string }) {
       {role === "docente" && <SourceUpload courseId={courseId} onUploaded={load} />}
       <AgentStrip state={cartografo} />
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Fonti {sources ? `(${sources.length})` : ""}</h2>
+        <h2 className="text-lg font-semibold">Sources {sources ? `(${sources.length})` : ""}</h2>
         <SourceList sources={sources} />
       </section>
     </>
@@ -67,16 +67,16 @@ function CreateCourse() {
           await api.createCourse(name.trim());
           await reloadCourse();
         } catch (err) {
-          toast.error(err instanceof ApiError ? err.message : "Non è stato possibile creare il corso.");
+          toast.error(err instanceof ApiError ? err.message : "Could not create the course.");
         }
       }}
     >
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Nome del corso
-        <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder="Per esempio Reinforcement Learning" />
+        Course name
+        <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder="For example Reinforcement Learning" />
       </label>
       <Button type="submit" disabled={!name.trim()} className="lg:self-start">
-        Crea il corso
+        Create course
       </Button>
     </form>
   );

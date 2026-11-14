@@ -27,7 +27,7 @@ const MAX_RUNNING = 3;
 // Cosa può scegliere lo studente: le lezioni del perimetro e i concetti, con la lezione in cui compaiono.
 studio.get("/courses/:id/studio", async (c) => {
   const id = c.req.param("id");
-  if (!(await courseExists(c.env.DB, id))) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await courseExists(c.env.DB, id))) return fail(c, 404, "not_found", "Course not found.");
   const graph = await loadCourseGraph(c.env.DB, id);
   const inScope = [...graph.inScope].map((cid) => graph.concepts.get(cid)!);
   const lessons = graph.lessons
@@ -49,25 +49,25 @@ studio.post("/courses/:id/study-plans", bodyLimit({ maxSize: 32 * 1024 }), async
   const parsed = planBody.safeParse(await c.req.json().catch(() => undefined));
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return fail(c, 400, "invalid_body", `Richiesta non valida: ${issue.path.join(".") || "corpo"} ${issue.message}`);
+    return fail(c, 400, "invalid_body", `Invalid request: ${issue.path.join(".") || "body"} ${issue.message}`);
   }
   const body = parsed.data;
   const db = c.env.DB;
   const courseId = c.req.param("id");
-  if (!(await courseExists(db, courseId))) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await courseExists(db, courseId))) return fail(c, 404, "not_found", "Course not found.");
   const running = await studioQuery(
     db,
     "SELECT COUNT(*) AS n FROM study_plans WHERE course_id = ? AND status = 'running' AND created_at >= datetime('now', '-10 minutes')",
     courseId,
   ).first<{ n: number }>();
-  if ((running?.n ?? 0) >= MAX_RUNNING) return fail(c, 429, "too_many_plans", "Ci sono già troppi piani in preparazione. Riprova fra un minuto.");
+  if ((running?.n ?? 0) >= MAX_RUNNING) return fail(c, 429, "too_many_plans", "Too many plans are already being prepared. Try again in a minute.");
 
   const graph = await loadCourseGraph(db, courseId);
   // Solo identificatori di questo corso: il resto si ignora.
   const knownLessons = body.knownLessons.filter((id) => graph.lessons.some((l) => l.id === id));
   const knownConcepts = body.knownConcepts.filter((id) => graph.inScope.has(id));
   const { sessions, stats } = buildPlan(graph, { days: body.days, knownLessons, knownConcepts });
-  if (!sessions.length) return fail(c, 422, "nothing_to_study", "Con quello che conosci già non resta niente da studiare nel perimetro del corso.");
+  if (!sessions.length) return fail(c, 422, "nothing_to_study", "With what you already know, nothing is left to study in the course scope.");
 
   const planId = crypto.randomUUID();
   const sessionIds = sessions.map(() => crypto.randomUUID());
@@ -93,7 +93,7 @@ studio.post("/courses/:id/study-plans", bodyLimit({ maxSize: 32 * 1024 }), async
   } catch (err) {
     console.error(err);
     await studioQuery(db, "UPDATE study_plans SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?", "Il Pianificatore non è partito", planId).run();
-    return fail(c, 503, "agent_unavailable", "Il Pianificatore non è partito. Riprova.");
+    return fail(c, 503, "agent_unavailable", "The Planner did not start. Try again.");
   }
   return c.json({ planId }, 202);
 });
@@ -107,7 +107,7 @@ studio.get("/study-plans/:id", async (c) => {
     "SELECT id, course_id AS courseId, days, scope, known_lessons AS knownLessons, known_concepts AS knownConcepts, stats, status, error, created_at AS createdAt FROM study_plans WHERE id = ?",
     c.req.param("id"),
   ).first<Record<string, unknown> & { courseId: string; knownLessons: string; knownConcepts: string; stats: string }>();
-  if (!plan) return fail(c, 404, "not_found", "Piano non trovato.");
+  if (!plan) return fail(c, 404, "not_found", "Plan not found.");
   const rows = (
     await studioQuery(db, "SELECT id, ordinal, day, concepts, status, why, look, error FROM study_sessions WHERE plan_id = ? ORDER BY ordinal", plan.id).all<{
       id: string;
@@ -135,7 +135,7 @@ studio.get("/study-plans/:id", async (c) => {
       const cpt = graph.concepts.get(p.id);
       return {
         id: p.id,
-        name: cpt?.name ?? "Concetto rimosso",
+        name: cpt?.name ?? "Removed concept",
         topicName: cpt?.topicName ?? null,
         lesson: cpt?.introLesson ? shortLesson(cpt.introLesson.title) : null,
         evidence: cpt?.evidence.length ?? 0,

@@ -31,7 +31,7 @@ export function studentForbidden(method: string, path: string): boolean {
 export const studentGuard: MiddlewareHandler<{ Bindings: Env }> = async (c, next) => {
   if (c.req.method === "OPTIONS" || !isStudent(c.req.header("x-role"))) return next();
   if (studentForbidden(c.req.method, c.req.path)) {
-    return c.json({ error: { code: "forbidden_role", message: "Con il ruolo studente questa parte è in sola lettura o non è visibile." } }, 403);
+    return c.json({ error: { code: "forbidden_role", message: "With the student role this part is read-only or not visible." } }, 403);
   }
   return next();
 };

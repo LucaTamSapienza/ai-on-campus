@@ -22,7 +22,7 @@ async function readBody<T extends z.ZodType>(c: Context<App>, schema: T): Promis
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return fail(c, 400, "invalid_body", `Richiesta non valida: ${issue.path.join(".") || "corpo"} ${issue.message}`);
+    return fail(c, 400, "invalid_body", `Invalid request: ${issue.path.join(".") || "body"} ${issue.message}`);
   }
   return parsed.data;
 }
@@ -49,7 +49,7 @@ esame.post("/courses/:id/exams", async (c) => {
   const body = await readBody(c, z.object({ title: z.string().trim().min(1).max(120) }));
   if (body instanceof Response) return body;
   const courseId = c.req.param("id");
-  if (!(await c.env.DB.prepare("SELECT 1 FROM courses WHERE id = ?").bind(courseId).first())) return fail(c, 404, "not_found", "Corso non trovato.");
+  if (!(await c.env.DB.prepare("SELECT 1 FROM courses WHERE id = ?").bind(courseId).first())) return fail(c, 404, "not_found", "Course not found.");
   const id = crypto.randomUUID();
   await c.env.DB.prepare("INSERT INTO exams (id, course_id, title) VALUES (?, ?, ?)").bind(id, courseId, body.title).run();
   return c.json({ id, title: body.title }, 201);
@@ -58,7 +58,7 @@ esame.post("/courses/:id/exams", async (c) => {
 esame.get("/exams/:id", async (c) => {
   const db = c.env.DB;
   const exam = await db.prepare("SELECT id, course_id AS courseId, title, created_at AS createdAt FROM exams WHERE id = ?").bind(c.req.param("id")).first();
-  if (!exam) return fail(c, 404, "not_found", "Esame non trovato.");
+  if (!exam) return fail(c, 404, "not_found", "Exam not found.");
   const rows = (
     await db
       .prepare(
@@ -110,19 +110,19 @@ const rubricItem = z.object({
 esame.post("/exams/:id/questions", async (c) => {
   const raw = (await c.req.json().catch(() => undefined)) as { rubric?: unknown } | undefined;
   if (!raw || !Array.isArray(raw.rubric) || raw.rubric.length === 0) {
-    return fail(c, 422, "rubric_required", "Serve la griglia di correzione.");
+    return fail(c, 422, "rubric_required", "A grading rubric is required.");
   }
   const parsed = z
     .object({ text: z.string().trim().min(10).max(MAX_QUESTION_CHARS), rubric: z.array(rubricItem).min(1).max(MAX_CRITERIA) })
     .safeParse(raw);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
-    return fail(c, 400, "invalid_body", `Richiesta non valida: ${issue.path.join(".") || "corpo"} ${issue.message}`);
+    return fail(c, 400, "invalid_body", `Invalid request: ${issue.path.join(".") || "body"} ${issue.message}`);
   }
   const body = parsed.data;
   const db = c.env.DB;
   const exam = await db.prepare("SELECT id, course_id FROM exams WHERE id = ?").bind(c.req.param("id")).first<{ id: string; course_id: string }>();
-  if (!exam) return fail(c, 404, "not_found", "Esame non trovato.");
+  if (!exam) return fail(c, 404, "not_found", "Exam not found.");
 
   const rubric = body.rubric.map((r, i) => ({ id: `c${i + 1}`, criterion: r.criterion, points: r.points, ...(r.expected ? { expected: r.expected } : {}) }));
   const maxPoints = rubric.reduce((s, r) => s + r.points, 0);
@@ -148,7 +148,7 @@ esame.get("/questions/:id", async (c) => {
     .prepare("SELECT id, exam_id AS examId, course_id AS courseId, ordinal, current_version_id AS currentVersionId FROM questions WHERE id = ?")
     .bind(c.req.param("id"))
     .first<{ id: string; examId: string; courseId: string; ordinal: number; currentVersionId: string | null }>();
-  if (!q) return fail(c, 404, "not_found", "Domanda non trovata.");
+  if (!q) return fail(c, 404, "not_found", "Question not found.");
   const version = q.currentVersionId ? await loadVersion(db, q.currentVersionId) : null;
   const last = await db
     .prepare("SELECT id, status, question_version_id AS versionId FROM attack_runs WHERE question_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1")
@@ -171,9 +171,9 @@ esame.post("/questions/:id/attack", async (c) => {
     .prepare("SELECT id, current_version_id AS versionId FROM questions WHERE id = ?")
     .bind(c.req.param("id"))
     .first<{ id: string; versionId: string | null }>();
-  if (!q) return fail(c, 404, "not_found", "Domanda non trovata.");
+  if (!q) return fail(c, 404, "not_found", "Question not found.");
   const version = q.versionId ? await loadVersion(db, q.versionId) : null;
-  if (!version || version.rubric.length === 0) return fail(c, 422, "rubric_required", "Serve la griglia di correzione.");
+  if (!version || version.rubric.length === 0) return fail(c, 422, "rubric_required", "A grading rubric is required.");
 
   const runId = crypto.randomUUID();
   try {
@@ -184,7 +184,7 @@ esame.post("/questions/:id/attack", async (c) => {
   } catch (err) {
     if (isUnique(err)) {
       const active = await db.prepare("SELECT id FROM attack_runs WHERE question_id = ? AND status = 'running'").bind(q.id).first<{ id: string }>();
-      return c.json({ error: { code: "run_active", message: "C'è già un attacco in corso su questa domanda.", runId: active?.id ?? null } }, 409);
+      return c.json({ error: { code: "run_active", message: "An attack is already running on this question.", runId: active?.id ?? null } }, 409);
     }
     throw err;
   }
@@ -195,16 +195,16 @@ esame.post("/questions/:id/attack", async (c) => {
     console.error(err);
     await db
       .prepare("UPDATE attack_runs SET status = 'error', error = ?, finished_at = CURRENT_TIMESTAMP WHERE id = ?")
-      .bind("Il coordinatore non è partito", runId)
+      .bind("The coordinator did not start", runId)
       .run();
-    return fail(c, 503, "agent_unavailable", "Il coordinatore degli agenti non è partito. Riprova.");
+    return fail(c, 503, "agent_unavailable", "The agent coordinator did not start. Try again.");
   }
   return c.json({ runId }, 202);
 });
 
 esame.get("/runs/:id", async (c) => {
   const run = await loadRun(c.env.DB, c.req.param("id"));
-  if (!run) return fail(c, 404, "not_found", "Esecuzione non trovata.");
+  if (!run) return fail(c, 404, "not_found", "Run not found.");
   return c.json({ run });
 });
 
@@ -223,9 +223,9 @@ esame.post("/questions/:id/decision", async (c) => {
   const db = c.env.DB;
   const questionId = c.req.param("id");
   const q = await db.prepare("SELECT id, current_version_id AS current FROM questions WHERE id = ?").bind(questionId).first<{ id: string; current: string | null }>();
-  if (!q) return fail(c, 404, "not_found", "Domanda non trovata.");
+  if (!q) return fail(c, 404, "not_found", "Question not found.");
   if (q.current !== body.expectedVersionId) {
-    return fail(c, 409, "version_changed", "La domanda è cambiata nel frattempo. Ricarica la pagina.");
+    return fail(c, 409, "version_changed", "The question changed in the meantime. Reload the page.");
   }
   const review = await db
     .prepare(
@@ -234,7 +234,7 @@ esame.post("/questions/:id/decision", async (c) => {
     )
     .bind(body.reviewId, questionId, body.expectedVersionId)
     .first<{ id: string; proposedText: string | null }>();
-  if (!review) return fail(c, 404, "not_found", "Scheda non trovata per questa versione della domanda.");
+  if (!review) return fail(c, 404, "not_found", "No report found for this version of the question.");
 
   const decisionId = crypto.randomUUID();
   const current = "(SELECT current_version_id FROM questions WHERE id = ?)";
@@ -246,13 +246,13 @@ esame.post("/questions/:id/decision", async (c) => {
       )
       .bind(decisionId, questionId, review.id, body.expectedVersionId, questionId, body.expectedVersionId)
       .run();
-    if (!res.meta.changes) return fail(c, 409, "version_changed", "La domanda è cambiata nel frattempo. Ricarica la pagina.");
+    if (!res.meta.changes) return fail(c, 409, "version_changed", "The question changed in the meantime. Reload the page.");
     return c.json({ versionId: body.expectedVersionId, decisionId });
   }
 
   const text = body.action === "approvata" ? review.proposedText : body.text;
   if (!text) {
-    return fail(c, 400, "invalid_body", body.action === "approvata" ? "Il Revisore non ha proposto un testo da approvare." : "Serve il testo modificato.");
+    return fail(c, 400, "invalid_body", body.action === "approvata" ? "The Reviewer did not propose a text to approve." : "The edited text is required.");
   }
   const versionId = crypto.randomUUID();
   const origin = body.action === "approvata" ? "proposta_approvata" : "proposta_modificata";
@@ -275,7 +275,7 @@ esame.post("/questions/:id/decision", async (c) => {
       .prepare("UPDATE questions SET current_version_id = ? WHERE id = ? AND current_version_id = ? AND EXISTS (SELECT 1 FROM question_versions WHERE id = ?)")
       .bind(versionId, questionId, body.expectedVersionId, versionId),
   ]);
-  if (!results[0].meta.changes) return fail(c, 409, "version_changed", "La domanda è cambiata nel frattempo. Ricarica la pagina.");
+  if (!results[0].meta.changes) return fail(c, 409, "version_changed", "The question changed in the meantime. Reload the page.");
   return c.json({ versionId, decisionId });
 });
 
@@ -289,7 +289,7 @@ esame.get("/questions/:id/versions", async (c) => {
       .bind(questionId)
       .all<{ id: string }>()
   ).results;
-  if (!versions.length) return fail(c, 404, "not_found", "Domanda non trovata.");
+  if (!versions.length) return fail(c, 404, "not_found", "Question not found.");
   const decisions = (
     await db
       .prepare("SELECT to_version_id AS toVersionId, action, created_at AS createdAt FROM decisions WHERE question_id = ? ORDER BY created_at")

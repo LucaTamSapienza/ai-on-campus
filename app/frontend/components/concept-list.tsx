@@ -24,7 +24,7 @@ export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, cla
   const listRef = useRef<HTMLUListElement>(null);
   const items = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return concepts.filter((c) => !s || c.name.toLowerCase().includes(s)).sort((a, b) => a.name.localeCompare(b.name, "it"));
+    return concepts.filter((c) => !s || c.name.toLowerCase().includes(s)).sort((a, b) => a.name.localeCompare(b.name, "en"));
   }, [q, concepts]);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, cla
   }, [selectedId]);
 
   return (
-    <section className={cn("flex min-h-0 flex-col bg-card", className)} aria-label="Elenco dei concetti">
+    <section className={cn("flex min-h-0 flex-col bg-card", className)} aria-label="Concept list">
       <div className="flex items-center gap-2 border-b p-4">
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -41,16 +41,16 @@ export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, cla
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={`Filtra ${concepts.length} concetti`}
-            aria-label="Filtra i concetti"
+            placeholder={`Filter ${concepts.length} concepts`}
+            aria-label="Filter concepts"
             className="pl-10"
           />
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Chiudi l'elenco">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close the list">
           <X className="size-5" />
         </Button>
       </div>
-      <ul ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-2" role="listbox" aria-label="Concetti">
+      <ul ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain py-2" role="listbox" aria-label="Concepts">
         {items.map((c) => (
           <li key={c.id} role="option" aria-selected={c.id === selectedId} data-id={c.id}>
             <button
@@ -63,13 +63,13 @@ export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, cla
             >
               <TopicDot slot={slotOf(c.topicId)} />
               <span className="min-w-0 flex-1 break-words">{c.name}</span>
-              <span className="shrink-0 text-sm text-muted-foreground tabular-nums" aria-label={`${c.degree} relazioni`}>
+              <span className="shrink-0 text-sm text-muted-foreground tabular-nums" aria-label={`${c.degree} relations`}>
                 {c.degree}
               </span>
             </button>
           </li>
         ))}
-        {items.length === 0 && <li className="px-4 py-3 text-base text-muted-foreground">Nessun concetto con questo nome.</li>}
+        {items.length === 0 && <li className="px-4 py-3 text-base text-muted-foreground">No concept with this name.</li>}
       </ul>
     </section>
   );

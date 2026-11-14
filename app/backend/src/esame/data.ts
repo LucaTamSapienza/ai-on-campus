@@ -167,8 +167,8 @@ export function answersToGrade(agent: AttackAgent, finding: Attack["finding"], a
   return answer ? [answer] : [];
 }
 
-const NAMES: Record<AttackAgent, string> = { esterno: "l'Esterno", letterale: "il Letterale", cavillatore: "il Cavillatore" };
-const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1)).replace(".", ",");
+const NAMES: Record<AttackAgent, string> = { esterno: "The Outsider", letterale: "The Literalist", cavillatore: "The Quibbler" };
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
 // I verdetti li calcola il backend sui voti, con parole fisse.
 export function computeVerdicts(run: Pick<RunDetail, "attacks" | "version">): Verdict[] {
@@ -179,13 +179,13 @@ export function computeVerdicts(run: Pick<RunDetail, "attacks" | "version">): Ve
   const esterno = get("esterno");
   const eg = esterno?.grades.find((g) => g.readingIndex === 0);
   if (esterno?.status !== "done" || !eg || eg.total === null) {
-    failed.push(`${NAMES.esterno} non ha completato${esterno?.error ? `: ${esterno.error}` : eg?.error ? `: voto non riuscito, ${eg.error}` : ""}`);
+    failed.push(`${NAMES.esterno} did not finish${esterno?.error ? `: ${esterno.error}` : eg?.error ? `: grading failed, ${eg.error}` : ""}`);
   } else if (eg.total >= PASS_THRESHOLD * eg.max) {
     const threshold = Math.round(PASS_THRESHOLD * eg.max * 10) / 10;
     out.push({
       kind: "supera_soglia",
-      title: "Questo modello supera la soglia senza i materiali",
-      detail: `${esterno.model} prende ${fmt(eg.total)} su ${fmt(eg.max)} senza vedere il corso. Soglia: ${fmt(threshold)} (70%).`,
+      title: "This model clears the pass mark without the course materials",
+      detail: `${esterno.model} scores ${fmt(eg.total)} out of ${fmt(eg.max)} without seeing the course. Pass mark: ${fmt(threshold)} (70%).`,
       agent: "esterno",
       model: esterno.model,
       total: eg.total,
@@ -197,43 +197,43 @@ export function computeVerdicts(run: Pick<RunDetail, "attacks" | "version">): Ve
   const letterale = get("letterale");
   const lf = letterale?.finding as LetteraleFinding | null | undefined;
   if (letterale?.status !== "done" || !lf) {
-    failed.push(`${NAMES.letterale} non ha completato${letterale?.error ? `: ${letterale.error}` : ""}`);
+    failed.push(`${NAMES.letterale} did not finish${letterale?.error ? `: ${letterale.error}` : ""}`);
   } else if (lf.citations.length === 0) {
     out.push({
       kind: "prove_insufficienti",
-      title: "Prove insufficienti nei passaggi recuperati",
-      detail: `Il Letterale non ha trovato frasi verificabili nei passaggi recuperati${
-        lf.discarded.length ? ` (${lf.discarded.length} citazioni scartate perché non presenti nei passaggi)` : ""
-      }. Non vuol dire che l'argomento manchi dal corso: il recupero può non averlo trovato.`,
+      title: "Insufficient evidence in the retrieved passages",
+      detail: `The Literalist found no verifiable sentences in the retrieved passages${
+        lf.discarded.length === 1 ? " (1 citation discarded because it is not in the passages)" : lf.discarded.length ? ` (${lf.discarded.length} citations discarded because they are not in the passages)` : ""
+      }. This does not mean the topic is missing from the course: retrieval may not have found it.`,
       agent: "letterale",
     });
   } else if (!letterale.grades.some((g) => g.total !== null)) {
-    failed.push(`${NAMES.letterale}: voto non riuscito`);
+    failed.push(`${NAMES.letterale}: grading failed`);
   }
 
   const cav = get("cavillatore");
   const cf = cav?.finding as CavillatoreFinding | null | undefined;
   if (cav?.status !== "done" || !cf) {
-    failed.push(`${NAMES.cavillatore} non ha completato${cav?.error ? `: ${cav.error}` : ""}`);
+    failed.push(`${NAMES.cavillatore} did not finish${cav?.error ? `: ${cav.error}` : ""}`);
   } else if (cf.found) {
     const totals = [0, 1].map((i) => cav.grades.find((g) => g.readingIndex === i));
-    const marks = totals.map((g) => (g && g.total !== null ? `${fmt(g.total)}/${fmt(g.max)}` : "voto non riuscito"));
+    const marks = totals.map((g) => (g && g.total !== null ? `${fmt(g.total)}/${fmt(g.max)}` : "grading failed"));
     out.push({
       kind: "ambiguita",
-      title: "Ambiguità candidata",
-      detail: `«${cf.phrase}»: ${cf.assumption.replace(/[.\s]+$/, "")}. Lettura 1: ${marks[0]}; lettura 2: ${marks[1]}. La giudica il docente.`,
+      title: "Candidate ambiguity",
+      detail: `“${cf.phrase}”: ${cf.assumption.replace(/[.\s]+$/, "")}. Reading 1: ${marks[0]}; reading 2: ${marks[1]}. The teacher decides.`,
       agent: "cavillatore",
     });
-    if (totals.some((g) => !g || g.total === null)) failed.push(`${NAMES.cavillatore}: voto di una lettura non riuscito`);
+    if (totals.some((g) => !g || g.total === null)) failed.push(`${NAMES.cavillatore}: grading of one reading failed`);
   }
 
   if (failed.length) {
-    out.push({ kind: "incompleta", title: "Analisi incompleta", detail: `${failed.join("; ")}.` });
+    out.push({ kind: "incompleta", title: "Incomplete analysis", detail: `${failed.join("; ")}.` });
   } else if (out.length === 0) {
     out.push({
       kind: "nessun_controesempio",
-      title: "Nessun controesempio trovato",
-      detail: "I tre attacchi sono completi e valutati: nessuno ha trovato un difetto. Non è una garanzia, è l'esito di questi tre attacchi.",
+      title: "No counterexample found",
+      detail: "All three attacks finished and were graded, and none found a flaw. This is not a guarantee, only the outcome of these three attacks.",
     });
   }
   return out;

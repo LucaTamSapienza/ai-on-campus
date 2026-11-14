@@ -45,33 +45,33 @@ test.describe("blocco 2", () => {
   test("Classe: domanda, otto studenti dal vivo, voti, riepilogo, dettaglio", async ({ page }) => {
     test.setTimeout(180_000);
     const errors = watch(page);
-    await page.goto("/classe");
-    await expect(page.getByRole("heading", { name: "Classe simulata" })).toBeVisible();
-    await expect(page.getByText("non è una previsione dei voti veri")).toBeVisible();
+    await page.goto("/class");
+    await expect(page.getByRole("heading", { name: "Simulated class" })).toBeVisible();
+    await expect(page.getByText("not a prediction of real grades")).toBeVisible();
 
     // Scelta della domanda.
-    await page.getByRole("button", { name: /Domanda 3/ }).click();
-    await expect(page).toHaveURL(/\/classe\?q=/);
-    await expect(page.getByRole("button", { name: /Domanda 3/ })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: /Question 3/ }).click();
+    await expect(page).toHaveURL(/\/class\?q=/);
+    await expect(page.getByRole("button", { name: /Question 3/ })).toHaveAttribute("aria-pressed", "true");
 
     // Esecuzione dal vivo.
-    await page.getByRole("button", { name: /Fai rispondere/ }).click();
-    await expect(page.getByRole("button", { name: "La classe sta rispondendo" })).toBeDisabled();
-    await expect(page.getByText(/^(Sta scrivendo|In correzione)$/).first()).toBeVisible({ timeout: 30_000 });
+    await page.getByRole("button", { name: /Run the class/ }).click();
+    await expect(page.getByRole("button", { name: "The class is answering" })).toBeDisabled();
+    await expect(page.getByText(/^(Writing|Being graded)$/).first()).toBeVisible({ timeout: 30_000 });
 
     // Otto voti, poi il riepilogo.
-    await expect(page.getByText("Corretto", { exact: true })).toHaveCount(8, { timeout: 120_000 });
-    await expect(page.getByRole("button", { name: "Fai rispondere di nuovo" })).toBeEnabled();
-    await expect(page.getByRole("heading", { name: "Distribuzione dei voti" })).toBeVisible();
-    await expect(page.getByText("8 di 8 corretti")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Cosa spiega i punti persi" })).toBeVisible();
+    await expect(page.getByText("Graded", { exact: true })).toHaveCount(8, { timeout: 120_000 });
+    await expect(page.getByRole("button", { name: "Run the class again" })).toBeEnabled();
+    await expect(page.getByRole("heading", { name: "Score distribution" })).toBeVisible();
+    await expect(page.getByText("8 of 8 graded")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What explains the lost points" })).toBeVisible();
 
     // Dettaglio di uno studente.
     await page.getByRole("button", { name: /Aurora Venti/ }).click();
-    const detail = page.getByRole("region", { name: /Risposta di Aurora Venti/ });
+    const detail = page.getByRole("region", { name: /Answer by Aurora Venti/ });
     await expect(detail).toBeVisible();
-    await expect(detail.getByText("Cosa aveva in mano")).toBeVisible();
-    await expect(detail.getByRole("button", { name: /Voto del Correttore/ })).toBeVisible();
+    await expect(detail.getByText("What they had")).toBeVisible();
+    await expect(detail.getByRole("button", { name: /Grader's score/ })).toBeVisible();
 
     await noHorizontalScroll(page);
     expect(errors, "errori in console").toEqual([]);
@@ -80,11 +80,11 @@ test.describe("blocco 2", () => {
   test("Lezioni: lezione svolta, proposte con prove, registrazione fino alla trascrizione", async ({ page }) => {
     test.setTimeout(120_000);
     const errors = watch(page);
-    await page.goto("/lezioni");
-    await expect(page.getByRole("heading", { name: "Lezioni", exact: true })).toBeVisible();
+    await page.goto("/lessons");
+    await expect(page.getByRole("heading", { name: "Lessons", exact: true })).toBeVisible();
 
     // Segna una lezione svolta e torna com'era.
-    const lessons = page.getByRole("region", { name: "Lezioni svolte" });
+    const lessons = page.getByRole("region", { name: "Lessons taught" });
     const lesson = lessons.getByRole("button", { name: /^L01/ });
     const before = await lesson.getAttribute("aria-pressed");
     await lesson.click();
@@ -95,21 +95,21 @@ test.describe("blocco 2", () => {
     await expect(lesson).toHaveAttribute("aria-pressed", before ?? "false");
 
     // Proposte con le prove (citazioni «L08 · slide 31»).
-    const proposals = page.getByRole("region", { name: "Argomenti proposti" });
-    await expect(proposals.getByRole("heading", { name: "Su cosa fare domande" })).toBeVisible();
+    const proposals = page.getByRole("region", { name: "Suggested topics" });
+    await expect(proposals.getByRole("heading", { name: "What to ask about" })).toBeVisible();
     await expect(proposals.getByRole("listitem").first()).toBeVisible();
     await expect(proposals.getByRole("button", { name: /· slide \d+/ }).first()).toBeVisible();
 
     // Registrazione con il microfono finto, fino alla trascrizione; poi si scarta.
-    await page.getByRole("button", { name: "Registra", exact: true }).click();
+    await page.getByRole("button", { name: "Record", exact: true }).click();
     await expect(page.getByText(/\d:\d\d \/ 3:00/)).toBeVisible();
     await page.waitForTimeout(8_000);
-    await page.getByRole("button", { name: /Ferma e trascrivi/ }).click();
-    await expect(page.getByText("Trascrive la registrazione…")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Manda al Cartografo" })).toBeVisible({ timeout: 60_000 });
-    await expect(page.getByText(/secondi trascritti/)).toBeVisible();
-    await page.getByRole("button", { name: "Scarta" }).click();
-    await expect(page.getByRole("button", { name: "Registra", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /Stop and transcribe/ }).click();
+    await expect(page.getByText("Transcribing the recording…")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send to the Cartographer" })).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/seconds transcribed/)).toBeVisible();
+    await page.getByRole("button", { name: "Discard" }).click();
+    await expect(page.getByRole("button", { name: "Record", exact: true })).toBeVisible();
 
     await noHorizontalScroll(page);
     expect(errors, "errori in console").toEqual([]);
@@ -117,19 +117,19 @@ test.describe("blocco 2", () => {
 
   test("Studente: voci del docente sparite, materiali in sola lettura, 403 dal server", async ({ page, request }) => {
     const errors = watch(page);
-    await page.goto("/classe");
-    await expect(page.getByRole("heading", { name: "Classe simulata" })).toBeVisible();
-    await visible(page, "button", /^studente$/i).click();
+    await page.goto("/class");
+    await expect(page.getByRole("heading", { name: "Simulated class" })).toBeVisible();
+    await visible(page, "button", /^student$/i).click();
 
     // Da una pagina del docente si torna al grafo; restano solo Grafo e Materiali.
     await expect(page).toHaveURL(new URL("/", DEMO_URL).href);
-    await expect(visible(page, "link", "Grafo")).toBeVisible();
-    await expect(visible(page, "link", "Materiali")).toBeVisible();
-    for (const name of ["Esame", "Classe", "Lezioni"]) await expect(visible(page, "link", name)).toHaveCount(0);
+    await expect(visible(page, "link", "Graph")).toBeVisible();
+    await expect(visible(page, "link", "Materials")).toBeVisible();
+    for (const name of ["Exam", "Class", "Lessons"]) await expect(visible(page, "link", new RegExp(`^${name}$`))).toHaveCount(0);
 
-    await visible(page, "link", "Materiali").click();
-    await expect(page.getByRole("heading", { name: /^Fonti/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Carica/ })).toHaveCount(0);
+    await visible(page, "link", "Materials").click();
+    await expect(page.getByRole("heading", { name: /^Sources/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Upload/ })).toHaveCount(0);
     await noHorizontalScroll(page);
     expect(errors, "errori in console").toEqual([]);
 

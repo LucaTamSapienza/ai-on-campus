@@ -12,7 +12,7 @@ export function segment(raw: string, redactTerms: string[] = []): PassageDraft[]
   let text = raw.replace(/\r\n?/g, "\n").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
   for (const term of redactTerms) {
     if (term.length < 3) continue;
-    text = text.replace(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "[docente]");
+    text = text.replace(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "[teacher]");
   }
 
   let parts: PassageDraft[];
@@ -26,9 +26,9 @@ export function segment(raw: string, redactTerms: string[] = []): PassageDraft[]
     parts = text
       .split(/^(?=#{1,6}\s+\S)/m)
       .flatMap((section) => blocks(section))
-      .map((t, i) => ({ locator: `parte ${i + 1}`, text: t }));
+      .map((t, i) => ({ locator: `part ${i + 1}`, text: t }));
   } else {
-    parts = blocks(text).map((t, i) => ({ locator: `blocco ${i + 1}`, text: t }));
+    parts = blocks(text).map((t, i) => ({ locator: `block ${i + 1}`, text: t }));
   }
 
   parts = dropRepeatedLines(parts.map((p) => ({ ...p, text: tidy(p.text) })));

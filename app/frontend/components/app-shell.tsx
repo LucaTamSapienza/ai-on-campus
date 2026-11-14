@@ -21,20 +21,23 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 export type Role = "docente" | "studente";
 
+// Il valore resta quello dell'API; a schermo si legge l'etichetta inglese.
+const ROLE_LABEL: Record<Role, string> = { docente: "Teacher", studente: "Student" };
+
 type NavItem = { href: string; label: string; icon: LucideIcon; roles: Role[] };
 
 // Le pagine delle fasi successive si aggiungono qui quando esistono.
 const NAV: NavItem[] = [
-  { href: "/", label: "Grafo", icon: Network, roles: ["docente", "studente"] },
+  { href: "/", label: "Graph", icon: Network, roles: ["docente", "studente"] },
   // blocco 2: i materiali si leggono anche con ruolo studente
-  { href: "/materiali", label: "Materiali", icon: FileText, roles: ["docente", "studente"] },
+  { href: "/materials", label: "Materials", icon: FileText, roles: ["docente", "studente"] },
   // fase 03
-  { href: "/esame", label: "Esame", icon: ClipboardList, roles: ["docente"] },
+  { href: "/exam", label: "Exam", icon: ClipboardList, roles: ["docente"] },
   // blocco 2
-  { href: "/classe", label: "Classe", icon: Users, roles: ["docente"] },
-  { href: "/lezioni", label: "Lezioni", icon: CalendarCheck, roles: ["docente"] },
+  { href: "/class", label: "Class", icon: Users, roles: ["docente"] },
+  { href: "/lessons", label: "Lessons", icon: CalendarCheck, roles: ["docente"] },
   // blocco 3: il piano di studio, solo per lo studente (al docente la barra del telefono avrebbe sei voci)
-  { href: "/studio", label: "Studio", icon: Route, roles: ["studente"] },
+  { href: "/study", label: "Study", icon: Route, roles: ["studente"] },
 ];
 
 type ShellValue = {
@@ -66,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setCourse(courses[0] ?? null);
       setCourseError(null);
     } catch (e) {
-      setCourseError(e instanceof Error ? e.message : "Errore");
+      setCourseError(e instanceof Error ? e.message : "Error");
     } finally {
       setCourseLoading(false);
     }
@@ -100,7 +103,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </p>
             <CourseName course={course} loading={courseLoading} className="mt-1 text-sm text-muted-foreground" />
           </div>
-          <nav className="flex flex-col gap-1 px-3" aria-label="Navigazione principale">
+          <nav className="flex flex-col gap-1 px-3" aria-label="Main navigation">
             {nav.map((item) => (
               <Link
                 key={item.href}
@@ -138,7 +141,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* Telefono: barra in basso */}
           <nav
             className="grid shrink-0 auto-cols-fr grid-flow-col border-t bg-card pb-(--safe-bottom) lg:hidden"
-            aria-label="Navigazione principale"
+            aria-label="Main navigation"
           >
             {nav.map((item) => (
               <Link
@@ -163,15 +166,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function CourseName({ course, loading, className }: { course: Course | null; loading: boolean; className?: string }) {
-  return <p className={className}>{loading ? " " : (course?.name ?? "Nessun corso")}</p>;
+  return <p className={className}>{loading ? " " : (course?.name ?? "No course")}</p>;
 }
 
 // Selettore di ruolo: simulato, sostituisce il login d'ateneo.
 function RoleSwitch({ role, onChange, compact }: { role: Role; onChange: (r: Role) => void; compact?: boolean }) {
   return (
     <div className={cn("flex flex-col gap-1.5", compact && "items-end")}>
-      {!compact && <p className="text-xs font-medium text-muted-foreground">Ruolo (simulato)</p>}
-      <div role="group" aria-label="Ruolo simulato" className="flex rounded-lg bg-muted p-0.5">
+      {!compact && <p className="text-xs font-medium text-muted-foreground">Role (simulated)</p>}
+      <div role="group" aria-label="Simulated role" className="flex rounded-lg bg-muted p-0.5">
         {(["docente", "studente"] as Role[]).map((r) => (
           <button
             key={r}
@@ -179,11 +182,11 @@ function RoleSwitch({ role, onChange, compact }: { role: Role; onChange: (r: Rol
             aria-pressed={role === r}
             onClick={() => onChange(r)}
             className={cn(
-              "h-11 flex-1 rounded-md px-3 text-sm font-medium capitalize text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "h-11 flex-1 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               role === r && "bg-card text-foreground shadow-sm",
             )}
           >
-            {r}
+            {ROLE_LABEL[r]}
           </button>
         ))}
       </div>
@@ -204,8 +207,8 @@ function DemoCodeDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Codice demo</DialogTitle>
-          <DialogDescription>Per usare la demo serve il suo codice. Sostituisce il login d&apos;ateneo, che qui è simulato.</DialogDescription>
+          <DialogTitle>Demo code</DialogTitle>
+          <DialogDescription>Enter the demo code to use the demo. It stands in for the university login, which is simulated here.</DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(e) => {
@@ -216,10 +219,10 @@ function DemoCodeDialog() {
           }}
           className="flex flex-col gap-4"
         >
-          <Input value={code} onChange={(e) => setCode(e.target.value)} autoFocus aria-label="Codice demo" />
+          <Input value={code} onChange={(e) => setCode(e.target.value)} autoFocus aria-label="Demo code" />
           <DialogFooter>
             <Button type="submit" disabled={!code.trim()}>
-              Salva il codice
+              Save code
             </Button>
           </DialogFooter>
         </form>

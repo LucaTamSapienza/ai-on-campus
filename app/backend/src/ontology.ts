@@ -69,18 +69,18 @@ export async function writeOntology(
   for (const raw of input.concepts) {
     const parsed = conceptDraft.safeParse(raw);
     if (!parsed.success) {
-      reject("concetto", (raw as { name?: string })?.name ?? "?", "schema non valido");
+      reject("concetto", (raw as { name?: string })?.name ?? "?", "invalid schema");
       continue;
     }
     const c = parsed.data;
     const slug = slugify(c.name);
     const evidence = c.evidence.filter((e) => allowedPassages.has(e.passageId));
     if (!slug) {
-      reject("concetto", c.name, "nome non valido");
+      reject("concetto", c.name, "invalid name");
       continue;
     }
     if (evidence.length === 0) {
-      reject("concetto", c.name, "nessuna prova valida");
+      reject("concetto", c.name, "no valid evidence");
       continue;
     }
     const topicId = c.topic ? (opts.topicIds?.get(c.topic.toLowerCase()) ?? null) : null;
@@ -118,7 +118,7 @@ export async function writeOntology(
     const parsed = relationDraft.safeParse(raw);
     const label = `${(raw as { from?: string })?.from ?? "?"} → ${(raw as { to?: string })?.to ?? "?"}`;
     if (!parsed.success) {
-      reject("relazione", label, "schema o tipo non valido");
+      reject("relazione", label, "invalid schema or type");
       continue;
     }
     const r = parsed.data;
@@ -126,7 +126,7 @@ export async function writeOntology(
     const to = bySlug.get(slugify(r.to));
     const key = `${from}|${to}|${r.type}`;
     if (!from || !to) {
-      reject("relazione", label, `concetto non trovato: ${!from ? r.from : r.to}`);
+      reject("relazione", label, `concept not found: ${!from ? r.from : r.to}`);
       continue;
     }
     if (from === to) {

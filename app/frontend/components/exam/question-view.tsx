@@ -31,7 +31,7 @@ export function QuestionView({ questionId }: { questionId: string }) {
       setRunId((cur) => cur ?? d.lastRun?.id ?? null);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Errore");
+      setError(e instanceof Error ? e.message : "Error");
     }
   }, [questionId]);
 
@@ -47,9 +47,9 @@ export function QuestionView({ questionId }: { questionId: string }) {
       reload();
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
-        toast.message("C'è già un attacco in corso su questa domanda.");
+        toast.message("An attack is already running on this question.");
         await reload();
-      } else toast.error(e instanceof Error ? e.message : "Attacco non partito.");
+      } else toast.error(e instanceof Error ? e.message : "The attack did not start.");
     } finally {
       setStarting(false);
     }
@@ -76,22 +76,22 @@ export function QuestionView({ questionId }: { questionId: string }) {
   return (
     <div className="flex flex-col gap-6">
       <Link
-        href="/esame"
+        href="/exam"
         className="flex h-11 items-center gap-2 self-start rounded-lg text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <ArrowLeft className="size-4" aria-hidden /> Tutte le domande
+        <ArrowLeft className="size-4" aria-hidden /> All questions
       </Link>
 
       <header className="flex flex-col gap-3">
         <p className="text-sm text-muted-foreground">
-          Domanda {detail.question.ordinal} · versione {v.version} · {fmt(v.maxPoints)} punti
+          Question {detail.question.ordinal} · version {v.version} · {fmt(v.maxPoints)} points
         </p>
         <p className="text-lg font-medium whitespace-pre-wrap lg:text-xl">{v.text}</p>
         <Rubric rubric={v.rubric} />
         {canAttack && (
           <Button onClick={attack} disabled={starting} className="self-stretch sm:self-start">
             {starting ? <Loader2 className="animate-spin" aria-hidden /> : <Swords aria-hidden />}
-            {runId ? `Attacca la versione ${v.version}` : "Attacca la domanda"}
+            {runId ? `Attack version ${v.version}` : "Attack the question"}
           </Button>
         )}
       </header>
@@ -143,10 +143,10 @@ function RunSection({
   return (
     <div className="flex flex-col gap-6">
       {run.version.id !== currentVersionId && (
-        <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">Questo attacco riguarda la versione {run.version.version}.</p>
+        <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">This attack covers version {run.version.version}.</p>
       )}
       <RunProgress run={run} live={live} />
-      {run.status === "error" && run.error && <p className="text-sm text-destructive">Esecuzione chiusa: {run.error}</p>}
+      {run.status === "error" && run.error && <p className="text-sm text-destructive">Run closed: {run.error}</p>}
       <RetrievalPath run={run} />
       <RunBoard run={run} live={live} />
       {run.review && (
@@ -168,7 +168,7 @@ function Rubric({ rubric }: { rubric: RubricItem[] }) {
         aria-expanded={open}
         className="flex min-h-11 w-full items-center justify-between gap-3 px-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <span className="text-sm font-medium">Griglia di correzione · {rubric.length} criteri</span>
+        <span className="text-sm font-medium">Grading rubric · {rubric.length} criteria</span>
         <ChevronDown className={cn("size-4 text-muted-foreground transition-transform duration-150", open && "rotate-180")} aria-hidden />
       </button>
       {open && (
