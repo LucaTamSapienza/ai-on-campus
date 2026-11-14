@@ -16,3 +16,4 @@ __pycache__/
 
 # Materiale di corso vero, usato in locale per la demo: non va nel repository
 materiale-locale/
+!app/frontend/.env.development

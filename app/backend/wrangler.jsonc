@@ -1,0 +1,38 @@
+// Worker unico di PRISMA: API Hono, agenti su Durable Objects, file statici del frontend.
+// File comune dell'orchestratore: i moduli non lo modificano, chiedono.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ai-on-campus",
+  // Solo l'account personale di Luca (confermato il 14/11/2026).
+  "account_id": "b3eb6ceb7206160b5e492b92a293fc20",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "assets": {
+    // Export statico di Next.js (cd app/frontend && npm run build)
+    "directory": "../frontend/out",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*", "/agents/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "aoc-db",
+      // Segnaposto: il database remoto lo crea l'orchestratore al primo deploy.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "Cartografo", "class_name": "Cartografo" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Cartografo"] }],
+  "vars": {
+    // Tetto di spesa giornaliero sui modelli, in dollari.
+    "DAILY_BUDGET_USD": "1.50"
+  }
+  // Segreti: OPENROUTER_API_KEY, DEMO_CODE (facoltativo), REDACT_TERMS (facoltativo).
+  // In locale da .dev.vars, online con wrangler secret put.
+}
