@@ -1,6 +1,6 @@
 # Fase 00, brainstorming
 
-Stato: **idea non scelta**. Quattro idee confrontate, adversarial di Codex fatto, raccomandazione rivista: Controesame a tre attacchi. Sceglie Luca.
+Stato: **chiusa**. Idea scelta: Controesame, tre attacchi più grafo di conoscenza.
 
 Fonti: `input/case-study-reply.md` (testo integrale del case study Reply) e `input/briefing-circleback.md` (briefing in aula delle 11:04).
 
@@ -133,4 +133,11 @@ Chiesta da Luca a un agente Codex `gpt-6-astra` (effort `high`) con lo stesso co
 
 ## Idea scelta
 
-Da scrivere quando Luca sceglie, con il perché.
+**Controesame**, scelta da Luca in chat alle 12:20 («mi piace molto»), nella forma a tre attacchi più il grafo di conoscenza del corso.
+
+- **Perché.** Prende il criterio che pesa il 40%, non somiglia a nessun esempio di Reply né agli Extra Materials (che propongono ovunque un tutor), regge all'adversarial perché ogni agente porta una prova verificabile, e copre due percorsi del Level 3: multi-agente e knowledge graph.
+- **Aggiunta di Luca.** Il grafo di ontologia estratto dai materiali caricati, e l'idea di una classe di N agenti, uno per studente con profilo e voti.
+- **Come entra la classe.** Non come agenti che recitano una persona: un modello non può «non sapere» un concetto, e profili con voti sono dati personali. Entra come modulo facoltativo e deterministico: ogni studente sintetico è l'elenco dei concetti del grafo che padroneggia, e il backend calcola quali domande gli sono alla portata. Si presenta come copertura dell'esame, non come previsione. Luca la conferma o la sposta nella proposta visiva.
+- **Da Astra.** Dove la risposta è numerica la verifica la fa il backend; il pitch si apre con un caso concreto.
+
+La proposta visiva è in `docs/proposta.html`.

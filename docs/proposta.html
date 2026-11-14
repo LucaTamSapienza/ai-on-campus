@@ -1,0 +1,183 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Controesame, la proposta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&display=swap">
+<style>
+/* Layout: un foglio di appunti a quadretti, una colonna, schizzi delle schermate in fila che vanno a capo */
+:root{
+  --paper:#fbfaf3; --grid:#e3e6ea; --ink:#22303f; --soft:#5d6b7a;
+  --pen:#1f5fbf; --red:#c8402f; --green:#2f7d4f; --hl:#ffe66b; --card:#ffffff;
+  --hand:"Patrick Hand","Bradley Hand","Segoe Print","Comic Sans MS",cursive;
+  --title:"Caveat","Bradley Hand","Segoe Print",cursive;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#1c2330; --grid:#283142; --ink:#e8ecf2; --soft:#a3afbf;
+  --pen:#7fb2ff; --red:#ff8a78; --green:#7fd39c; --hl:#6b5a12; --card:#232c3b; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#1c2330; --grid:#283142; --ink:#e8ecf2; --soft:#a3afbf;
+  --pen:#7fb2ff; --red:#ff8a78; --green:#7fd39c; --hl:#6b5a12; --card:#232c3b; color-scheme:dark }
+body{background:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font-family:var(--hand);font-size:19px;line-height:1.4}
+.page{max-width:1080px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:34px}
+h1{font-family:var(--title);font-size:64px;line-height:1;margin:0;text-wrap:balance}
+h2{font-family:var(--title);font-size:38px;line-height:1.05;margin:0 0 10px;color:var(--pen);text-wrap:balance}
+h3{font-family:var(--title);font-size:27px;margin:0 0 4px;line-height:1.1}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.hl{background:linear-gradient(transparent 55%,var(--hl) 55%);padding:0 2px}
+.red{color:var(--red)} .green{color:var(--green)} .soft{color:var(--soft)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--soft);font-size:17px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.row>*{min-width:0}
+.screen{background:var(--card);border:2px solid var(--ink);border-radius:10px 14px 9px 13px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.screen:nth-child(odd){transform:rotate(-.5deg)} .screen:nth-child(even){transform:rotate(.4deg)}
+.num{font-family:var(--title);font-size:22px;color:var(--red)}
+.wire{border:1.5px dashed var(--soft);border-radius:6px;padding:6px 8px;font-size:16px;line-height:1.25;color:var(--soft)}
+.wire b{color:var(--ink);font-weight:400}
+.btn{align-self:flex-start;border:2px solid var(--pen);color:var(--pen);border-radius:20px;padding:1px 12px;font-size:17px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cols .wire{min-width:0;font-size:14px;padding:5px}
+.note{font-size:17px;color:var(--soft)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;align-items:stretch}
+.box{border:2px solid var(--ink);border-radius:12px 8px 12px 9px;padding:10px 12px;background:var(--card);min-width:0}
+.box.pen{border-color:var(--pen)} .box.red{border-color:var(--red);color:var(--ink)} .box.green{border-color:var(--green);color:var(--ink)}
+.box small{display:block;color:var(--soft);font-size:15.5px;line-height:1.25}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;font-size:17px;min-width:560px;width:100%}
+th,td{border-bottom:1.5px dashed var(--soft);padding:5px 10px 5px 0;text-align:left;vertical-align:top}
+th{font-family:var(--title);font-size:22px;color:var(--pen);font-weight:700}
+.bar{display:grid;grid-template-columns:150px 1fr;gap:4px 10px;align-items:center;font-size:16.5px;font-variant-numeric:tabular-nums}
+.bar i{display:block;height:16px;background:var(--pen);border-radius:3px 6px 4px 5px;min-width:3px}
+.bar i.g{background:var(--green)} .bar i.r{background:var(--red)}
+.time{display:grid;grid-template-columns:repeat(46,1fr);gap:2px;font-size:14px}
+.time span{border:1.5px solid var(--ink);border-radius:5px;padding:2px 4px;background:var(--card);min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ask{border:2.5px solid var(--red);border-radius:14px 9px 15px 10px;padding:14px 16px;background:var(--card)}
+@media (max-width:640px){h1{font-size:46px} .time{grid-template-columns:1fr} .time span{grid-column:auto!important;white-space:normal}}
+</style>
+
+<div class="page">
+
+<header>
+  <h1>Controesame</h1>
+  <p style="font-size:24px">Prima di dare un esame agli studenti, <span class="hl">tre agenti provano a romperlo</span> e portano al docente la prova.</p>
+  <div class="meta">
+    <span>Compra: il dipartimento</span><span>Usa: il docente</span><span>Tema: assessment</span>
+    <span>Cloudflare: account personale di Luca (b3eb…fc20), risorse <b>aoc-</b></span>
+    <span>Modello: openai/gpt-6-luna via OpenRouter</span>
+  </div>
+</header>
+
+<section>
+  <h2>Il percorso della demo, schermata per schermata</h2>
+  <div class="row">
+    <div class="screen"><span class="num">1 · Il corso</span>
+      <div class="wire"><b>Materiali del corso</b><br>dispense.md · esami-passati.md</div>
+      <div class="wire">grafo che si disegna dal vivo:<br>○ concetto ─ richiede → ○ concetto<br>clic su un nodo = il passaggio delle dispense</div>
+      <span class="btn">Costruisci il grafo</span>
+      <span class="note">Il Cartografo estrae concetti, prerequisiti e fonte. Il docente può togliere un nodo sbagliato.</span></div>
+    <div class="screen"><span class="num">2 · La domanda</span>
+      <div class="wire"><b>Domanda d'esame</b><br>testo incollato dal docente</div>
+      <div class="wire"><b>Griglia di correzione</b><br>cosa vale i punti</div>
+      <span class="btn">Attacca la domanda</span>
+      <span class="note">Una domanda alla volta. Un esame intero è una lista di domande.</span></div>
+    <div class="screen"><span class="num">3 · L'attacco</span>
+      <div class="cols">
+        <div class="wire"><b>Esterno</b><br>solo la domanda<br>risponde…</div>
+        <div class="wire"><b>Letterale</b><br>solo le dispense<br>cita…</div>
+        <div class="wire"><b>Cavillatore</b><br>due letture<br>…</div></div>
+      <div class="wire"><b>Correttore</b>: voto con la griglia, criterio per criterio</div>
+      <span class="note">Tre colonne in streaming, in parallelo. Si vede chi ha in mano cosa.</span></div>
+    <div class="screen"><span class="num">4 · La scheda</span>
+      <div class="wire"><span class="red">Si supera senza il corso</span>: voto 27/30 senza dispense</div>
+      <div class="wire"><span class="red">Due letture</span>: ipotesi A / ipotesi B, fonte §3.2</div>
+      <div class="wire"><span class="green">Si ricava dal materiale</span>: §2.1, §2.4</div>
+      <div class="wire"><b>Il docente riscrive</b> (o parte dalla proposta del Revisore)</div>
+      <span class="btn">Salva e riattacca</span>
+      <span class="note">Risposta, ipotesi, fonte, decisione. Niente semafori senza prova accanto.</span></div>
+    <div class="screen"><span class="num">5 · Prima e dopo</span>
+      <div class="wire"><b>v1</b> Esterno 27/30 → <b>v2</b> Esterno 11/30</div>
+      <div class="wire">grafo del corso: i concetti che l'esame tocca sono accesi, gli altri spenti</div>
+      <div class="wire soft">facoltativo: griglia della classe sintetica, chi ha i concetti che la domanda richiede</div>
+      <span class="note">Se dopo la riscrittura non trova più niente lo dice così: «nessun controesempio trovato», non «esame valido».</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Agenti, dati e chiamate</h2>
+  <div class="flow">
+    <div class="box pen"><h3>Cartografo</h3><small>Legge le dispense, scrive concetti, prerequisiti e passaggi in D1. Gira una volta per corso.</small></div>
+    <div class="box red"><h3>Esterno</h3><small>Riceve solo la domanda. Nessuno strumento. Risponde come un modello che il corso non l'ha visto.</small></div>
+    <div class="box red"><h3>Letterale</h3><small>Strumento: cerca nei passaggi e nel grafo. Risponde solo citando, oppure dice «nel materiale non c'è».</small></div>
+    <div class="box red"><h3>Cavillatore</h3><small>Domanda più dispense. Cerca due risposte difendibili e l'ipotesi che le separa. Può dire «non ne trovo».</small></div>
+    <div class="box green"><h3>Correttore</h3><small>Applica la griglia del docente a ogni risposta. Se il conto è numerico lo fa il backend, non il modello.</small></div>
+    <div class="box green"><h3>Revisore</h3><small>Compone la scheda e propone una riscrittura. Strumento: apre la revisione. Non può salvarla: quello lo fa il docente.</small></div>
+  </div>
+  <p class="note" style="margin-top:12px">Un Durable Object per agente (Cloudflare Agents SDK), stato in tempo reale al frontend via WebSocket. Tutti dietro la stessa interfaccia verso OpenRouter, con tetto di token in uscita. D1: <b>sources</b> (passaggi numerati), <b>concepts</b>, <b>edges</b>, <b>questions</b>, <b>question_versions</b>, <b>attacks</b>, <b>grades</b>, <b>decisions</b>, <b>events</b>.</p>
+</section>
+
+<section class="row">
+  <div>
+    <h2>Quanto costa una corsa</h2>
+    <div class="bar">
+      <span>Grafo del corso</span><span><i style="width:44%"></i></span>
+      <span>Un giro di attacco</span><span><i class="g" style="width:50%"></i></span>
+      <span>Demo intera</span><span><i class="r" style="width:100%"></i></span>
+    </div>
+    <p class="note" style="margin-top:8px">Stime: grafo circa 0,35 centesimi, un giro (3 attacchi, 3 correzioni, 1 revisione) circa 0,4, demo intera con due giri sotto 1,5 centesimi. Con 5 $ ci stanno centinaia di prove. Il filo verticale misura il numero vero.</p>
+  </div>
+  <div>
+    <h2>Il confine che l'agente tiene</h2>
+    <ul>
+      <li>Non certifica mai «esame equo» o «a prova di AI».</li>
+      <li>Non riscrive l'esame da solo: senza la decisione del docente la versione non cambia. È un controllo nel backend, non nel prompt.</li>
+      <li>Senza griglia non dà voti: chiede la griglia.</li>
+      <li>Non dice niente sugli studenti veri.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Cosa è simulato</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Cosa</th><th>Perché</th></tr>
+    <tr><td>Il login del docente</td><td>Non c'è accesso a un login d'ateneo. Si entra direttamente come un docente, scritto in chiaro nell'interfaccia.</td></tr>
+    <tr><td>La classe (solo se si fa il modulo 4)</td><td>Nessun dato di studenti veri. Otto profili sintetici in D1, ognuno è l'elenco dei concetti che padroneggia. Il conto è deterministico e si presenta come copertura, non come previsione.</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:8px">Tutto il resto è vero: i sei agenti chiamano il modello, il grafo si estrae dal materiale, le versioni si salvano in D1, ogni cosa a schermo arriva dall'API. Perimetro ridotto, non finto: i materiali entrano come testo o Markdown, niente PDF.</p>
+</section>
+
+<section>
+  <h2>I moduli</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Modulo</th><th>Cosa consegna</th><th>Si prova così</th></tr>
+    <tr><td>0 · Filo verticale</td><td>Guscio del frontend, API, D1, un agente: incollo una domanda, l'Esterno risponde in streaming, la risposta è salvata</td><td>una domanda, una risposta a schermo</td></tr>
+    <tr><td>1 · Corso e grafo</td><td>Caricamento del materiale, Cartografo, grafo a schermo con i passaggi</td><td>clic su un nodo, vedo la fonte</td></tr>
+    <tr><td>2 · Tre attacchi</td><td>Letterale, Cavillatore, Correttore, le tre colonne in parallelo</td><td>una domanda, tre esiti con prova</td></tr>
+    <tr><td>3 · Scheda e riattacco</td><td>Revisore, decisione del docente, nuova versione, confronto prima e dopo</td><td>riscrivo, riattacco, l'esito cambia</td></tr>
+    <tr><td>4 · Copertura e classe</td><td>Concetti toccati dall'esame sul grafo; griglia della classe sintetica</td><td class="soft">solo se 0-3 girano entro le 15:30</td></tr>
+    <tr><td>5 · Consegna</td><td>README, architettura, tre esempi di interazione (normale, incompleta, confine), pitch</td><td>ultima ora</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:8px">Pezzo più rischioso: l'estrazione del grafo con un modello economico. Ripiego: elenco piatto di concetti con il loro passaggio, senza prerequisiti. Si decide entro le 14:15.</p>
+</section>
+
+<section>
+  <h2>L'orario da adesso</h2>
+  <div class="time">
+    <span style="grid-column:span 4">12:25 proposta</span>
+    <span style="grid-column:span 4">12:45 piano</span>
+    <span style="grid-column:span 6">13:05 filo verticale</span>
+    <span style="grid-column:span 17">13:35 moduli 1-3</span>
+    <span style="grid-column:span 3;border-color:var(--red)">15:00 pitch 60″</span>
+    <span style="grid-column:span 12">15:15 modulo 4, rifinitura, consegna</span>
+  </div>
+  <p class="note" style="margin-top:8px">Alle 15:00 passano gli esperti: per allora i moduli 0-3 devono girare, anche brutti.</p>
+</section>
+
+<section class="ask">
+  <h2 style="color:var(--red)">Tre cose da dirmi</h2>
+  <ul>
+    <li><b>Il corso vero.</b> Dispense e due o tre domande d'esame di un corso preciso. Se non me lo dai tu, cerco materiale universitario con licenza aperta di probabilità e statistica, così può stare nel repository.</li>
+    <li><b>La classe.</b> Va bene come modulo 4, facoltativo e deterministico, o la vuoi nel percorso principale?</li>
+    <li><b>La lingua.</b> Propongo interfaccia e pitch in italiano; il briefing dice che vale quanto l'inglese.</li>
+  </ul>
+</section>
+
+</div>
