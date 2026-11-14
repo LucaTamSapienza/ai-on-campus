@@ -98,7 +98,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Desktop: barra a sinistra */}
         <aside className="hidden w-(--nav-width) shrink-0 flex-col border-r bg-card lg:flex">
           <div className="px-6 pt-8 pb-6">
-            <p className="text-lg font-bold tracking-wide" title={BRAND.tagline}>
+            <p className="flex items-center gap-2 text-lg font-bold tracking-wide" title={BRAND.tagline}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/prisma-mark.svg" alt="" className="size-8" />
               {BRAND.name}
             </p>
             <CourseName course={course} loading={courseLoading} className="mt-1 text-sm text-muted-foreground" />
@@ -128,7 +130,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* Telefono: intestazione */}
           <header className="flex shrink-0 items-center justify-between gap-3 border-b bg-card px-4 pt-(--safe-top) lg:hidden">
             <div className="flex h-14 min-w-0 flex-col justify-center">
-              <p className="text-xs font-semibold tracking-wide text-muted-foreground">{BRAND.name}</p>
+              <p className="flex items-center gap-1 text-xs font-semibold tracking-wide text-muted-foreground">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/brand/prisma-mark.svg" alt="" className="size-4" />
+                {BRAND.name}
+              </p>
               <CourseName course={course} loading={courseLoading} className="truncate text-sm font-semibold" />
             </div>
             <RoleSwitch role={role} onChange={setRole} compact />
