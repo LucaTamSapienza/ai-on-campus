@@ -20,8 +20,8 @@
     {
       "binding": "DB",
       "database_name": "aoc-db",
-      // Segnaposto: il database remoto lo crea l'orchestratore al primo deploy.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Database remoto aoc-db sull'account personale di Luca, creato al primo deploy (14/11/2026).
+      "database_id": "f8d2832b-adec-45f7-9a9d-29656601c6de",
       "migrations_dir": "migrations"
     }
   ],

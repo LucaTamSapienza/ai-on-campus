@@ -1,6 +1,6 @@
 # PRISMA
 
-> **Status, 14/11/2026.** Build finished and merged on `main`: course graph, triple attack with rewrite and re-attack, simulated class, recorded lesson, student view, study plan. Runs locally with `wrangler dev`; not deployed yet. Hand-in documents: this README, [`docs/architecture.md`](docs/architecture.md), [`docs/interaction-examples.md`](docs/interaction-examples.md). Pitch material in [`pitch/`](pitch/). Agent rules for this workspace: [`AGENTS.md`](AGENTS.md) (Italian).
+> **Status, 14/11/2026.** Build finished and merged on `main`: course graph, triple attack with rewrite and re-attack, simulated class, recorded lesson, student view, study plan. Runs locally with `wrangler dev` and online at https://ai-on-campus.martesai.workers.dev (v1 deployed at 16:00 from `main`; the API asks for a demo code). Hand-in documents: this README, [`docs/architecture.md`](docs/architecture.md), [`docs/interaction-examples.md`](docs/interaction-examples.md). Pitch material in [`pitch/`](pitch/). Agent rules for this workspace: [`AGENTS.md`](AGENTS.md) (Italian).
 
 **Every exam question, tested from three sides before the exam.**
 
