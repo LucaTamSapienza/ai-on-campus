@@ -49,6 +49,7 @@ th{font-family:var(--title);font-size:22px;color:var(--pen);font-weight:700}
 .bar i.g{background:var(--green)} .bar i.r{background:var(--red)}
 .time{display:grid;grid-template-columns:repeat(46,1fr);gap:2px;font-size:14px}
 .time span{border:1.5px solid var(--ink);border-radius:5px;padding:2px 4px;background:var(--card);min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tag{display:inline-block;border:1.5px solid currentColor;border-radius:12px;padding:0 8px;font-size:15px;white-space:nowrap}
 .ask{border:2.5px solid var(--red);border-radius:14px 9px 15px 10px;padding:14px 16px;background:var(--card)}
 @media (max-width:640px){h1{font-size:46px} .time{grid-template-columns:1fr} .time span{grid-column:auto!important;white-space:normal}}
 </style>
@@ -57,80 +58,123 @@ th{font-family:var(--title);font-size:22px;color:var(--pen);font-weight:700}
 
 <header>
   <h1>Controesame</h1>
-  <p style="font-size:24px">Prima di dare un esame agli studenti, <span class="hl">tre agenti provano a romperlo</span> e portano al docente la prova.</p>
+  <p style="font-size:24px">Non scopre chi copia. Aiuta il docente a scrivere <span class="hl">domande che non si copiano</span>, e glielo dimostra prima dell'appello.</p>
   <div class="meta">
-    <span>Compra: il dipartimento</span><span>Usa: il docente</span><span>Tema: assessment</span>
+    <span>Versione 2, dopo il brainstorming di squadra delle 12:26</span>
+    <span>Compra: il dipartimento</span><span>Usa: il docente; lo studente legge</span><span>Tema: assessment, con un piede nel teaching</span>
     <span>Cloudflare: account personale di Luca (b3eb…fc20), risorse <b>aoc-</b></span>
-    <span>Modello: openai/gpt-6-luna via OpenRouter</span>
   </div>
 </header>
 
 <section>
-  <h2>Il percorso della demo, schermata per schermata</h2>
+  <h2>Tutte le funzionalità uscite dal brainstorming, e dove finiscono</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Funzionalità</th><th>Cosa fa</th><th>Dove</th></tr>
+    <tr><td>Grafo del corso</td><td>Dai documenti caricati: corso → argomenti → concetti, con prerequisiti e il passaggio da cui ogni concetto viene</td><td><span class="tag green">blocco 1</span></td></tr>
+    <tr><td>Triplo attacco</td><td>Tre agenti attaccano la domanda in parallelo, ognuno con un accesso diverso alla conoscenza</td><td><span class="tag green">blocco 1</span></td></tr>
+    <tr><td>Riscrittura e riattacco</td><td>Il Revisore propone, il docente decide, i tre riattaccano la nuova versione</td><td><span class="tag green">blocco 1</span></td></tr>
+    <tr><td>Classe simulata</td><td>N studenti sintetici sostengono l'esame, ognuno avendo in mano solo ciò che ha seguito</td><td><span class="tag" style="color:var(--pen)">blocco 2</span></td></tr>
+    <tr><td>Registra la lezione</td><td>Un bottone: audio dal browser, trascrizione, i concetti spiegati entrano nel grafo come «fatti a lezione»</td><td><span class="tag" style="color:var(--pen)">blocco 2</span></td></tr>
+    <tr><td>Argomenti, non esame</td><td>«Questi sono gli argomenti fatti a lezione, quali vuoi verificare?» Il docente scrive, l'app non genera l'esame</td><td><span class="tag" style="color:var(--pen)">blocco 2</span></td></tr>
+    <tr><td>Lato studente in sola lettura</td><td>Il grafo del docente: cosa si è fatto, in quale lezione, da quale fonte</td><td><span class="tag" style="color:var(--pen)">blocco 2</span></td></tr>
+    <tr><td>Piano di studio</td><td>«Ho quattro settimane»: percorso sul grafo che rispetta i prerequisiti e mostra i collegamenti</td><td><span class="tag soft">blocco 3, se avanza</span></td></tr>
+    <tr><td>Coerenza fra gli appelli</td><td>Stessa copertura e stessa difficoltà da un appello all'altro</td><td><span class="tag soft">solo nel pitch</span></td></tr>
+    <tr><td>Questionario dello studente, deep research, tutor che fa domande</td><td>Profili veri anonimizzati; ricerca fuori dal materiale; il tutor è stato giudicato debole in squadra</td><td><span class="tag soft">solo nel pitch</span></td></tr>
+  </table></div>
+  <p class="note" style="margin-top:8px">Blocco 1 deve girare alle 15:00 quando passano gli esperti. Blocco 2 entra dopo, un pezzo alla volta, fino allo stop delle 16:15. Quello che resta fuori si racconta come strada futura e non si finge.</p>
+</section>
+
+<section>
+  <h2>Lato docente, schermata per schermata</h2>
   <div class="row">
     <div class="screen"><span class="num">1 · Il corso</span>
-      <div class="wire"><b>Materiali del corso</b><br>dispense.md · esami-passati.md</div>
-      <div class="wire">grafo che si disegna dal vivo:<br>○ concetto ─ richiede → ○ concetto<br>clic su un nodo = il passaggio delle dispense</div>
-      <span class="btn">Costruisci il grafo</span>
-      <span class="note">Il Cartografo estrae concetti, prerequisiti e fonte. Il docente può togliere un nodo sbagliato.</span></div>
-    <div class="screen"><span class="num">2 · La domanda</span>
-      <div class="wire"><b>Domanda d'esame</b><br>testo incollato dal docente</div>
-      <div class="wire"><b>Griglia di correzione</b><br>cosa vale i punti</div>
+      <div class="wire"><b>Materiali</b> dispense.md · slide.md<br><b>Lezioni</b> 12/11 · 14/11</div>
+      <div class="cols" style="grid-template-columns:1fr 1fr"><span class="btn">Carica documenti</span><span class="btn">● Registra lezione</span></div>
+      <div class="wire">grafo a tre livelli:<br>corso → argomento → concetto<br>pieno = fatto a lezione, vuoto = solo nelle dispense</div>
+      <span class="note">Il Cartografo estrae dal materiale. La registrazione viene trascritta e i concetti che riconosce si segnano come spiegati.</span></div>
+    <div class="screen"><span class="num">2 · Prepara l'esame</span>
+      <div class="wire"><b>Argomenti fatti a lezione</b><br>☑ probabilità condizionata<br>☑ Bayes &nbsp; ☐ indipendenza</div>
+      <div class="wire"><b>La tua domanda</b> (la scrive il docente)<br><b>Griglia</b> cosa vale i punti</div>
       <span class="btn">Attacca la domanda</span>
-      <span class="note">Una domanda alla volta. Un esame intero è una lista di domande.</span></div>
-    <div class="screen"><span class="num">3 · L'attacco</span>
+      <span class="note">L'app propone dove guardare, non scrive l'esame. È il confine deciso in squadra.</span></div>
+    <div class="screen"><span class="num">3 · Il triplo attacco</span>
       <div class="cols">
-        <div class="wire"><b>Esterno</b><br>solo la domanda<br>risponde…</div>
-        <div class="wire"><b>Letterale</b><br>solo le dispense<br>cita…</div>
-        <div class="wire"><b>Cavillatore</b><br>due letture<br>…</div></div>
+        <div class="wire"><b>Esterno</b><br>solo la domanda</div>
+        <div class="wire"><b>Letterale</b><br>solo il grafo</div>
+        <div class="wire"><b>Cavillatore</b><br>due letture</div></div>
       <div class="wire"><b>Correttore</b>: voto con la griglia, criterio per criterio</div>
-      <span class="note">Tre colonne in streaming, in parallelo. Si vede chi ha in mano cosa.</span></div>
+      <span class="note">In parallelo, in streaming. Si vede chi ha in mano cosa.</span></div>
     <div class="screen"><span class="num">4 · La scheda</span>
-      <div class="wire"><span class="red">Si supera senza il corso</span>: voto 27/30 senza dispense</div>
-      <div class="wire"><span class="red">Due letture</span>: ipotesi A / ipotesi B, fonte §3.2</div>
-      <div class="wire"><span class="green">Si ricava dal materiale</span>: §2.1, §2.4</div>
-      <div class="wire"><b>Il docente riscrive</b> (o parte dalla proposta del Revisore)</div>
-      <span class="btn">Salva e riattacca</span>
-      <span class="note">Risposta, ipotesi, fonte, decisione. Niente semafori senza prova accanto.</span></div>
-    <div class="screen"><span class="num">5 · Prima e dopo</span>
-      <div class="wire"><b>v1</b> Esterno 27/30 → <b>v2</b> Esterno 11/30</div>
-      <div class="wire">grafo del corso: i concetti che l'esame tocca sono accesi, gli altri spenti</div>
-      <div class="wire soft">facoltativo: griglia della classe sintetica, chi ha i concetti che la domanda richiede</div>
-      <span class="note">Se dopo la riscrittura non trova più niente lo dice così: «nessun controesempio trovato», non «esame valido».</span></div>
+      <div class="wire"><span class="red">Si copia</span>: l'Esterno prende 27/30 senza il corso</div>
+      <div class="wire"><span class="red">Due letture</span>: ipotesi A / B, fonte §3.2</div>
+      <div class="wire"><span class="green">Si ricava dal corso</span>: §2.1, lezione del 12/11</div>
+      <div class="wire"><b>Riscrittura</b> proposta dal Revisore, modificabile</div>
+      <span class="btn">Approva e riattacca</span>
+      <span class="note">v1 → v2: l'Esterno scende a 11/30. Oppure: «nessun controesempio trovato».</span></div>
+    <div class="screen"><span class="num">5 · La classe</span>
+      <div class="wire">8 studenti sintetici, anonimi:<br>S1 ha seguito tutto · S4 ha saltato Bayes · S7 solo le dispense…</div>
+      <div class="wire">griglia studenti × domande, con il voto del Correttore<br>clic su una cella = la risposta</div>
+      <span class="btn">Fai sostenere l'esame</span>
+      <span class="note">«Questa domanda la sbaglia solo chi ha saltato la lezione del 12/11»: l'esame misura il corso.</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Lato studente, in sola lettura</h2>
+  <div class="row">
+    <div class="screen"><span class="num">6 · Il corso visto dallo studente</span>
+      <div class="wire">lo stesso grafo, senza modifica<br>clic su un concetto = passaggio delle dispense e lezione in cui è stato spiegato</div>
+      <div class="wire soft">nessuna domanda d'esame, nessun esito degli attacchi</div>
+      <span class="note">Lo studente fuori corso vede cosa si è fatto invece di chiederlo in chat. Si presenta come «cosa è stato insegnato», non come servizio di segreteria: logistica e amministrazione sono fuori tema.</span></div>
+    <div class="screen"><span class="num">7 · Piano di studio</span>
+      <div class="wire"><b>Ho</b> 4 settimane</div>
+      <div class="wire">settimana 1: insiemi, probabilità → settimana 2: condizionata → Bayes…<br>frecce = «ti serve prima questo»</div>
+      <span class="btn">Costruisci il percorso</span>
+      <span class="note">L'ordine lo calcola il backend dai prerequisiti del grafo; l'agente spiega i collegamenti. Blocco 3.</span></div>
   </div>
 </section>
 
 <section>
   <h2>Agenti, dati e chiamate</h2>
   <div class="flow">
-    <div class="box pen"><h3>Cartografo</h3><small>Legge le dispense, scrive concetti, prerequisiti e passaggi in D1. Gira una volta per corso.</small></div>
-    <div class="box red"><h3>Esterno</h3><small>Riceve solo la domanda. Nessuno strumento. Risponde come un modello che il corso non l'ha visto.</small></div>
-    <div class="box red"><h3>Letterale</h3><small>Strumento: cerca nei passaggi e nel grafo. Risponde solo citando, oppure dice «nel materiale non c'è».</small></div>
-    <div class="box red"><h3>Cavillatore</h3><small>Domanda più dispense. Cerca due risposte difendibili e l'ipotesi che le separa. Può dire «non ne trovo».</small></div>
-    <div class="box green"><h3>Correttore</h3><small>Applica la griglia del docente a ogni risposta. Se il conto è numerico lo fa il backend, non il modello.</small></div>
-    <div class="box green"><h3>Revisore</h3><small>Compone la scheda e propone una riscrittura. Strumento: apre la revisione. Non può salvarla: quello lo fa il docente.</small></div>
+    <div class="box pen"><h3>Cartografo</h3><small>Documenti e trascrizioni → argomenti, concetti, prerequisiti, passaggi. Segna cosa è stato spiegato a lezione.</small></div>
+    <div class="box red"><h3>Esterno</h3><small>Solo la domanda. È il modello generico che lo studente ha in tasca.</small></div>
+    <div class="box red"><h3>Letterale</h3><small>Solo il grafo e i passaggi. Risponde citando, o dice «nel corso non c'è».</small></div>
+    <div class="box red"><h3>Cavillatore</h3><small>Cerca due risposte difendibili e l'ipotesi che le separa. Può dire «non ne trovo».</small></div>
+    <div class="box green"><h3>Correttore</h3><small>Applica la griglia del docente a ogni risposta, anche a quelle della classe.</small></div>
+    <div class="box green"><h3>Revisore</h3><small>Compone la scheda, propone la riscrittura. Non può salvarla: lo fa il docente.</small></div>
+    <div class="box pen"><h3>Studenti (N)</h3><small>Un agente per studente sintetico. Riceve solo i passaggi dei concetti che quel profilo ha seguito.</small></div>
+    <div class="box pen"><h3>Pianificatore</h3><small>Lato studente: spiega il percorso che il backend ha ordinato sui prerequisiti.</small></div>
   </div>
-  <p class="note" style="margin-top:12px">Un Durable Object per agente (Cloudflare Agents SDK), stato in tempo reale al frontend via WebSocket. Tutti dietro la stessa interfaccia verso OpenRouter, con tetto di token in uscita. D1: <b>sources</b> (passaggi numerati), <b>concepts</b>, <b>edges</b>, <b>questions</b>, <b>question_versions</b>, <b>attacks</b>, <b>grades</b>, <b>decisions</b>, <b>events</b>.</p>
+  <p class="note" style="margin-top:12px">La trascrizione non è un agente: è un modello vocale. Proposta: Whisper su Workers AI, che è Cloudflare e non costa sui 5 $ di OpenRouter. Tutto il resto passa da openai/gpt-6-luna. D1: <b>sources</b>, <b>lessons</b>, <b>topics</b>, <b>concepts</b>, <b>edges</b>, <b>questions</b>, <b>question_versions</b>, <b>attacks</b>, <b>grades</b>, <b>decisions</b>, <b>students</b>, <b>student_concepts</b>, <b>sittings</b>, <b>events</b>.</p>
 </section>
 
 <section class="row">
   <div>
-    <h2>Quanto costa una corsa</h2>
-    <div class="bar">
-      <span>Grafo del corso</span><span><i style="width:44%"></i></span>
-      <span>Un giro di attacco</span><span><i class="g" style="width:50%"></i></span>
-      <span>Demo intera</span><span><i class="r" style="width:100%"></i></span>
-    </div>
-    <p class="note" style="margin-top:8px">Stime: grafo circa 0,35 centesimi, un giro (3 attacchi, 3 correzioni, 1 revisione) circa 0,4, demo intera con due giri sotto 1,5 centesimi. Con 5 $ ci stanno centinaia di prove. Il filo verticale misura il numero vero.</p>
+    <h2>La classe: come farla senza che sia teatro</h2>
+    <ul>
+      <li>Un agente per studente, come voluto in squadra. Ma non recita un carattere: <span class="hl">cambia quello che ha in mano</span>.</li>
+      <li>Ogni profilo è l'elenco dei concetti seguiti. L'agente riceve solo quei passaggi, risponde, il Correttore dà il voto.</li>
+      <li>È lo stesso principio dei tre attacchi: accessi diversi alla conoscenza.</li>
+      <li class="red">Limite da dire: il modello sa già la statistica di base. La classe distingue bene solo sulle domande che dipendono da ciò che è specifico del corso. Infatti è questo che dimostra.</li>
+      <li>Profili sintetici e anonimi. Mai dati di studenti veri.</li>
+    </ul>
   </div>
   <div>
-    <h2>Il confine che l'agente tiene</h2>
+    <h2>«Non lo fa già una chat?»</h2>
     <ul>
-      <li>Non certifica mai «esame equo» o «a prova di AI».</li>
-      <li>Non riscrive l'esame da solo: senza la decisione del docente la versione non cambia. È un controllo nel backend, non nel prompt.</li>
-      <li>Senza griglia non dà voti: chiede la griglia.</li>
-      <li>Non dice niente sugli studenti veri.</li>
+      <li>Una chat ha un solo punto di vista. Qui tre agenti <b>non possono</b> vedere le stesse cose: lo impone il backend.</li>
+      <li>Una chat non ha il corso. Qui ogni affermazione cita un passaggio o una lezione, o dice che non c'è.</li>
+      <li>Una chat non ricorda. Qui restano le versioni della domanda, le decisioni, gli esiti.</li>
+      <li>Una chat riscrive se glielo chiedi. Qui la versione cambia solo con la firma del docente.</li>
     </ul>
+    <h2 style="margin-top:14px">Quanto costa</h2>
+    <div class="bar">
+      <span>Grafo del corso</span><span><i style="width:20%"></i></span>
+      <span>Un giro di attacco</span><span><i class="g" style="width:23%"></i></span>
+      <span>Classe, 8 × 3</span><span><i class="r" style="width:58%"></i></span>
+    </div>
+    <p class="note" style="margin-top:6px">Stime in centesimi: 0,35 · 0,4 · 1. Una demo completa sta sotto i 3 centesimi. Il filo verticale misura il numero vero.</p>
   </div>
 </section>
 
@@ -138,45 +182,34 @@ th{font-family:var(--title);font-size:22px;color:var(--pen);font-weight:700}
   <h2>Cosa è simulato</h2>
   <div class="tablewrap"><table>
     <tr><th>Cosa</th><th>Perché</th></tr>
-    <tr><td>Il login del docente</td><td>Non c'è accesso a un login d'ateneo. Si entra direttamente come un docente, scritto in chiaro nell'interfaccia.</td></tr>
-    <tr><td>La classe (solo se si fa il modulo 4)</td><td>Nessun dato di studenti veri. Otto profili sintetici in D1, ognuno è l'elenco dei concetti che padroneggia. Il conto è deterministico e si presenta come copertura, non come previsione.</td></tr>
+    <tr><td>Login e ruoli</td><td>Nessun login d'ateneo. Un selettore dichiarato: docente o studente.</td></tr>
+    <tr><td>Gli studenti della classe</td><td>Profili sintetici in D1. Le risposte e i voti sono veri, prodotti dagli agenti.</td></tr>
   </table></div>
-  <p class="note" style="margin-top:8px">Tutto il resto è vero: i sei agenti chiamano il modello, il grafo si estrae dal materiale, le versioni si salvano in D1, ogni cosa a schermo arriva dall'API. Perimetro ridotto, non finto: i materiali entrano come testo o Markdown, niente PDF.</p>
+  <p class="note" style="margin-top:8px">Tutto il resto è vero: grafo estratto dal materiale, registrazione e trascrizione dal microfono, attacchi, correzioni, versioni. Perimetro ridotto: documenti come testo o Markdown, niente PDF e niente video; una registrazione di un minuto in demo, non una lezione intera.</p>
 </section>
 
 <section>
-  <h2>I moduli</h2>
+  <h2>I moduli e l'orario</h2>
   <div class="tablewrap"><table>
-    <tr><th>Modulo</th><th>Cosa consegna</th><th>Si prova così</th></tr>
-    <tr><td>0 · Filo verticale</td><td>Guscio del frontend, API, D1, un agente: incollo una domanda, l'Esterno risponde in streaming, la risposta è salvata</td><td>una domanda, una risposta a schermo</td></tr>
-    <tr><td>1 · Corso e grafo</td><td>Caricamento del materiale, Cartografo, grafo a schermo con i passaggi</td><td>clic su un nodo, vedo la fonte</td></tr>
-    <tr><td>2 · Tre attacchi</td><td>Letterale, Cavillatore, Correttore, le tre colonne in parallelo</td><td>una domanda, tre esiti con prova</td></tr>
-    <tr><td>3 · Scheda e riattacco</td><td>Revisore, decisione del docente, nuova versione, confronto prima e dopo</td><td>riscrivo, riattacco, l'esito cambia</td></tr>
-    <tr><td>4 · Copertura e classe</td><td>Concetti toccati dall'esame sul grafo; griglia della classe sintetica</td><td class="soft">solo se 0-3 girano entro le 15:30</td></tr>
-    <tr><td>5 · Consegna</td><td>README, architettura, tre esempi di interazione (normale, incompleta, confine), pitch</td><td>ultima ora</td></tr>
+    <tr><th>Quando</th><th>Modulo</th><th>Si prova così</th></tr>
+    <tr><td>13:00</td><td>Piano e design system</td><td>su main, nessuna approvazione</td></tr>
+    <tr><td>13:15</td><td>0 · Filo verticale: guscio, API, D1, l'Esterno risponde in streaming</td><td>una domanda, una risposta a schermo</td></tr>
+    <tr><td>13:45</td><td class="green">A · Corso e grafo &nbsp;‖&nbsp; B · Triplo attacco, scheda e riattacco (due agenti in parallelo, due worktree)</td><td>clic su un nodo, vedo la fonte · riscrivo, l'esito cambia</td></tr>
+    <tr><td class="red">15:00</td><td class="red">Pitch di 60 secondi agli esperti, con il blocco 1 che gira</td><td></td></tr>
+    <tr><td>15:10</td><td style="color:var(--pen)">C · Classe simulata &nbsp;‖&nbsp; D · Registra lezione, argomenti, lato studente in lettura</td><td>griglia studenti × domande · registro, il nodo si riempie</td></tr>
+    <tr><td>16:15</td><td>Stop alle funzioni nuove. Piano di studio solo se C e D sono chiusi prima</td><td></td></tr>
+    <tr><td>16:15</td><td>README, architettura, tre esempi di interazione, registrazione di riserva, pitch</td><td></td></tr>
   </table></div>
-  <p class="note" style="margin-top:8px">Pezzo più rischioso: l'estrazione del grafo con un modello economico. Ripiego: elenco piatto di concetti con il loro passaggio, senza prerequisiti. Si decide entro le 14:15.</p>
-</section>
-
-<section>
-  <h2>L'orario da adesso</h2>
-  <div class="time">
-    <span style="grid-column:span 4">12:25 proposta</span>
-    <span style="grid-column:span 4">12:45 piano</span>
-    <span style="grid-column:span 6">13:05 filo verticale</span>
-    <span style="grid-column:span 17">13:35 moduli 1-3</span>
-    <span style="grid-column:span 3;border-color:var(--red)">15:00 pitch 60″</span>
-    <span style="grid-column:span 12">15:15 modulo 4, rifinitura, consegna</span>
-  </div>
-  <p class="note" style="margin-top:8px">Alle 15:00 passano gli esperti: per allora i moduli 0-3 devono girare, anche brutti.</p>
+  <p class="note" style="margin-top:8px">Pezzi rischiosi: il grafo estratto con un modello economico (ripiego: argomenti e concetti senza prerequisiti, decisione alle 14:15) e la trascrizione dal vivo (ripiego: incollare la trascrizione come testo, dichiarandolo).</p>
 </section>
 
 <section class="ask">
-  <h2 style="color:var(--red)">Tre cose da dirmi</h2>
+  <h2 style="color:var(--red)">Da confermare</h2>
   <ul>
-    <li><b>Il corso vero.</b> Dispense e due o tre domande d'esame di un corso preciso. Se non me lo dai tu, cerco materiale universitario con licenza aperta di probabilità e statistica, così può stare nel repository.</li>
-    <li><b>La classe.</b> Va bene come modulo 4, facoltativo e deterministico, o la vuoi nel percorso principale?</li>
-    <li><b>La lingua.</b> Propongo interfaccia e pitch in italiano; il briefing dice che vale quanto l'inglese.</li>
+    <li><b>Il taglio.</b> Blocco 1 per le 15:00, blocco 2 dopo, il resto solo nel pitch. Se vuoi spostare qualcosa di blocco, dimmelo.</li>
+    <li><b>Il corso.</b> Ho pronte dispense e otto domande d'esame vere di MIT 18.05, Probabilità e statistica, licenza aperta, in inglese. Se preferisci un vostro corso in italiano, mi servono dispense e domande.</li>
+    <li><b>La trascrizione.</b> Whisper su Workers AI, sul tuo account Cloudflare.</li>
+    <li><b>Lingua.</b> Interfaccia e pitch in italiano.</li>
   </ul>
 </section>
 

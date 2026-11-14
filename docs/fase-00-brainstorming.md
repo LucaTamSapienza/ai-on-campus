@@ -141,3 +141,15 @@ Chiesta da Luca a un agente Codex `gpt-6-astra` (effort `high`) con lo stesso co
 - **Da Astra.** Dove la risposta è numerica la verifica la fa il backend; il pitch si apre con un caso concreto.
 
 La proposta visiva è in `docs/proposta.html`.
+
+## Dopo il brainstorming di squadra (12:26, riletto alle 12:50)
+
+La squadra converge su Controesame come web app per docenti «imbottita di funzionalità». Il riassunto è in `input/brainstorming-squadra-circleback.md`. Cosa cambia:
+
+- **Il problema detto meglio.** Non scoprire chi copia con l'AI, ma aiutare il docente a scrivere domande che non si copiano.
+- **Nuove funzionalità.** Registrazione e trascrizione della lezione che alimenta il grafo; grafo gerarchico (corso, argomenti, concetti); proposta degli argomenti fatti a lezione al posto della generazione dell'esame; lato studente in sola lettura; piano di studio sul grafo; coerenza fra gli appelli.
+- **La classe simulata torna, con un agente per studente.** Si tiene il principio che regge all'adversarial: l'agente non recita un carattere, riceve solo i passaggi dei concetti che quel profilo ha seguito. Limite dichiarato: il modello conosce già la materia di base, quindi la classe distingue solo sulle domande legate a ciò che è specifico del corso.
+- **Scartato in squadra.** L'app che scrive l'esame (per «aiuta a pensare o pensa per te?») e il tutor che fa domande (debole).
+- **Il taglio.** Blocco 1 per le 15:00: grafo, triplo attacco, riscrittura e riattacco. Blocco 2 dopo: classe, registrazione della lezione, argomenti, lato studente. Piano di studio se avanza. Coerenza fra appelli, questionario e deep research solo nel pitch.
+
+La proposta visiva aggiornata è `docs/proposta.html`.
