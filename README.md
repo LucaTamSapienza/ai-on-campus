@@ -4,8 +4,8 @@ Hackathon del 14/11/2026, tema «AI on Campus». Un'idea B2B per le università,
 
 ## Stato
 
-- **Fase:** 00, brainstorming. Quattro idee in `docs/fase-00-brainstorming.md`, adversarial di Codex in corso. In `input/` ci sono il case study Reply integrale e il riassunto del briefing.
-- **Idea:** non scelta. Raccomandazione provvisoria: la classe di prova (assessment).
+- **Fase:** 00, brainstorming. Quattro idee e l'adversarial di Codex in `docs/fase-00-brainstorming.md`: si aspetta la scelta di Luca. In `input/` ci sono il case study Reply integrale e il riassunto del briefing.
+- **Idea:** non scelta. Raccomandazione dopo l'adversarial: Controesame a tre attacchi (assessment).
 - **Alle 15:00** gli esperti passano in aula: 60 secondi di pitch senza slide, in italiano o in inglese. Non è chiaro se sia già la prima valutazione: da chiedere.
 - **Criteri:** creatività e innovazione 40%, impatto 20%, tecnica 20%, presentazione 20%. Fuori tema amministrazione e logistica.
 - **Inizio:** verso le 11:15, orario approssimativo detto da Luca. **Consegna:** non ancora nota; con 7 ore di durata cadrebbe verso le 18:15. Gli orari sotto si correggono appena arrivano quelli ufficiali.

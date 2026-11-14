@@ -1,6 +1,6 @@
 # Fase 00, brainstorming
 
-Stato: **idea non scelta**. Quattro idee confrontate, una raccomandazione provvisoria, adversarial di Codex in corso. Sceglie Luca.
+Stato: **idea non scelta**. Quattro idee confrontate, adversarial di Codex fatto, raccomandazione rivista: Controesame a tre attacchi. Sceglie Luca.
 
 Fonti: `input/case-study-reply.md` (testo integrale del case study Reply) e `input/briefing-circleback.md` (briefing in aula delle 11:04).
 
@@ -62,15 +62,51 @@ Fonti: `input/case-study-reply.md` (testo integrale del case study Reply) e `inp
 | 3. Spiegalo a Leo | medio alta | media | media: meno pezzi | alta: si capisce guardando | grafo sì, multi-agente piccolo |
 | 4. Simulatore d'orale | bassa | media | media | media | grafo sì |
 
-## Raccomandazione provvisoria
+## Raccomandazione provvisoria, prima dell'adversarial
 
-**La 1, la classe di prova.** Prende il criterio che pesa di più, ha un pitch da una frase («oggi il tuo esame lo passa un modello che non ha mai seguito il corso: prima di darlo agli studenti, fallo sostenere a una classe sintetica») e il multi-agente non è decorazione: senza più studenti diversi il prodotto non esiste. È anche la direzione che chi presentava ha chiamato «più difficile», quindi meno affollata.
+La 1, la classe di prova: prende il criterio che pesa di più, si spiega in una frase e senza più agenti diversi il prodotto non esiste. La 2 era la seconda scelta. **Superata dall'adversarial qui sotto.**
 
-La 2 è la seconda scelta, più sicura sull'impatto e più vicina al «teaching» di cui si parlava in squadra. Una variante che tiene insieme le due: il grafo del corso è lo stesso, e i profili di errore degli studenti sintetici della 1 possono nascere dalle domande vere raccolte dalla 2. Non per oggi: oggi se ne fa una.
+## Adversarial di Codex (11:57)
 
-## Adversarial di Codex
+Fatto da un agente Codex (`gpt-6.1-sol`, effort `xhigh`) in sola lettura, con il compito di cercare ciò che non regge. La sua classifica: Controesame (idea nuova sua), Leo, polso dell'aula, classe di prova, simulatore d'orale.
 
-In corso. Qui vanno le obiezioni che reggono e cosa cambiano.
+**Le obiezioni che reggono**
+
+- **Sulla 1, quella che la affonda così com'è.** «Avete ordinato allo stesso modello di interpretare quattro studenti, poi gli avete chiesto di confermare che l'esame li distingue. Dove avete misurato qualcosa sugli esseri umani?» I profili sono recite: il modello economico che fa «quello che ha memorizzato» ragiona lo stesso, e limitargli il contesto non cancella quello che sa già. Stesso voto non vuol dire domanda inutile, errore del profilo bravo non vuol dire ambiguità: sono indizi, non diagnosi. Un semaforo verde può sostituire il giudizio del docente invece di aiutarlo.
+- **Sulla 2.** «Misurate chi usa il chatbot e lo chiamate stato della classe.» Un «40% non ha capito» è falso senza denominatore. Due pubblici da spiegare in un minuto.
+- **Sulla 3.** È la più fattibile delle quattro, ma «l'AI non può pensare al posto dello studente» è falso: un altro modello può sostenere tutta la conversazione. Venderla come prova valutabile è prematuro.
+- **Su tutte.** Manca un corso preciso con materiale vero: il Level 2 chiede contenuto universitario reale, e i dati sintetici vanno bene per gli utenti, non per le dispense. Manca un episodio vissuto che provi il problema. Il Level 3 non dà punti da solo: quattro personaggi non sono agenti con responsabilità distinte e un disegno di nodi non è un grafo interrogato. In tre ore di build la 1 come descritta (upload generico, estrazione del grafo, sei ruoli, matrice, seconda corsa) non ci sta.
+
+**La sua proposta, Controesame.** Due agenti cercano, sulle dispense vere, due risposte diverse ma entrambe difendibili alla stessa domanda d'esame. Il docente vede ipotesi e passaggi citati, corregge, si riprova. Nessuno studente simulato, nessun certificato di «esame equo»: un controesempio verificabile, oppure «non ne abbiamo trovati».
+
+**Dove non seguo Codex.** Controesame da solo è difendibile ma piccolo: sul 40% di creatività rischia l'obiezione che lui stesso scrive, «è una revisione con due prompt». E butta via l'unica cosa della 1 che è una misura vera e non una recita: far rispondere un modello che il corso non l'ha mai visto. Quello non simula uno studente, è esattamente lo strumento che lo studente ha in tasca.
+
+## Raccomandazione dopo l'adversarial
+
+**Controesame, nella forma allargata a tre attacchi: la 1 senza le recite.** Il docente carica una domanda d'esame, la griglia e le dispense del corso. Tre agenti la attaccano, ognuno con un accesso diverso alla conoscenza, e ognuno porta una prova che il docente verifica leggendo poche righe.
+
+| Agente | Cosa ha in mano | Cosa prova | La prova a schermo |
+|---|---|---|---|
+| L'esterno | solo la domanda, nessun materiale del corso | la domanda si supera senza aver seguito | la sua risposta e il voto che prende con la griglia del docente |
+| Il letterale | solo le dispense | la risposta non si ricava dal materiale, o si ricava copiando un passaggio | i passaggi citati, o «nel materiale non c'è» |
+| Il cavillatore | domanda e dispense | la domanda ammette due letture difendibili | le due risposte, con l'ipotesi che le separa e la fonte |
+
+Un agente correttore applica la griglia e un agente revisore mette insieme i tre esiti in una scheda: risposta, ipotesi, fonte, decisione. Niente semafori. Il docente sceglie cosa cambiare, il sistema salva la nuova versione e i tre attacchi ripartono su quella.
+
+- **Perché regge all'obiezione di Codex.** Non si afferma niente sugli studenti. Ogni agente fa una cosa che è vera per come è costruito, non per come gli si dice di comportarsi.
+- **Level 2.** Materiale vero: dispense e domande di un corso reale. Azione: apre una revisione, salva la decisione del docente, riesegue. Confine: non certifica mai «esame equo» o «a prova di AI», non riscrive l'esame da solo, e se non trova un controesempio lo dice.
+- **Level 3.** Multi-agente con responsabilità distinte, proposte indipendenti sullo stesso input, confronto e punto di decisione umano: è lo schema della pagina. Il grafo dei concetti del corso entra solo se avanza tempo, come copertura dell'esame; non è promesso.
+- **Le tre domande.** Nuovo: provare un esame prima di darlo, con prove e non con un punteggio. Aiuta a pensare: il docente legge un controesempio e decide. Chi resta fuori: non vede difficoltà linguistiche o di accessibilità, e va detto.
+- **Pitch in una frase.** «Oggi una domanda d'esame la supera un modello che il corso non l'ha mai visto, e nessuno se ne accorge prima dell'appello. Controesame la attacca in tre modi e porta al docente la prova, non un voto.»
+- **Cosa resta debole.** Nessuna prova che un dipartimento pagherebbe. Il «cavillatore» può inventare un conflitto finto: per questo le citazioni sono visibili e il docente può scartarlo.
+
+Se invece la squadra vuole restare sul teaching, la scelta è la 3 (Leo) nella forma stretta di Codex: un concetto, tre scambi, un nuovo esempio di verifica, esercitazione assegnata dal docente. La 2 scende per via del campione distorto.
+
+## Cosa serve da Luca per chiudere
+
+1. **L'idea:** Controesame a tre attacchi, Leo, o un'altra.
+2. **Un corso vero.** Dispense e qualche domanda d'esame reale di un corso preciso. Il repository potrebbe diventare pubblico: o materiale con licenza aperta, o materiale di un tuo corso che resta fuori da Git.
+3. **Un episodio vissuto** per il pitch: una domanda d'esame ambigua, o un esame che si passava con un modello generico.
 
 ## Idea scelta
 
