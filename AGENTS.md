@@ -30,7 +30,7 @@ Lo stato corrente (fase, ora della consegna, cosa manca) sta in cima a `README.m
 - Quello che è simulato si dichiara in `docs/fase-01-piano.md` e, se serve, nel pitch. Mai presentare come funzionante una cosa finta.
 - Dati sintetici: nessun dato reale di studenti, docenti o atenei. Stanno nel database, caricati da uno script di semina, non scritti nel frontend.
 - **Modelli via OpenRouter.** Luca ha una chiave con 5 $ di credito: è tutto il budget della giornata. Si usano sempre modelli economici della classe Luna: il predefinito è `openai/gpt-6-luna` (0,10 $ per milione di token in ingresso e 0,50 $ in uscita, catalogo OpenRouter letto il 14/11/2026). Un modello più caro solo se Luca lo dice per quel punto preciso. Ogni chiamata ha un tetto di token in uscita, e le prove ripetute in sviluppo usano risposte brevi. Per cambiare modello o aggiungerne uno di altro tipo (embedding, voce) si rilegge il catalogo del giorno su `https://openrouter.ai/api/v1/models`, non ci si basa su quello che si ricorda. La chiave si chiama `OPENROUTER_API_KEY`, sta nel `.env` alla radice, arriva al Worker da `app/backend/.dev.vars` in locale e da `wrangler secret put` online. Non arriva mai al frontend: il browser chiama solo la nostra API.
-- **Un solo test che conta: il percorso della demo in Playwright.** Dalla prima fase di build esiste `npm run e2e`, che apre l'applicazione in un browser vero e percorre la demo dall'inizio alla fine come farà Luca davanti alla giuria, in locale e contro l'URL online. Cresce insieme alla demo: ogni fase di build aggiunge il suo passo. Si lancia dopo ogni modifica che tocca il percorso e prima di ogni deploy, e l'esito vero si dice a Luca, con lo screenshot del passo che fallisce. Luca può lanciarlo anche da solo, o farlo girare a un agente mentre un altro costruisce. Le chiamate ai modelli nel test sono vere ma poche: una corsa completa deve costare centesimi. Oltre a questo, test quasi nessuno: niente test unitari su codice banale.
+- **Un solo test che conta: il percorso della demo in Playwright.** Playwright e Chromium sono già installati alla radice (`playwright.config.ts`, cartella `e2e/`). `npm run e2e` apre l'applicazione in un browser vero e percorre la demo dall'inizio alla fine come farà Luca davanti alla giuria, in locale oppure contro l'URL online con `DEMO_URL=<url> npm run e2e`. Il test è un solo file, `e2e/demo.spec.ts`, che nasce con la prima fase di build. Cresce insieme alla demo: ogni fase di build aggiunge il suo passo. Si lancia dopo ogni modifica che tocca il percorso e prima di ogni deploy, e l'esito vero si dice a Luca, con lo screenshot del passo che fallisce. Luca può lanciarlo anche da solo, o farlo girare a un agente mentre un altro costruisce. Le chiamate ai modelli nel test sono vere ma poche: una corsa completa deve costare centesimi. Oltre a questo, test quasi nessuno: niente test unitari su codice banale.
 - Piano di riserva se la rete del posto cade: una registrazione dello schermo del percorso completo, fatta appena funziona.
 - Commit piccoli e frequenti su `main`, con push: oggi niente branch e PR. Il push serve anche da backup.
 - Nessun segreto nel repository: chiavi solo in `.env` o `.dev.vars`, gitignorati, con i nomi in `.env.example`. Prima di rendere pubblico il repository si ricontrollano `input/` e la storia Git.
@@ -60,12 +60,31 @@ Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non 
 
 ## Interfaccia
 
-La giuria giudica quello che vede. Due skill, in due momenti diversi, per non avere indicazioni in conflitto:
+La giuria giudica quello che vede. Una schermata per passo della demo, testo leggibile da un proiettore, stati di attesa visibili mentre gli agenti lavorano.
 
-- **Per partire e per costruire, le skill di `ui-ux-pro-max`** (in `.agents/skills/`, con symlink per Claude Code; gli script si lanciano con `python3` da qualunque runtime). Sono sette e si usano tutte dove servono: `ui-ux-pro-max` per stile, palette, font e regole di UX; `design-system` per i token; `ui-styling` per i componenti shadcn/ui e Tailwind; `design` e `brand` per nome, logo e identità dell'idea; `slides` e `banner-design` per il pitch. Nella fase del piano si genera il design system dell'idea scelta con `--design-system` e lo si salva in `docs/design-system.md`: da lì in poi quel file è la regola, e si cambia solo se Luca lo chiede. Le proposte sono un punto di partenza: sceglie Luca, e quello che su un proiettore si legge male si scarta. Gli script di `design` che generano immagini vogliono chiavi che qui non ci sono (vedi `.agents/skills/ORIGINE.md`): prima di usarli si chiede a Luca.
-- **Per rifinire, `interfaces`** (plugin di Claude Code, che installa Luca), quando una schermata funziona già: `interface-review` prima di considerarla finita, `better-ui` e `variant` per migliorarla o confrontare alternative. Non decide il design system, lo rispetta.
+Il design si decide una volta e poi si rispetta. Nella fase del piano si genera il design system dell'idea scelta con `ui-ux-pro-max` (`--design-system`) e lo si salva in `docs/design-system.md`: stile, palette, font, componenti. Da lì in poi quel file è la regola, e si cambia solo se Luca lo chiede. Le proposte delle skill sono un punto di partenza: sceglie Luca, e quello che su un proiettore si legge male si scarta.
 
-Con qualunque runtime valgono le stesse attese: una schermata per passo della demo, testo leggibile da un proiettore, stati di attesa visibili mentre gli agenti lavorano.
+## Skill: quando usarle
+
+Le skill nel repository stanno in `.agents/skills/` e valgono per ogni runtime (in Claude Code arrivano dai symlink in `.claude/skills/`; altrove si legge il loro `SKILL.md` e si lanciano gli script con `python3`). Le altre sono plugin o skill della macchina di Luca: se nel tuo runtime non ci sono, fai lo stesso lavoro a mano e dillo.
+
+| Momento | Skill | Dove sta | Quando si usa e quando no |
+|---|---|---|---|
+| Fase 00, brainstorming | nessuna | | Si ragiona sulle fonti di `input/`. Niente skill di design o di codice prima che Luca abbia scelto l'idea |
+| Fase 01, piano | `ui-ux-pro-max` | repository | Una volta, per generare `docs/design-system.md`. Poi solo per domande puntuali di UX (`--domain ux`) o sui grafici, non per rigenerare lo stile |
+| Fase 01, piano | `brand`, `design` | repository | Solo se all'idea servono un nome, un tono e un logo. Gli script di `design` che generano immagini vogliono chiavi che qui non ci sono (`.agents/skills/ORIGINE.md`): prima si chiede a Luca |
+| Fase 01, piano | `agents-sdk`, `durable-objects` | plugin Cloudflare | Per disegnare gli agenti e il loro stato prima di scriverli, e di nuovo quando si implementano |
+| Fase 01, piano | `generate-diagrams` | macchina di Luca | Lo schema dell'architettura, che serve nel piano e poi nelle slide |
+| Build, scheletro e deploy | `wrangler`, `workers-best-practices` | plugin Cloudflare | Configurazione di `wrangler.jsonc`, D1, binding, deploy. Sempre prima di un comando remoto |
+| Build, frontend | `design-system`, `ui-styling` | repository | Alla prima schermata, per portare i token di `docs/design-system.md` in Tailwind e scegliere i componenti shadcn/ui. Sulle schermate successive si riusa quello che c'è |
+| Build, fine di ogni fase | Playwright (`npm run e2e`) | repository | Dopo ogni modifica che tocca il percorso della demo e prima di ogni deploy. Non è una skill: è il test in `e2e/` |
+| Build, fine di ogni fase | `run` | Claude Code | Quando serve guardare l'app con gli occhi, per uno screenshot o un difetto che il test non descrive |
+| Rifinitura | `interfaces` | plugin, lo installa Luca | Solo su schermate che funzionano già: `interface-review` prima di considerarne finita una, `better-ui` e `variant` per migliorarla. Non decide il design system, lo rispetta. Mai mentre il percorso della demo è ancora rotto |
+| Pitch | `slides`, `banner-design` | repository | Slide in HTML con lo stesso design system della demo; `banner-design` per la copertina. Solo a demo al sicuro |
+| Pitch, video | skill Remotion | `ad-studio` | Solo se Luca decide di fare il video, in una sessione aperta su quel repository |
+| Sempre | `karpathy-guidelines` | plugin | Codice minimo e modifiche chirurgiche: è lo spirito di tutto «Come si costruisce» |
+
+Una skill non scavalca questo file: se suggerisce test, astrazioni o passaggi che qui sono esclusi, vale `AGENTS.md`.
 
 ## Video
 
@@ -82,6 +101,8 @@ Resta aperta l'opzione di aprire il pitch con un video breve dell'idea, fatto co
 | `docs/fase-NN-….md` | Una per fase di build |
 | `app/frontend/` | Next.js, export statico |
 | `app/backend/` | Worker Hono, migrazioni D1, agenti, script di semina |
+| `e2e/`, `playwright.config.ts` | Il percorso della demo in Playwright |
+| `.agents/skills/` | Skill condivise fra runtime |
 | `pitch/` | Slide, scaletta, eventuale video |
 
 Le skill condivise fra runtime stanno in `.agents/skills/`, copiate senza la loro `.git` e con l'origine annotata in `ORIGINE.md`; `.claude/skills/` contiene solo symlink.
