@@ -8,13 +8,14 @@ import { List, Search, SlidersHorizontal, X } from "lucide-react";
 import type { GraphConcept, Topic } from "@/lib/api";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
+import { TopicDot } from "@/components/topic-dot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type Props = {
   concepts: GraphConcept[];
   topics: Topic[];
-  colorOf: (topicId: string | null) => string;
+  slotOf: (topicId: string | null) => number | null;
   activeTopics: Set<string>;
   onToggleTopic: (id: string) => void;
   onClearTopics: () => void;
@@ -65,10 +66,10 @@ export function GraphToolbar(props: Props) {
       {!isDesktop && (
         <DrawerPrimitive.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
           <DrawerPrimitive.Portal>
-            <DrawerPrimitive.Overlay className="fixed inset-0 z-40 bg-foreground/10" />
+            <DrawerPrimitive.Overlay className="fixed inset-0 z-40 bg-overlay" />
             <DrawerPrimitive.Content
               aria-describedby={undefined}
-              className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col gap-4 rounded-t-2xl border-t bg-card px-4 pt-2 pb-[calc(16px+env(safe-area-inset-bottom))] outline-none"
+              className="fixed inset-x-0 bottom-0 z-50 flex max-h-(--sheet-max-height) flex-col gap-4 rounded-t-2xl border-t bg-card px-4 pt-2 pb-(--sheet-padding-bottom) outline-none"
             >
               <div className="mx-auto h-1.5 w-12 rounded-full bg-muted" aria-hidden />
               <DrawerPrimitive.Title className="text-lg font-semibold">Argomenti</DrawerPrimitive.Title>
@@ -83,7 +84,7 @@ export function GraphToolbar(props: Props) {
   );
 }
 
-function TopicChips({ topics, colorOf, activeTopics, onToggleTopic, onClearTopics, nowrap }: Props & { nowrap?: boolean }) {
+function TopicChips({ topics, slotOf, activeTopics, onToggleTopic, onClearTopics, nowrap }: Props & { nowrap?: boolean }) {
   if (topics.length === 0) return null;
   return (
     <div className={cn("pointer-events-auto flex gap-2", nowrap ? "w-max" : "flex-wrap")} role="group" aria-label="Filtra per argomento">
@@ -97,11 +98,11 @@ function TopicChips({ topics, colorOf, activeTopics, onToggleTopic, onClearTopic
             onClick={() => onToggleTopic(t.id)}
             title={t.summary}
             className={cn(
-              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border bg-card px-4 text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:min-h-9",
+              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border bg-card px-4 text-sm font-medium transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               on ? "border-primary text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorOf(t.id) }} aria-hidden />
+            <TopicDot slot={slotOf(t.id)} />
             {t.name}
           </button>
         );
@@ -110,7 +111,7 @@ function TopicChips({ topics, colorOf, activeTopics, onToggleTopic, onClearTopic
         <button
           type="button"
           onClick={onClearTopics}
-          className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50 lg:min-h-9"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-medium text-primary outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <X className="size-4" aria-hidden /> Tutti
         </button>

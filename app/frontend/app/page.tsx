@@ -6,7 +6,6 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Loader2, Network } from "lucide-react";
 import { api, type Graph } from "@/lib/api";
-import { NO_TOPIC_COLOR, TOPIC_COLORS } from "@/lib/graph-style";
 import { useCartografo } from "@/hooks/use-cartografo";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { useShell } from "@/components/app-shell";
@@ -66,9 +65,10 @@ function CourseGraph({ courseId }: { courseId: string }) {
     load();
   }, [load, version]);
 
-  const colorOf = useMemo(() => {
-    const byId = new Map((graph?.topics ?? []).map((t, i) => [t.id, TOPIC_COLORS[i % TOPIC_COLORS.length]]));
-    return (topicId: string | null) => (topicId && byId.get(topicId)) || NO_TOPIC_COLOR;
+  // Posizione dell'argomento nella palette (token --topic-N); null = senza argomento.
+  const slotOf = useMemo(() => {
+    const byId = new Map((graph?.topics ?? []).map((t, i) => [t.id, i]));
+    return (topicId: string | null) => (topicId ? (byId.get(topicId) ?? null) : null);
   }, [graph?.topics]);
 
   const focus = (id: string) => {
@@ -101,17 +101,17 @@ function CourseGraph({ courseId }: { courseId: string }) {
       {listOpen && isDesktop && (
         <ConceptList
           concepts={graph.concepts}
-          colorOf={colorOf}
+          slotOf={slotOf}
           selectedId={selectedId}
           onPick={focus}
           onClose={() => setListOpen(false)}
-          className="w-[300px] shrink-0 border-r animate-in duration-250 ease-out slide-in-from-left-8 fade-in-0"
+          className="w-(--list-width) shrink-0 border-r animate-in duration-250 ease-out slide-in-from-left-8 fade-in-0"
         />
       )}
       <div className="relative min-w-0 flex-1 overflow-hidden">
         <GraphCanvas
           graph={graph}
-          colorOf={colorOf}
+          slotOf={slotOf}
           selectedId={selectedId}
           onSelect={(id) => (id && !isDesktop ? focus(id) : setSelectedId(id))}
           activeTopics={activeTopics}
@@ -121,7 +121,7 @@ function CourseGraph({ courseId }: { courseId: string }) {
         <GraphToolbar
           concepts={graph.concepts}
           topics={graph.topics}
-          colorOf={colorOf}
+          slotOf={slotOf}
           activeTopics={activeTopics}
           onToggleTopic={(id) =>
             setActiveTopics((s) => {
@@ -139,7 +139,7 @@ function CourseGraph({ courseId }: { courseId: string }) {
         {listOpen && !isDesktop && (
           <ConceptList
             concepts={graph.concepts}
-            colorOf={colorOf}
+            slotOf={slotOf}
             selectedId={selectedId}
             onPick={(id) => {
               setListOpen(false);
@@ -150,12 +150,12 @@ function CourseGraph({ courseId }: { courseId: string }) {
           />
         )}
         {graph.concepts.length === 0 && <CenteredLoader label="Il Cartografo sta leggendo" />}
-        <AgentStrip state={cartografo} className="absolute inset-x-4 bottom-4 z-10 lg:right-4 lg:left-auto lg:w-[440px]" />
+        <AgentStrip state={cartografo} className="absolute inset-x-4 bottom-4 z-10 lg:right-4 lg:left-auto lg:w-(--strip-width)" />
       </div>
       <DetailPanel
         conceptId={selectedId}
         role={role}
-        colorOf={colorOf}
+        slotOf={slotOf}
         onClose={() => setSelectedId(null)}
         onSelect={focus}
         onChanged={load}

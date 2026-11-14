@@ -2,7 +2,95 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Token di docs/design-system.md: unica sorgente dei colori. Tema chiaro soltanto. */
+/* Token di docs/design-system.md, su tre livelli: primitivi (valori), semantici (significato),
+   di componente (guscio, grafo, fogli). Componenti e pagine usano solo semantici e di componente.
+   Tema chiaro soltanto. */
+
+/* === PRIMITIVI === */
+:root {
+  --white: #ffffff;
+  --slate-50: #f8fafc;
+  --slate-100: #e9eff8;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-800: #1e293b;
+  --slate-900-rgb: 15 23 42;
+  --blue-600: #2563eb;
+  --orange-600: #ea580c;
+  --red-600: #dc2626;
+  --green-700: #15803d;
+
+  /* Colori degli argomenti, in ordine (design system, «Colori degli argomenti nel grafo») */
+  --topic-1: #2563eb;
+  --topic-2: #0d9488;
+  --topic-3: #9333ea;
+  --topic-4: #db2777;
+  --topic-5: #ca8a04;
+  --topic-6: #0891b2;
+  --topic-7: #65a30d;
+  --topic-8: #dc2626;
+  --topic-9: #4f46e5;
+  --topic-10: #b45309;
+  --topic-11: #059669;
+  --topic-12: #7c3aed;
+
+  --space-4: 16px;
+  --radius-control: 8px;
+  --radius-sheet: 16px;
+}
+
+/* === SEMANTICI === */
+:root {
+  --background: var(--slate-50);
+  --foreground: var(--slate-800);
+  --card: var(--white);
+  --card-foreground: var(--slate-800);
+  --popover: var(--white);
+  --popover-foreground: var(--slate-800);
+  --primary: var(--blue-600);
+  --primary-foreground: var(--white);
+  --secondary: var(--slate-100);
+  --secondary-foreground: var(--slate-800);
+  --muted: var(--slate-100);
+  --muted-foreground: var(--slate-600);
+  --accent: var(--orange-600);
+  --accent-foreground: var(--white);
+  --destructive: var(--red-600);
+  --success: var(--green-700);
+  --border: var(--slate-200);
+  --input: var(--slate-200);
+  --ring: var(--blue-600);
+  --overlay: rgb(var(--slate-900-rgb) / 0.1);
+  --radius: var(--radius-control);
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+/* === COMPONENTI === */
+:root {
+  /* Guscio e disposizione (design system, «Disposizione») */
+  --nav-width: 232px;
+  --panel-width: 400px;
+  --list-width: 300px;
+  --strip-width: 440px;
+  --column-width: 880px;
+  --row-height: 72px;
+  /* Foglio del dettaglio su telefono: lascia scoperti 72 px in alto quando è a tutta altezza */
+  --sheet-height: calc(100dvh - 72px);
+  --sheet-max-height: 80dvh;
+  --sheet-padding-bottom: calc(var(--space-4) + var(--safe-bottom));
+
+  /* Grafo: il canvas li legge con getComputedStyle (lib/graph-style.ts) */
+  --graph-edge: var(--slate-300);
+  --graph-edge-focus: var(--slate-800);
+  --graph-node-new: var(--accent);
+  --graph-node-selected: var(--primary);
+  --graph-no-topic: var(--slate-500);
+  --graph-label: var(--foreground);
+  --graph-halo: var(--background);
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -27,36 +115,29 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-overlay: var(--overlay);
+  --color-topic-1: var(--topic-1);
+  --color-topic-2: var(--topic-2);
+  --color-topic-3: var(--topic-3);
+  --color-topic-4: var(--topic-4);
+  --color-topic-5: var(--topic-5);
+  --color-topic-6: var(--topic-6);
+  --color-topic-7: var(--topic-7);
+  --color-topic-8: var(--topic-8);
+  --color-topic-9: var(--topic-9);
+  --color-topic-10: var(--topic-10);
+  --color-topic-11: var(--topic-11);
+  --color-topic-12: var(--topic-12);
+  --color-topic-none: var(--graph-no-topic);
+  /* Scala tipografica: 32 px per il titolo di pagina su desktop */
+  --text-title: 2rem;
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 8px;
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-control);
   --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --shadow-float: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
+  --radius-2xl: var(--radius-sheet);
+  --shadow-float: 0 1px 2px rgb(var(--slate-900-rgb) / 0.06), 0 8px 24px rgb(var(--slate-900-rgb) / 0.08);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
-}
-
-:root {
-  --background: #f8fafc;
-  --foreground: #1e293b;
-  --card: #ffffff;
-  --card-foreground: #1e293b;
-  --popover: #ffffff;
-  --popover-foreground: #1e293b;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #e9eff8;
-  --secondary-foreground: #1e293b;
-  --muted: #e9eff8;
-  --muted-foreground: #475569;
-  --accent: #ea580c;
-  --accent-foreground: #ffffff;
-  --destructive: #dc2626;
-  --success: #15803d;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
-  --radius: 8px;
 }
 
 @layer base {

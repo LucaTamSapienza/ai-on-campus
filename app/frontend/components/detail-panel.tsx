@@ -10,6 +10,7 @@ import { RELATION_LABELS } from "@/lib/graph-style";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import type { Role } from "@/components/app-shell";
 import { SourceRef } from "@/components/source-ref";
+import { TopicDot } from "@/components/topic-dot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,7 +20,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 type Props = {
   conceptId: string | null;
   role: Role;
-  colorOf: (topicId: string | null) => string;
+  slotOf: (topicId: string | null) => number | null;
   onClose: () => void;
   onSelect: (id: string) => void;
   onChanged: () => void;
@@ -38,7 +39,7 @@ export function DetailPanel(props: Props) {
     if (!props.conceptId) return null;
     return (
       <aside
-        className="relative flex w-[400px] shrink-0 flex-col border-l bg-card animate-in duration-250 ease-out slide-in-from-right-8 fade-in-0"
+        className="relative flex w-(--panel-width) shrink-0 flex-col border-l bg-card animate-in duration-250 ease-out slide-in-from-right-8 fade-in-0"
         aria-label="Dettaglio del concetto"
       >
         <DetailBody {...props} />
@@ -58,7 +59,7 @@ export function DetailPanel(props: Props) {
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 z-40 flex h-[calc(100dvh-72px)] flex-col rounded-t-2xl border-t bg-card shadow-float outline-none"
+          className="fixed inset-x-0 bottom-0 z-40 flex h-(--sheet-height) flex-col rounded-t-2xl border-t bg-card shadow-float outline-none"
         >
           <div className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-muted" aria-hidden />
           <DetailBody {...props} titleAs={DrawerPrimitive.Title} scrollable={snap === 1} />
@@ -71,7 +72,7 @@ export function DetailPanel(props: Props) {
 function DetailBody({
   conceptId,
   role,
-  colorOf,
+  slotOf,
   onClose,
   onSelect,
   onChanged,
@@ -136,7 +137,7 @@ function DetailBody({
           <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 font-medium">
-                <span className="size-2.5 rounded-full" style={{ backgroundColor: colorOf(current.concept.topicId) }} aria-hidden />
+                <TopicDot slot={slotOf(current.concept.topicId)} />
                 {current.concept.topicName ?? "Senza argomento"}
               </span>
               <span className="rounded-full border px-3 py-1 text-muted-foreground">{current.concept.kind}</span>

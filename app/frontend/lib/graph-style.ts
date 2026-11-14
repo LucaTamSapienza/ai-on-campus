@@ -2,17 +2,42 @@
 // Tailwind, quindi i valori stanno qui e non nelle pagine.
 import type { RelationType } from "@/lib/api";
 
-export const TOPIC_COLORS = [
-  "#2563EB", "#0D9488", "#9333EA", "#DB2777", "#CA8A04", "#0891B2",
-  "#65A30D", "#DC2626", "#4F46E5", "#B45309", "#059669", "#7C3AED",
+export const TOPIC_COUNT = 12;
+
+// Classi dei pallini degli argomenti (token --color-topic-N di globals.css), scritte per esteso
+// perché Tailwind le trovi.
+const TOPIC_DOTS = [
+  "bg-topic-1", "bg-topic-2", "bg-topic-3", "bg-topic-4", "bg-topic-5", "bg-topic-6",
+  "bg-topic-7", "bg-topic-8", "bg-topic-9", "bg-topic-10", "bg-topic-11", "bg-topic-12",
 ];
-export const NO_TOPIC_COLOR = "#64748B"; // muted-foreground schiarito: concetto senza argomento
-export const ACCENT = "#EA580C"; // --accent: nodo appena aggiunto
-export const PRIMARY = "#2563EB"; // --primary: nodo selezionato
-export const FOREGROUND = "#1E293B"; // --foreground: etichette
-export const BACKGROUND = "#F8FAFC"; // --background: alone delle etichette
-export const EDGE = "#CBD5E1"; // archi a riposo, un tono sopra --border per leggersi sul fondo
-export const EDGE_FOCUS = "#1E293B"; // archi del nodo in fuoco: contrasto pieno
+export const topicDotClass = (slot: number | null) => (slot === null ? "bg-topic-none" : TOPIC_DOTS[slot % TOPIC_COUNT]);
+
+// Colori del grafo letti dai token di globals.css: il canvas non legge le classi Tailwind.
+export type GraphTheme = {
+  topics: string[];
+  noTopic: string;
+  newNode: string;
+  selected: string;
+  edge: string;
+  edgeFocus: string;
+  label: string;
+  halo: string;
+};
+
+export function readGraphTheme(): GraphTheme {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name: string) => css.getPropertyValue(name).trim();
+  return {
+    topics: Array.from({ length: TOPIC_COUNT }, (_, i) => v(`--topic-${i + 1}`)),
+    noTopic: v("--graph-no-topic"),
+    newNode: v("--graph-node-new"),
+    selected: v("--graph-node-selected"),
+    edge: v("--graph-edge"),
+    edgeFocus: v("--graph-edge-focus"),
+    label: v("--graph-label"),
+    halo: v("--graph-halo"),
+  };
+}
 
 export function withAlpha(hex: string, alpha: number) {
   const n = parseInt(hex.slice(1), 16);

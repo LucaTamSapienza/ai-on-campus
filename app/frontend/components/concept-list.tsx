@@ -6,19 +6,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import type { GraphConcept } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { TopicDot } from "@/components/topic-dot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type Props = {
   concepts: GraphConcept[];
-  colorOf: (topicId: string | null) => string;
+  slotOf: (topicId: string | null) => number | null;
   selectedId: string | null;
   onPick: (id: string) => void;
   onClose: () => void;
   className?: string;
 };
 
-export function ConceptList({ concepts, colorOf, selectedId, onPick, onClose, className }: Props) {
+export function ConceptList({ concepts, slotOf, selectedId, onPick, onClose, className }: Props) {
   const [q, setQ] = useState("");
   const listRef = useRef<HTMLUListElement>(null);
   const items = useMemo(() => {
@@ -60,7 +61,7 @@ export function ConceptList({ concepts, colorOf, selectedId, onPick, onClose, cl
                 c.id === selectedId && "bg-muted font-semibold text-primary",
               )}
             >
-              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorOf(c.topicId) }} aria-hidden />
+              <TopicDot slot={slotOf(c.topicId)} />
               <span className="min-w-0 flex-1 truncate">{c.name}</span>
               <span className="shrink-0 text-sm text-muted-foreground tabular-nums" aria-label={`${c.degree} relazioni`}>
                 {c.degree}

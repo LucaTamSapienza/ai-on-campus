@@ -18,7 +18,7 @@ export function SourceList({ sources }: { sources: Source[] | null }) {
     return (
       <div className="flex flex-col gap-2">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-[72px] w-full" />
+          <Skeleton key={i} className="h-(--row-height) w-full" />
         ))}
       </div>
     );
@@ -28,7 +28,7 @@ export function SourceList({ sources }: { sources: Source[] | null }) {
       {[...sources].reverse().map((s) => {
         const st = STATUS[s.status];
         return (
-          <li key={s.id} className="flex min-h-[72px] items-center gap-4 px-4 py-3">
+          <li key={s.id} className="flex min-h-(--row-height) items-center gap-4 px-4 py-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-base font-medium">{s.title}</p>
               <p className="text-sm text-muted-foreground">

@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <ShellContext.Provider value={{ course, courseLoading, courseError, reloadCourse, role }}>
       <div className="flex h-dvh w-full overflow-hidden">
         {/* Desktop: barra a sinistra */}
-        <aside className="hidden w-[232px] shrink-0 flex-col border-r bg-card lg:flex">
+        <aside className="hidden w-(--nav-width) shrink-0 flex-col border-r bg-card lg:flex">
           <div className="px-6 pt-8 pb-6">
             <p className="text-lg font-bold tracking-wide" title={BRAND.tagline}>
               {BRAND.name}
@@ -99,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Telefono: intestazione */}
-          <header className="flex shrink-0 items-center justify-between gap-3 border-b bg-card px-4 pt-[env(safe-area-inset-top)] lg:hidden">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b bg-card px-4 pt-(--safe-top) lg:hidden">
             <div className="flex h-14 min-w-0 flex-col justify-center">
               <p className="text-xs font-semibold tracking-wide text-muted-foreground">{BRAND.name}</p>
               <CourseName course={course} loading={courseLoading} className="truncate text-base font-semibold" />
@@ -111,8 +111,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           {/* Telefono: barra in basso */}
           <nav
-            className="grid shrink-0 border-t bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
-            style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
+            className="grid shrink-0 auto-cols-fr grid-flow-col border-t bg-card pb-(--safe-bottom) lg:hidden"
             aria-label="Navigazione principale"
           >
             {nav.map((item) => (
@@ -154,7 +153,7 @@ function RoleSwitch({ role, onChange, compact }: { role: Role; onChange: (r: Rol
             aria-pressed={role === r}
             onClick={() => onChange(r)}
             className={cn(
-              "h-10 flex-1 rounded-md px-3 text-sm font-medium capitalize text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "h-11 flex-1 rounded-md px-3 text-sm font-medium capitalize text-muted-foreground transition-colors duration-150 ease-out outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               role === r && "bg-card text-foreground shadow-sm",
             )}
           >

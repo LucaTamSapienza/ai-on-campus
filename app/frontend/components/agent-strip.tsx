@@ -57,7 +57,7 @@ export function AgentStrip({ state, className }: { state: CartografoState | null
           </div>
           {(working || doneKey) && (
             <p className="shrink-0 text-right text-sm tabular-nums">
-              <span className="font-semibold text-accent">+{state.conceptsAdded}</span>
+              <span className="font-semibold">+{state.conceptsAdded}</span>
               <span className="text-muted-foreground"> concetti</span>
             </p>
           )}
