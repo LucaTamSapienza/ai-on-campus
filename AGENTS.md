@@ -48,8 +48,8 @@ Durante il brainstorming Luca discute con i compagni e la conversazione è regis
 
 Luca dialoga con un solo orchestratore. L'orchestratore tiene il piano, decide l'ordine, lancia gli agenti e porta il lavoro su `main`; il codice lo scrivono gli agenti che lancia: Opus su Claude Code, il modello di lavoro equivalente sugli altri runtime. Dopo l'approvazione della proposta l'orchestratore non torna da Luca a chiedere conferme: va fino in fondo.
 
-- **Prima in verticale.** Un solo filo che attraversa tutto: una schermata, una rotta, una tabella, un agente del prodotto che risponde, online. Finché questo filo non gira non si parallelizza niente.
-- **Poi in parallelo, per moduli.** Il piano divide il resto in moduli con confini chiari (file e rotte di ciascuno). Ogni modulo va a un agente, nella sua worktree e sul suo branch. I contratti fra moduli (forma delle rotte, tabelle) si fissano nel piano prima di lanciarli, così non si pestano i piedi.
+- **Prima in verticale.** Un solo filo che attraversa tutto: una schermata, una rotta, una tabella, un agente del prodotto che risponde, online. Finché questo filo non gira non si parallelizza niente. Il filo verticale costruisce anche il guscio comune del frontend: layout, navigazione, tema con i token di `docs/design-system.md`, i componenti condivisi e `lib/api.ts`. I moduli ci entrano dentro, non se ne fanno uno ciascuno.
+- **Poi in parallelo, per moduli.** Il piano divide il resto in moduli con confini chiari (file e rotte di ciascuno). Ogni modulo va a un agente, nella sua worktree e sul suo branch. I contratti fra moduli (forma delle rotte, tabelle) si fissano nel piano prima di lanciarli, così non si pestano i piedi. Il compito che l'orchestratore dà a ogni agente dice il modulo, i suoi file, i contratti e le skill da usare: chi tocca il frontend riceve sempre `docs/design-system.md`, le skill `design-system` e `ui-styling` e l'indicazione di riusare il guscio e i componenti esistenti. Un agente non deve indovinare quali skill servono.
 - **L'orchestratore integra.** Mergia le PR una alla volta, nell'ordine che evita conflitti, e controlla che su `main` l'app parta ancora.
 - **Un avviso a metà, senza fermarsi.** Quando il filo verticale è online l'orchestratore lo dice a Luca in una riga con l'URL, e prosegue con i moduli. Luca ci dà un'occhiata quando vuole: un problema visto lì costa minuti, visto alla fine costa ore.
 - **Alla fine tutto è su `main`.** Nessun branch o worktree aperto. L'orchestratore dice a Luca cosa c'è, cosa è rimasto fuori e cosa è simulato, e gli lascia i comandi per provare su `localhost` e l'URL online.
@@ -117,6 +117,8 @@ Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non 
 ## Interfaccia
 
 La giuria giudica quello che vede. Una schermata per passo della demo, testo leggibile da un proiettore, stati di attesa visibili mentre gli agenti lavorano.
+
+La struttura del frontend non la deve dettare Luca. La propone l'agente nella proposta visiva, con le bozze delle schermate e come si passa dall'una all'altra, e Luca la corregge lì. Il piano la traduce in pagine, rotte e componenti condivisi, e il filo verticale la costruisce.
 
 Il design si decide una volta e poi si rispetta. Nella fase del piano si genera il design system dell'idea scelta con `ui-ux-pro-max` (`--design-system`) e lo si salva in `docs/design-system.md`: stile, palette, font, componenti. Da lì in poi quel file è la regola, e si cambia solo se Luca lo chiede. Le proposte delle skill sono un punto di partenza: sceglie Luca, e quello che su un proiettore si legge male si scarta.
 
