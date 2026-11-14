@@ -34,24 +34,30 @@ Lo stato corrente (fase, ora della consegna, cosa manca) sta in cima a `README.m
 - Piano di riserva se la rete del posto cade: una registrazione dello schermo del percorso completo, fatta appena funziona.
 - Nessun segreto nel repository: chiavi solo in `.env` o `.dev.vars`, gitignorati, con i nomi in `.env.example`. Prima di rendere pubblico il repository si ricontrollano `input/` e la storia Git.
 
-## Commit e push
+## Branch, PR e merge
 
-Luca lavora da solo: si committa e si pusha direttamente su `main`, senza branch e senza PR. L'agente lo fa da sé, senza chiedere ogni volta: in questo repository l'autorizzazione è permanente.
+Luca lavora da solo, ma non si scrive su `main`: ogni pezzo passa da un branch e da una PR. Serve a una cosa sola, poter tornare indietro. `main` contiene sempre l'ultima versione della demo che funziona, e ogni PR è un passo che si può annullare da solo.
 
-Quando si pusha:
+Il giro, per ogni pezzo di lavoro:
 
-- **A ogni pezzo che funziona.** Un commit per un passo compiuto (una rotta, una schermata, un agente che risponde), con push subito dopo. Il push è anche il backup della giornata: niente lavoro di ore solo sul Mac.
-- **Alla chiusura di ogni fase**, dopo che Luca l'ha approvata: il file `docs/fase-NN-….md` aggiornato e lo stato in `README.md` vanno nello stesso push.
-- **Prima di ogni deploy.** Online gira solo codice già pushato: prima `npm run e2e`, poi commit e push, poi `wrangler deploy`. Così il commit dice sempre cosa c'è in demo.
-- **Prima di una modifica rischiosa** al percorso della demo, per avere un punto a cui tornare.
+1. **Branch da `main` aggiornato**: `git pull`, poi `git switch -c <prefisso>/<cosa>`. Prefissi `feat/`, `fix/`, `docs/`, `chore/`. Un branch per un passo compiuto (una fase di build, una schermata, un agente), non per una giornata di lavoro.
+2. **Commit piccoli e push frequenti del branch.** Il push è anche il backup: niente lavoro di ore solo sul Mac. Sul branch si può pushare anche un lavoro a metà.
+3. **PR verso `main` con `gh pr create`** quando il passo funziona: `npm run e2e` è passato e la PR lo dice, con cosa cambia per la demo e cosa resta simulato. L'agente apre la PR da sé, senza chiedere.
+4. **Il merge lo decide Luca.** L'agente non mergia di sua iniziativa: dice che la PR è pronta e aspetta. Quando Luca dà l'ok, `gh pr merge --squash --delete-branch`: su `main` ogni PR diventa un solo commit.
+5. **Deploy solo da `main`**, dopo il merge: `git switch main`, `git pull`, `npm run e2e`, `wrangler deploy`. Online gira sempre un commit di `main`.
 
-Come si pusha:
+Tornare indietro:
 
-- Su `main` resta codice con cui il percorso della demo gira. Un lavoro a metà si può pushare per non perderlo, ma il messaggio comincia con `WIP:` e dice cosa è rotto.
+- Una PR mergiata che rompe la demo si annulla con `git revert <commit>` su un branch `fix/`, con la sua PR. Poi si rifà il deploy da `main`.
+- Se serve subito la versione di prima online, `wrangler rollback` riporta il Worker al deploy precedente mentre si sistema il codice.
+- Mai `--force` su `main` e mai riscrivere la storia già pushata.
+
+Il resto:
+
+- Anche i documenti passano da PR: la chiusura di una fase è una PR `docs/` con il file `docs/fase-NN-….md` e lo stato in `README.md` aggiornati.
 - Prima di ogni commit `git status`: niente `.env`, `.dev.vars`, chiavi o file che non c'entrano. Il repository potrebbe diventare pubblico con tutta la sua storia.
-- Messaggi in italiano, una riga che dice cosa cambia per la demo.
-- Mai `--force` e mai riscrivere la storia già pushata. Se il push viene rifiutato, `git pull --rebase` e si riprova.
-- Se più agenti scrivono insieme, ognuno lavora in una worktree sul suo branch e chi coordina lo porta su `main` in locale, sempre senza PR. Nello stesso checkout scrive un solo agente alla volta.
+- Messaggi e titoli delle PR in italiano, una riga che dice cosa cambia per la demo.
+- Se più agenti scrivono insieme, ognuno lavora in una worktree sul suo branch e apre la sua PR. Nello stesso checkout scrive un solo agente alla volta.
 - La visibilità del repository la cambia solo Luca.
 
 ## Stack e infrastruttura
@@ -73,7 +79,7 @@ Ambienti: due, e basta.
 | D1 e R2 | `.wrangler/state` | risorse con prefisso `aoc-` |
 | Segreti | `.dev.vars` | `wrangler secret put` |
 
-Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non c'è staging né pipeline.
+Qui il deploy da locale è permesso, a differenza dei progetti dei clienti: non c'è staging né pipeline. Si fa solo da `main`, dopo il merge della PR.
 
 **Account Cloudflare.** `wrangler` su questo Mac è collegato a più account, alcuni di lavoro e di clienti con sistemi in produzione. Questo progetto va solo sull'account personale di Luca: l'`account_id` si fissa in `wrangler.jsonc` alla prima fase di build e Luca lo conferma. Prima di ogni comando remoto che crea, scrive o cancella, controlla account e nome della risorsa. Non si tocca nessuna risorsa senza il prefisso `aoc-` o il nome `ai-on-campus`.
 
