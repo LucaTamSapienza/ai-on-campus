@@ -17,7 +17,8 @@ Built in one day, on 14 November 2026, for the Reply "AI on Campus" case study (
 - **Try it locally:** [Run it locally](#run-it-locally). The course material is not in the repository, so bring your own lessons as Markdown.
 - **Online demo:** https://ai-on-campus.martesai.workers.dev (the API asks for a demo code).
 - **Read more:** [`docs/architecture.md`](docs/architecture.md), [`docs/interaction-examples.md`](docs/interaction-examples.md) (real runs, including one where an agent holds its boundary), pitch video and storyboard in [`pitch/`](pitch/).
-- **How it was built:** almost all the code was written by AI agents following [`AGENTS.md`](AGENTS.md) (Italian); the plan and the notes of each build phase are in [`docs/`](docs/).
+- **How it was built:** almost all the code was written by AI agents following [`AGENTS.md`](AGENTS.md) (Italian); the plan and the notes of each build phase are in [`docs/`](docs/). The hackathon's own source material (the `input/` folder those files refer to: the case-study text and the briefing notes) is not published.
+- **Licence:** [MIT](LICENSE) for the code. The course used in the demo belongs to its teacher and is not included.
 
 ## The problem and who pays
 
