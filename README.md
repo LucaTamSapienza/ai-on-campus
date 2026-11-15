@@ -1,10 +1,23 @@
-# PRISMA
+<p align="center">
+  <img src="pitch/assets/loghi/prisma-mark.svg" alt="PRISMA logo" width="120">
+</p>
 
-> **Status, 14/11/2026.** Build finished and merged on `main`: course graph, triple attack with rewrite and re-attack, simulated class, recorded lesson, student view, study plan. Runs locally with `wrangler dev` and online at https://ai-on-campus.martesai.workers.dev (v1 deployed at 16:00 from `main`; the API asks for a demo code). Hand-in documents: this README, [`docs/architecture.md`](docs/architecture.md), [`docs/interaction-examples.md`](docs/interaction-examples.md). Pitch material in [`pitch/`](pitch/). Agent rules for this workspace: [`AGENTS.md`](AGENTS.md) (Italian).
+# PRISMA
 
 **Every exam question, tested from three sides before the exam.**
 
 PRISMA takes a university course (slides, notes, lesson transcripts), turns it into a graph of concepts with the slides behind each one, and lets the teacher attack a draft exam question with three agents before it reaches students: one answers without the course, one answers only from the course, one looks for a second reading. A Grader scores every answer against the teacher's rubric, a Reviewer proposes a rewrite, and the teacher decides.
+
+Built in one day, on 14 November 2026, for the Reply "AI on Campus" case study (Student Tech Clash 2026). Everything described below is built and runs: nothing here is a mockup.
+
+| The course as a graph | The report on one question |
+|---|---|
+| ![Course graph: concepts coloured by topic, linked by typed relations](docs/img/graph.png) | ![Report of a triple attack: verdicts with their evidence and a proposed rewrite](docs/img/report.png) |
+
+- **Try it locally:** [Run it locally](#run-it-locally). The course material is not in the repository, so bring your own lessons as Markdown.
+- **Online demo:** https://ai-on-campus.martesai.workers.dev (the API asks for a demo code).
+- **Read more:** [`docs/architecture.md`](docs/architecture.md), [`docs/interaction-examples.md`](docs/interaction-examples.md) (real runs, including one where an agent holds its boundary), pitch video and storyboard in [`pitch/`](pitch/).
+- **How it was built:** almost all the code was written by AI agents following [`AGENTS.md`](AGENTS.md) (Italian); the plan and the notes of each build phase are in [`docs/`](docs/).
 
 ## The problem and who pays
 
@@ -147,5 +160,5 @@ All the examples in `docs/interaction-examples.md` together, in two sessions: 96
 - **The verdicts depend on one model.** "Clears the pass mark without the course materials" is about `openai/gpt-6-luna`; a stronger or weaker model may score differently. The Quibbler does not always find the same ambiguity on the same text: that is why it is a "candidate" left to the teacher.
 - **Retrieval is lexical.** FTS5 plus graph edges, no embeddings: a passage phrased with different words can be missed, which is why the verdict says "in the retrieved passages" and not "not in the course".
 - **Prompt injection** is contained, not impossible: untrusted text is fenced and no agent has tools, but a model can still follow an injected sentence. What limits the damage is in code: JSON schemas, evidence and citation checks, totals and verdicts computed by the backend, and no agent can write a question version.
-- **Not deployed.** The remote D1 database does not exist yet (`database_id` placeholder in `wrangler.jsonc`).
+- **A demo, not a service.** The online version is one Worker with one course, two fixed demo accounts and a daily spending cap on model calls; when the cap is reached the agents stop until the next day.
 - **Real microphone not verified end to end**; the recorded lesson was tested with Chromium's fake microphone and synthetic speech.
