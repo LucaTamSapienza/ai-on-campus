@@ -15,7 +15,6 @@ Built in one day, on 14 November 2026, for the Reply "AI on Campus" case study (
 | ![Course graph: concepts coloured by topic, linked by typed relations](docs/img/graph.png) | ![Report of a triple attack: verdicts with their evidence and a proposed rewrite](docs/img/report.png) |
 
 - **Try it locally:** [Run it locally](#run-it-locally). The course material is not in the repository, so bring your own lessons as Markdown.
-- **Online demo:** https://ai-on-campus.martesai.workers.dev (the API asks for a demo code).
 - **Read more:** [`docs/architecture.md`](docs/architecture.md), [`docs/interaction-examples.md`](docs/interaction-examples.md) (real runs, including one where an agent holds its boundary), pitch video and storyboard in [`pitch/`](pitch/).
 - **How it was built:** almost all the code was written by AI agents following [`AGENTS.md`](AGENTS.md) (Italian); the plan and the notes of each build phase are in [`docs/`](docs/). The hackathon's own source material (the `input/` folder those files refer to: the case-study text and the briefing notes) is not published.
 - **Licence:** [MIT](LICENSE) for the code. The course used in the demo belongs to its teacher and is not included.
@@ -161,5 +160,5 @@ All the examples in `docs/interaction-examples.md` together, in two sessions: 96
 - **The verdicts depend on one model.** "Clears the pass mark without the course materials" is about `openai/gpt-6-luna`; a stronger or weaker model may score differently. The Quibbler does not always find the same ambiguity on the same text: that is why it is a "candidate" left to the teacher.
 - **Retrieval is lexical.** FTS5 plus graph edges, no embeddings: a passage phrased with different words can be missed, which is why the verdict says "in the retrieved passages" and not "not in the course".
 - **Prompt injection** is contained, not impossible: untrusted text is fenced and no agent has tools, but a model can still follow an injected sentence. What limits the damage is in code: JSON schemas, evidence and citation checks, totals and verdicts computed by the backend, and no agent can write a question version.
-- **A demo, not a service.** The online version is one Worker with one course, two fixed demo accounts and a daily spending cap on model calls; when the cap is reached the agents stop until the next day.
+- **No hosted demo.** The version deployed on Cloudflare for the hackathon was taken down on 15 November 2026, together with its remote database. The `database_id` in `app/backend/wrangler.jsonc` points to that deleted database: to deploy your own, create a D1 database and put its id there. Locally everything runs as described above.
 - **Real microphone not verified end to end**; the recorded lesson was tested with Chromium's fake microphone and synthetic speech.
