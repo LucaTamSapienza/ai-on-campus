@@ -1,5 +1,7 @@
 # ai-on-campus
 
+> **Nota del 15/11/2026.** L'hackathon è finito e questo repository è diventato pubblico. Il file resta com'era durante la giornata, perché è il contratto con cui gli agenti hanno costruito Prisma: dove parla al presente (repository privato, idea non ancora scelta, deploy su Cloudflare) descrive il 14 novembre. La cartella `input/` che cita non è pubblicata e la demo online è stata spenta.
+
 Workspace dell'hackathon del 14/11/2026, tema «AI on Campus»: l'AI dentro le università. Luca Tam è in squadra con altri compagni, ma ognuno lavora per conto suo: si ragiona insieme sull'idea, poi repository, codice e agenti di questo workspace sono solo di Luca. L'uso dell'AI è libero, quindi quasi tutto il lavoro passa dagli agenti che leggono questo file. La direzione è un'idea B2B: un prodotto che un ateneo, un dipartimento o un fornitore di servizi universitari compra, non un'app per il singolo studente. L'idea non è ancora scelta.
 
 Questo file è il contratto per qualunque agente (Claude Code, Codex o altro). `CLAUDE.md` è solo un adapter che lo richiama.
