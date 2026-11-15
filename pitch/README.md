@@ -1,9 +1,13 @@
 # Pitch
 
-- `prisma-pitch.mp4`: video dell'idea, 43,5 secondi, 1920 × 1080, pensato per parlarci sopra (regge senza audio).
-- `storyboard-video.md`: le otto scene con durata, testo e suono.
-- `prisma-pitch-fotogrammi.jpg`: i fotogrammi chiave, per rileggerlo senza aprirlo.
+- `prisma-pitch.mp4`: il video dell'idea, 30 secondi, 1920 × 1080, in inglese, pensato per parlarci sopra (regge senza audio). È l'ultima delle tre versioni fatte il 14 novembre 2026.
+- `storyboard-video.md`: le sei scene con durata, testo e suono.
+- `prisma-pitch-fotogrammi.jpg`: nove fotogrammi, per rileggerlo senza aprirlo.
+- `assets/loghi/`: il marchio di Prisma.
 
-Il video è costruito con Remotion nel repository `ad-studio`, branch `feat/aoc-video`, composizione `HackathonPitch`. Nome e frase stanno in `src/brands/prisma/brand.ts`. Le funzionalità non ancora costruite hanno l'etichetta «in arrivo», che si spegne una per una in `src/ads/hackathon-pitch/copy.ts`. Le schermate sono disegnate, non catture dell'app: si sostituiscono con quelle vere quando il percorso della demo gira.
+Il video è scritto come codice con Remotion, in un repository a parte: ogni fotogramma è deterministico e ogni correzione è una modifica più un nuovo render. Le schermate sono disegnate, non catture dell'app, e l'esempio è illustrativo (lo dice a schermo).
 
-Da chiarire con i mentor: la pagina del case study chiede per il primo pitch «60 secondi, senza slide». Se un video non è ammesso lì, resta per la presentazione da 5 minuti dei primi tre.
+Due punti in cui il video è rimasto indietro rispetto all'app:
+
+- Il terzo agente nel video si chiama **Nitpicker**; nell'app è il **Quibbler**.
+- La scena dello studente porta l'etichetta *coming soon*: il video è stato chiuso prima che il lato studente e il piano di studio fossero costruiti. Oggi ci sono entrambi.
